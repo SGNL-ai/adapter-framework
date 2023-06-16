@@ -1,3 +1,17 @@
+// Copyright 2023 SGNL.ai, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package wrapper
 
 import (
@@ -7,7 +21,7 @@ import (
 
 // getResponse converts an adapter Response into a GetPageResponse.
 func getResponse(
-	reverseMapping entityReverseIdMapping,
+	reverseMapping *entityReverseIdMapping,
 	resp *framework.Response,
 ) (rpcResponse *api_adapter_v1.GetPageResponse) {
 	if resp.Error != nil {
@@ -42,8 +56,8 @@ func getResponse(
 // getEntityObjects converts an adapter list of objects for an entity into an
 // EntityObject.
 func getEntityObjects(
-	reverseMapping entityReverseIdMapping,
-	objects []*framework.Object,
+	reverseMapping *entityReverseIdMapping,
+	objects []framework.Object,
 ) (entityObjects api_adapter_v1.EntityObjects, adapterErr *api_adapter_v1.Error) {
 	entityObjects.EntityId = reverseMapping.Id
 
@@ -68,44 +82,14 @@ func getEntityObjects(
 
 // getEntityObject converts an adapter Object into an RPC object.
 func getEntityObject(
-	reverseMapping entityReverseIdMapping,
-	object *framework.Object,
+	reverseMapping *entityReverseIdMapping,
+	object framework.Object,
 ) (entityObject api_adapter_v1.Object, adapterErr *api_adapter_v1.Error) {
-	if len(object.Attributes) > 0 {
-		entityObject.Attributes = make([]*api_adapter_v1.Attribute, 0, len(object.Attributes))
+	for externalId, value := range object {
+		switch v := value.(type) {
 
-		for attributeExternalId, attributeValue := range object.Attributes {
-			attributeMetadata, validExternalId := reverseMapping.Attributes[attributeExternalId]
-
-			if !validExternalId {
-				adapterErr = &api_adapter_v1.Error{
-					Message: api_adapter_v1.ErrMsgAdapterInvalidEntityExternalId,
-					Code:    api_adapter_v1.ErrorCode_ERROR_CODE_INTERNAL,
-				}
-
-				return
-			}
-
-			var values []*api_adapter_v1.AttributeValue
-
-			values, adapterErr = getAttributeValues(attributeMetadata, attributeValue)
-
-			if adapterErr != nil {
-				return
-			}
-
-			entityObject.Attributes = append(entityObject.Attributes, &api_adapter_v1.Attribute{
-				Id:     attributeMetadata.Id,
-				Values: values,
-			})
-		}
-	}
-
-	if len(object.Children) > 0 {
-		entityObject.ChildObjects = make([]*api_adapter_v1.EntityObjects, 0, len(object.Children))
-
-		for entityExternalId, childObjects := range object.Children {
-			childReverseMapping, validExternalId := reverseMapping.ChildEntities[entityExternalId]
+		case []framework.Object: // Child objects for a child entity.
+			childReverseMapping, validExternalId := reverseMapping.ChildEntities[externalId]
 
 			if !validExternalId {
 				adapterErr = &api_adapter_v1.Error{
@@ -118,13 +102,37 @@ func getEntityObject(
 
 			var childEntityObjects api_adapter_v1.EntityObjects
 
-			childEntityObjects, adapterErr = getEntityObjects(childReverseMapping, childObjects)
+			childEntityObjects, adapterErr = getEntityObjects(childReverseMapping, v)
 
 			if adapterErr != nil {
 				return
 			}
 
 			entityObject.ChildObjects = append(entityObject.ChildObjects, &childEntityObjects)
+
+		default: // Attribute.
+			attributeMetadata, validExternalId := reverseMapping.Attributes[externalId]
+
+			if !validExternalId {
+				adapterErr = &api_adapter_v1.Error{
+					Message: api_adapter_v1.ErrMsgAdapterInvalidEntityExternalId,
+					Code:    api_adapter_v1.ErrorCode_ERROR_CODE_INTERNAL,
+				}
+
+				return
+			}
+
+			var values []*api_adapter_v1.AttributeValue
+
+			values, adapterErr = getAttributeValues(attributeMetadata, value)
+
+			if adapterErr != nil {
+				return
+			}
+			entityObject.Attributes = append(entityObject.Attributes, &api_adapter_v1.Attribute{
+				Id:     attributeMetadata.Id,
+				Values: values,
+			})
 		}
 	}
 

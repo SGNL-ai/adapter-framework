@@ -1,3 +1,17 @@
+// Copyright 2023 SGNL.ai, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package wrapper
 
 import (
@@ -12,29 +26,17 @@ type entityReverseIdMapping struct {
 
 	// AttributeIds maps the entity's attributes' external IDs to their IDs
 	// and types.
-	Attributes map[string]*attributeMetadata
+	Attributes map[string]*api_adapter_v1.AttributeConfig
 
 	// ChildEntities maps the entity's child entities' external IDs to their
 	// entityReverseIdMapping.
-	ChildEntities map[string]entityReverseIdMapping
-}
-
-type attributeMetadata struct {
-	// Id is the unique identifier of the attribute.
-	Id string
-
-	// Type is the type of the attribute's values.
-	Type api_adapter_v1.AttributeType
-
-	// List indicates whether the attribute contains a list of values vs. a
-	// single value.
-	List bool
+	ChildEntities map[string]*entityReverseIdMapping
 }
 
 // getAdapterRequest converts a GetPageRequest into an adapter Request.
 func getAdapterRequest[Config any](
 	req *api_adapter_v1.GetPageRequest,
-) (adapterRequest *framework.Request[Config], reverseMapping entityReverseIdMapping, adapterErr *api_adapter_v1.Error) {
+) (adapterRequest *framework.Request[Config], reverseMapping *entityReverseIdMapping, adapterErr *api_adapter_v1.Error) {
 	var errMsg string
 
 	switch {
@@ -69,14 +71,17 @@ func getAdapterRequest[Config any](
 		adapterRequest.Config = config
 	}
 
-	adapterRequest.Address = req.Datasource.Address
-	adapterRequest.Auth = getAdapterAuth(req.Datasource.Auth)
-	adapterRequest.Entity, reverseMapping, adapterErr = getEntity(req.Entity)
+	var entityConfig *framework.EntityConfig
+
+	entityConfig, reverseMapping, adapterErr = getEntity(req.Entity)
 
 	if adapterErr != nil {
 		return
 	}
 
+	adapterRequest.Address = req.Datasource.Address
+	adapterRequest.Auth = getAdapterAuth(req.Datasource.Auth)
+	adapterRequest.Entity = *entityConfig
 	adapterRequest.Ordered = req.Entity.Ordered
 	adapterRequest.PageSize = req.PageSize
 	adapterRequest.Cursor = req.Cursor
@@ -111,7 +116,7 @@ func getAdapterAuth(
 // getEntity converts a request EntityConfig into an adapter EntityConfig.
 func getEntity(
 	entity *api_adapter_v1.EntityConfig,
-) (adapterEntity framework.EntityConfig, reverseMapping entityReverseIdMapping, adapterErr *api_adapter_v1.Error) {
+) (adapterEntity *framework.EntityConfig, reverseMapping *entityReverseIdMapping, adapterErr *api_adapter_v1.Error) {
 	var errMsg string
 
 	switch {
@@ -132,10 +137,13 @@ func getEntity(
 		return
 	}
 
+	reverseMapping = &entityReverseIdMapping{}
+	adapterEntity = &framework.EntityConfig{}
+
 	reverseMapping.Id = entity.Id
 	adapterEntity.ExternalId = entity.ExternalId
 
-	reverseMapping.Attributes = make(map[string]*attributeMetadata, len(entity.Attributes))
+	reverseMapping.Attributes = make(map[string]*api_adapter_v1.AttributeConfig, len(entity.Attributes))
 	adapterEntity.Attributes = make([]*framework.AttributeConfig, 0, len(entity.Attributes))
 	for _, attribute := range entity.Attributes {
 		switch {
@@ -160,11 +168,7 @@ func getEntity(
 			return
 		}
 
-		reverseMapping.Attributes[attribute.ExternalId] = &attributeMetadata{
-			Id:   attribute.Id,
-			Type: attribute.Type,
-			List: attribute.List,
-		}
+		reverseMapping.Attributes[attribute.ExternalId] = attribute
 
 		adapterEntity.Attributes = append(adapterEntity.Attributes, &framework.AttributeConfig{
 			ExternalId: attribute.ExternalId,
@@ -174,21 +178,28 @@ func getEntity(
 	}
 
 	if len(entity.ChildEntities) > 0 {
-		reverseMapping.ChildEntities = make(map[string]entityReverseIdMapping, len(entity.ChildEntities))
+		reverseMapping.ChildEntities = make(map[string]*entityReverseIdMapping, len(entity.ChildEntities))
 		adapterEntity.ChildEntities = make([]*framework.EntityConfig, 0, len(entity.ChildEntities))
 
 		for _, childEntity := range entity.ChildEntities {
-			if _, duplicateExternalId := reverseMapping.ChildEntities[childEntity.ExternalId]; duplicateExternalId {
+			switch {
+			case reverseMapping.ChildEntities[childEntity.ExternalId] != nil:
+				errMsg = api_adapter_v1.ErrorMsgEntityDuplicateChildEntityExternalId
+			case reverseMapping.Attributes[childEntity.ExternalId] != nil:
+				errMsg = api_adapter_v1.ErrorMsgEntityChildEntityExternalIdSameAsAttribute
+			}
+
+			if errMsg != "" {
 				adapterErr = &api_adapter_v1.Error{
-					Message: api_adapter_v1.ErrorMsgEntityDuplicateChildEntityExternalId,
+					Message: errMsg,
 					Code:    api_adapter_v1.ErrorCode_ERROR_CODE_INVALID_ENTITY_CONFIG,
 				}
 
 				return
 			}
 
-			var adapterChildEntity framework.EntityConfig
-			var childReverseMapping entityReverseIdMapping
+			var adapterChildEntity *framework.EntityConfig
+			var childReverseMapping *entityReverseIdMapping
 
 			adapterChildEntity, childReverseMapping, adapterErr = getEntity(childEntity)
 
@@ -197,7 +208,7 @@ func getEntity(
 			}
 
 			reverseMapping.ChildEntities[childEntity.ExternalId] = childReverseMapping
-			adapterEntity.ChildEntities = append(adapterEntity.ChildEntities, &adapterChildEntity)
+			adapterEntity.ChildEntities = append(adapterEntity.ChildEntities, adapterChildEntity)
 		}
 	}
 

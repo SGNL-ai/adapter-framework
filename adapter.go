@@ -11,6 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 package framework
 
 import (
@@ -146,24 +147,11 @@ type Page struct {
 	// Objects is the set of objects in the page returned by the datasource for
 	// the requested entity.
 	// Optional.
-	Objects []*Object `json:"objects,omitempty"`
+	Objects []Object `json:"objects,omitempty"`
 
 	// NextCursor the cursor that identifies the first object of the next page.
 	// Optional. If not set, this page is the last page for this entity.
 	NextCursor string `json:"nextCursor,omitempty"`
-}
-
-// Object is an object returned for the top entity or a child entity.
-type Object struct {
-	// Attributes maps attribute IDs to values.
-	// Only if the attribute has List set to true, the value must be a list.
-	// Optional.
-	// Attributes that were not requested are ignored.
-	Attributes map[string]any `json:"attributes,omitempty"`
-
-	// Children maps child entity IDs to their objects.
-	// Optional.
-	Children map[string][]*Object `json:"children,omitempty"`
 }
 
 // Error contains the details of an error that occurred while executing a

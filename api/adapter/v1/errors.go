@@ -1,3 +1,17 @@
+// Copyright 2023 SGNL.ai, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package v1
 
 const (
@@ -24,18 +38,19 @@ const (
 	ErrorMsgInvalidAddressFormatProvided = "Invalid address format provided"
 
 	// Invalid Entity Config (ErrorCode_ERROR_CODE_INVALID_ENTITY_CONFIG).
-	ErrorMsgNoIdProvidedInEntity                   = "No ID provided in entity"
-	ErrorMsgNoExternalIdProvidedInEntity           = "No external ID provided in entity"
-	ErrorMsgNoIdProvidedInAttribute                = "No ID provided in attribute"
-	ErrorMsgNoExternalIdProvidedInAttribute        = "No external ID provided in attribute"
-	ErrorMsgAttributeInvalidType                   = "Attribute has an invalid type"
-	ErrorMsgEntityDuplicateAttributeExternalId     = "Entity has attributes with duplicate external IDs"
-	ErrorMsgEntityDuplicateChildEntityExternalId   = "Entity has child entities with duplicate external IDs"
-	ErrorMsgEntityDoesNotSupportChildEntities      = "Entity does not support child entities"
-	ErrorMsgEntityProvidedWithNoAttributes         = "Provided entity attribute list is empty"
-	ErrorMsgEntityMissingUniqueIdAttribute         = "Provided entity attribute list is missing a required unique ID attribute"
-	ErrorMsgEntityMissingRequiredAttributeFmt      = "Provided entity attribute list is missing the following required attributes: %s"
-	ErrorMsgEntityUnsupportedAttributesProvidedFmt = "Provided entity attribute list contains the following unsupported attributes: %s"
+	ErrorMsgNoIdProvidedInEntity                       = "No ID provided in entity"
+	ErrorMsgNoExternalIdProvidedInEntity               = "No external ID provided in entity"
+	ErrorMsgNoIdProvidedInAttribute                    = "No ID provided in attribute"
+	ErrorMsgNoExternalIdProvidedInAttribute            = "No external ID provided in attribute"
+	ErrorMsgAttributeInvalidType                       = "Attribute has an invalid type"
+	ErrorMsgEntityDuplicateAttributeExternalId         = "Entity has attributes with duplicate external IDs"
+	ErrorMsgEntityDuplicateChildEntityExternalId       = "Entity has child entities with duplicate external IDs"
+	ErrorMsgEntityChildEntityExternalIdSameAsAttribute = "Entity has a child entity with the same external ID as an attribute"
+	ErrorMsgEntityDoesNotSupportChildEntities          = "Entity does not support child entities"
+	ErrorMsgEntityProvidedWithNoAttributes             = "Provided entity attribute list is empty"
+	ErrorMsgEntityMissingUniqueIdAttribute             = "Provided entity attribute list is missing a required unique ID attribute"
+	ErrorMsgEntityMissingRequiredAttributeFmt          = "Provided entity attribute list is missing the following required attributes: %s"
+	ErrorMsgEntityUnsupportedAttributesProvidedFmt     = "Provided entity attribute list contains the following unsupported attributes: %s"
 
 	// Datasource Auth Failed (ErrorCode_ERROR_CODE_DATASOURCE_AUTHENTICATION_FAILED).
 	ErrorMsgFailedToAuthenticate = "Failed to authenticate with datasource; check datasource configuration details and try again"
