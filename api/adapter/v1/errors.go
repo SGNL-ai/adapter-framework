@@ -9,19 +9,12 @@ const (
 	ErrorMsgDatasourceRejectedRequest = "Datasource rejected request"
 
 	// Invalid Page Request Config (ErrorCode_ERROR_CODE_INVALID_PAGE_REQUEST_CONFIG).
-	ErrorMsgNoRequest       = "Request is nil"
-	ErrorNoDatasourceConfig = "No datasource config provided"
-	ErrorNoEntityConfig     = "No entity config provided"
-	ErrorNoAuth             = "No datasource authentication credentials provided"
-	ErrorMsgInvalidCursor   = "Invalid cursor provided"
-
-	// Invalid Entity Config (ErrorCode_ERROR_CODE_INVALID_ENTITY_CONFIG).
-	ErrorMsgEntityDoesNotSupportChildEntities      = "Entity does not support child entities"
-	ErrorMsgEntityProvidedWithNoAttributes         = "Provided entity attribute list is empty"
-	ErrorMsgEntityMissingUniqueIdAttribute         = "Provided entity attribute list is missing a required unique id attribute"
-	ErrorMsgEntityMissingRequiredAttributeFmt      = "Provided entity attribute list is missing the following required attributes: %s"
-	ErrorMsgEntityUnsupportedAttributesProvidedFmt = "Provided entity attribute list contains the following unsupported attributes: %s"
-	ErrorMsgEntityPageSizeTooSmall                 = "Invalid page size provided; value must be greater than 0"
+	ErrorMsgNoRequest              = "Request is nil"
+	ErrorNoDatasourceConfig        = "No datasource config provided"
+	ErrorNoEntityConfig            = "No entity config provided"
+	ErrorNoAuth                    = "No datasource authentication credentials provided"
+	ErrorMsgInvalidCursor          = "Invalid cursor provided"
+	ErrorMsgEntityPageSizeTooSmall = "Invalid page size provided; value must be greater than 0"
 
 	// Invalid Datasource Config (ErrorCode_ERROR_CODE_INVALID_DATASOURCE_CONFIG).
 	ErrorMsgDatasourceHTTPAuthEmpty      = "Provided Datasource HTTP Auth is empty"
@@ -29,6 +22,20 @@ const (
 	ErrorMsgEntityMustBeOrdered          = "Entity must be ordered"
 	ErrorMsgEntityMustBeUnordered        = "Entity must be unordered"
 	ErrorMsgInvalidAddressFormatProvided = "Invalid address format provided"
+
+	// Invalid Entity Config (ErrorCode_ERROR_CODE_INVALID_ENTITY_CONFIG).
+	ErrorMsgNoIdProvidedInEntity                   = "No ID provided in entity"
+	ErrorMsgNoExternalIdProvidedInEntity           = "No external ID provided in entity"
+	ErrorMsgNoIdProvidedInAttribute                = "No ID provided in attribute"
+	ErrorMsgNoExternalIdProvidedInAttribute        = "No external ID provided in attribute"
+	ErrorMsgAttributeInvalidType                   = "Attribute has an invalid type"
+	ErrorMsgEntityDuplicateAttributeExternalId     = "Entity has attributes with duplicate external IDs"
+	ErrorMsgEntityDuplicateChildEntityExternalId   = "Entity has child entities with duplicate external IDs"
+	ErrorMsgEntityDoesNotSupportChildEntities      = "Entity does not support child entities"
+	ErrorMsgEntityProvidedWithNoAttributes         = "Provided entity attribute list is empty"
+	ErrorMsgEntityMissingUniqueIdAttribute         = "Provided entity attribute list is missing a required unique ID attribute"
+	ErrorMsgEntityMissingRequiredAttributeFmt      = "Provided entity attribute list is missing the following required attributes: %s"
+	ErrorMsgEntityUnsupportedAttributesProvidedFmt = "Provided entity attribute list contains the following unsupported attributes: %s"
 
 	// Datasource Auth Failed (ErrorCode_ERROR_CODE_DATASOURCE_AUTHENTICATION_FAILED).
 	ErrorMsgFailedToAuthenticate = "Failed to authenticate with datasource; check datasource configuration details and try again"
@@ -41,4 +48,8 @@ const (
 
 	// Datasource Permanently Unavailable (ErrorCode_ERROR_CODE_DATASOURCE_PERMANENTLY_UNAVAILABLE).
 	ErrorMsgDatasourcePermanentlyUnavailable = "Datasource permanently unavailable; check datasource configuration details or contact datasource support for assistance"
+
+	// Internal (ErrorCode_ERROR_CODE_INTERNAL).
+	ErrMsgAdapterEmptyResponse           = "Adapter returned an empty response"
+	ErrMsgAdapterInvalidEntityExternalId = "Adapter returned an invalid entity external ID"
 )

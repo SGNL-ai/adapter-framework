@@ -17,14 +17,17 @@ import (
 	"context"
 	"time"
 
-	v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
+	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
 )
 
 // Adapter is the high-level interface implemented by adapters.
+//
+// The Config type parameter must be a struct type into which the configuration
+// JSON object can be unmarshaled into.
 type Adapter[Config any] interface {
 	// GetPage returns a page of objects from the requested datasource for the
 	// requested entity.
-	GetPage(ctx context.Context, request Request[Config]) Response
+	GetPage(ctx context.Context, request *Request[Config]) Response
 }
 
 // Request is a request for a page of objects from a datasource for an entity.
@@ -45,12 +48,12 @@ type Request[Config any] struct {
 	// Optional.
 	Auth *DatasourceAuthCredentials `json:"auth,omitempty"`
 
-	// EntityConfig is the configuration of the entity to get data from.
-	EntityConfig EntityConfig `json:"entityConfig"`
+	// Entity is the configuration of the entity to get data from.
+	Entity EntityConfig `json:"entityConfig"`
 
-	// Ordered indicates whether the objects are ordered by ID, i.e. whether
-	// the response must contain objects ordered by monotonically increasing
-	// IDs for the entity.
+	// Ordered indicates whether the entity's objects are ordered by ID, i.e.
+	// whether the response must contain objects ordered by monotonically
+	// increasing IDs for the entity.
 	// If true and the adapter cannot return objects ordered by ID, the adapter
 	// must return error code ErrorCode_ERROR_CODE_INVALID_ENTITY_CONFIG.
 	Ordered bool `json:"ordered,omitempty"`
@@ -92,12 +95,12 @@ type EntityConfig struct {
 	// Attributes is the configuration of the attributes to return for the
 	// entity.
 	// Contains at least the entity's unique ID attribute.
-	Attributes []AttributeConfig `json:"attributes"`
+	Attributes []*AttributeConfig `json:"attributes"`
 
 	// ChildEntities is the configuration of the entities that are children of
 	// the entity to return together with the entity.
 	// Optional.
-	ChildEntities []EntityConfig `json:"childEntities,omitempty"`
+	ChildEntities []*EntityConfig `json:"childEntities,omitempty"`
 }
 
 // AttributeConfig is the configuration of an attribute to return.
@@ -143,60 +146,37 @@ type Page struct {
 	// Objects is the set of objects in the page returned by the datasource for
 	// the requested entity.
 	// Optional.
-	//
-	// Each object must be either:
-	//  - a map[string]any which keys are attribute names,
-	//  - or a pointer to an instance of a struct type.
-	//
-	// If it is an instance of a struct type, each field of that struct type
-	// must have a tag containing either:
-	//  - the "attr" tag key, which associated value is an attribute name,
-	//  - or the "child" tag key, which associated value is a child entity ID.
-	//
-	// The type of a field tagged with "attr" must match the type requested for
-	// that attribute in its AttributeConfig:
-	//  - AttributeTypeBool -> bool
-	//  - AttributeTypeDateTime -> time.Time
-	//  - AttributeTypeDouble -> float64
-	//  - AttributeTypeDuration -> time.Duration
-	//  - AttributeTypeInt64 -> int64
-	//  - AttributeTypeString -> string
-	// The field type may be a pointer, if the attribute may have the nil
-	// value.
-	//
-	// The type of a field tagged with "child" must be a list of map[string]any
-	// maps or a list of struct values.
-	//
-	// For example:
-	//
-	// struct Example struct {
-	//     Name      string    `attr:"name"`
-	//     Email     *string   `attr:"email"`
-	//     Addresses []Address `child:"address"`
-	// }
-	// struct Address struct {
-	//     PostalCode *string `attr:"postalCode"`
-	//     Region     *string `attr:"region"`
-	// }
-	//
-	// Attributes that were not requested are ignored.
-	Objects []any `json:"objects,omitempty"`
+	Objects []*Object `json:"objects,omitempty"`
 
 	// NextCursor the cursor that identifies the first object of the next page.
 	// Optional. If not set, this page is the last page for this entity.
 	NextCursor string `json:"nextCursor,omitempty"`
 }
 
+// Object is an object returned for the top entity or a child entity.
+type Object struct {
+	// Attributes maps attribute IDs to values.
+	// Only if the attribute has List set to true, the value must be a list.
+	// Optional.
+	// Attributes that were not requested are ignored.
+	Attributes map[string]any `json:"attributes,omitempty"`
+
+	// Children maps child entity IDs to their objects.
+	// Optional.
+	Children map[string][]*Object `json:"children,omitempty"`
+}
+
 // Error contains the details of an error that occurred while executing a
 // GetPage request.
 type Error struct {
 	// Message is the error message.
-	// By convention, should start with an upper-case letter and end with a period.
+	// By convention, should start with an upper-case letter and not end with
+	// punctuation.
 	// Optional.
 	Message string `json:"message,omitempty"`
 
 	// Code is the error code indicating the cause of the error.
-	Code v1.ErrorCode `json:"code"`
+	Code api_adapter_v1.ErrorCode `json:"code"`
 
 	// RetryAfter is the recommended minimal duration after which this request
 	// may be retried.
