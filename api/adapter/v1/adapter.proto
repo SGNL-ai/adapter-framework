@@ -36,20 +36,15 @@ message GetPageRequest {
     // The entity to return a page of objects from.
     EntityConfig entity = 2;
 
-    // Indicates whether the entity's objects are ordered by ID, i.e. whether
-    // the response must contain objects ordered by monotonically increasing
-    // IDs for the entity.
-    bool ordered = 3;
-
     // The maximum number of objects to return from the entity.
     // The number of child_objects in each object is not limited:
     // all the objects from child entities are returned in each parent object.
-    int64 page_size = 4;
+    int64 page_size = 3;
 
     // The cursor that identifies the first object of the page to return, as
     // returned by the last call to GetPage for the entity.
     // If not set, return the first page for this entity.
-    string cursor = 5;
+    string cursor = 4;
 }
 
 // A response containing a page of data.
@@ -106,12 +101,17 @@ message EntityConfig {
     // The adapter-specific name of the entity in the datasource.
     string external_id = 2;
 
+    // Indicates whether the objects are ordered by ID, i.e. whether the
+    // response must contain objects ordered by monotonically increasing IDs for
+    // the entity.
+    bool ordered = 3;
+
     // The configuration of the attributes to return for the entity.
-    repeated AttributeConfig attributes = 3;
+    repeated AttributeConfig attributes = 4;
 
     // The configuration of the entities that are children of the entity
     // to return together with the entity.
-    repeated EntityConfig child_entities = 4;
+    repeated EntityConfig child_entities = 5;
 }
 
 // The configuration of an attribute to ingest.

@@ -77,7 +77,7 @@ func getAdapterRequest[Config any](
 		return
 	}
 
-	adapterRequest.Ordered = req.Ordered
+	adapterRequest.Ordered = req.Entity.Ordered
 	adapterRequest.PageSize = req.PageSize
 	adapterRequest.Cursor = req.Cursor
 
