@@ -23,7 +23,7 @@ import (
 
 // Adapter is the high-level interface implemented by adapters.
 //
-// The Config type parameter must be a struct type into which the configuration
+// The Config type parameter must be a struct type the configuration
 // JSON object can be unmarshaled into.
 type Adapter[Config any] interface {
 	// GetPage returns a page of objects from the requested datasource for the
@@ -33,7 +33,7 @@ type Adapter[Config any] interface {
 
 // Request is a request for a page of objects from a datasource for an entity.
 //
-// The Config type parameter must be a struct type into which the configuration
+// The Config type parameter must be a struct type the configuration
 // JSON object can be unmarshaled into.
 type Request[Config any] struct {
 	// Config is configuration for the datasource.
