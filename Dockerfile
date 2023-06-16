@@ -31,9 +31,6 @@ RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@v${PROTOC_GEN_GO_VER
 ARG PROTOC_GEN_GO_RPC_VERSION=1.3.0
 RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v${PROTOC_GEN_GO_RPC_VERSION}
 
-ARG GOPS_VERSION=v0.3.27
-RUN CGO_ENABLED=0 go install -ldflags "-s -w" github.com/google/gops@${GOPS_VERSION}
-
 WORKDIR /build
 COPY . ./
 
