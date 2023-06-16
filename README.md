@@ -1,2 +1,1 @@
-# adapter-framework
-SGNL ingestion adapter framework
+# SGNL ingestion adapter framework
