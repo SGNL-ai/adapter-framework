@@ -124,7 +124,8 @@ func getEntityObject(
 
 			var values []*api_adapter_v1.AttributeValue
 
-			values, adapterErr = getAttributeValues(attributeMetadata, value)
+			// TODO: Validate that the value has the correct type re: attributeMetadata.
+			values, adapterErr = getAttributeValues(value)
 
 			if adapterErr != nil {
 				return
