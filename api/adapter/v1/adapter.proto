@@ -119,10 +119,10 @@ message AttributeConfig {
     // The unique identifier of the attribute.
     string id = 1;
 
-    // The adapter-specific name of the attribute in the datasource.
+    // The adapter-specific name of the attribute in the entity.
     string external_id = 2;
 
-    // The type of the ingested attribute's value.
+    // The type of the ingested attribute's values.
     // Determines the field set in the returned AttributeValue for this
     // attribute.
     AttributeType type = 3;
@@ -132,7 +132,7 @@ message AttributeConfig {
     bool list = 4;
 }
 
-// The type of the value of the values for an attribute.
+// The type of the values for an attribute.
 enum AttributeType {
     // Invalid. Must not be used.
     ATTRIBUTE_TYPE_UNSPECIFIED = 0;

@@ -37,7 +37,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// The type of the value of the values for an attribute.
+// The type of the values for an attribute.
 type AttributeType int32
 
 const (
@@ -618,9 +618,9 @@ type AttributeConfig struct {
 
 	// The unique identifier of the attribute.
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// The adapter-specific name of the attribute in the datasource.
+	// The adapter-specific name of the attribute in the entity.
 	ExternalId string `protobuf:"bytes,2,opt,name=external_id,json=externalId,proto3" json:"external_id,omitempty"`
-	// The type of the ingested attribute's value.
+	// The type of the ingested attribute's values.
 	// Determines the field set in the returned AttributeValue for this
 	// attribute.
 	Type AttributeType `protobuf:"varint,3,opt,name=type,proto3,enum=sgnl.adapter.v1.AttributeType" json:"type,omitempty"`
