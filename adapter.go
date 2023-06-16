@@ -89,8 +89,8 @@ type BasicAuthCredentials struct {
 
 // EntityConfig is the configuration of an entity to get data from.
 type EntityConfig struct {
-	// Id is the identifier of the entity within the datasource.
-	Id string `json:"id"`
+	// ExternalId is the identifier of the entity within the datasource.
+	ExternalId string `json:"externalId"`
 
 	// Attributes is the configuration of the attributes to return for the
 	// entity.
@@ -105,8 +105,8 @@ type EntityConfig struct {
 
 // AttributeConfig is the configuration of an attribute to return.
 type AttributeConfig struct {
-	// Id is the adapter-specific name of the attribute in the entity.
-	Id string `json:"id"`
+	// ExternalId is the adapter-specific name of the attribute in the entity.
+	ExternalId string `json:"externalId"`
 
 	// Type is the type of the attribute's values.
 	Type AttributeType `json:"type"`

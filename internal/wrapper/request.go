@@ -133,7 +133,7 @@ func getEntity(
 	}
 
 	reverseMapping.Id = entity.Id
-	adapterEntity.Id = entity.ExternalId
+	adapterEntity.ExternalId = entity.ExternalId
 
 	reverseMapping.Attributes = make(map[string]*attributeMetadata, len(entity.Attributes))
 	adapterEntity.Attributes = make([]*framework.AttributeConfig, 0, len(entity.Attributes))
@@ -167,9 +167,9 @@ func getEntity(
 		}
 
 		adapterEntity.Attributes = append(adapterEntity.Attributes, &framework.AttributeConfig{
-			Id:   attribute.ExternalId,
-			Type: framework.AttributeType(attribute.Type),
-			List: attribute.List,
+			ExternalId: attribute.ExternalId,
+			Type:       framework.AttributeType(attribute.Type),
+			List:       attribute.List,
 		})
 	}
 
