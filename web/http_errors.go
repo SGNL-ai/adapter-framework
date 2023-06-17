@@ -19,36 +19,31 @@ import (
 	"strconv"
 	"time"
 
+	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
-	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 // HTTPError returns a detailed error if the given HTTP response status code
 // indicates that the HTTP request failed, and nil otherwise.
-func HTTPError(statusCode int, retryAfterHeader string) (adapterErr *api_adapter_v1.Error) {
+func HTTPError(statusCode int, retryAfterHeader string) (adapterErr *framework.Error) {
 	if statusCode >= 200 && statusCode < 300 { // Success.
 		return nil
 	}
 
-	adapterErr = new(api_adapter_v1.Error)
+	adapterErr = new(framework.Error)
 
 	if retryAfterHeader != "" {
 		// Cf. https://datatracker.ietf.org/doc/html/rfc7231#section-7.1.3,
 		// Retry-After can be either an HTTP-date or a number of seconds.
 		seconds, err := strconv.ParseInt(retryAfterHeader, 10, 64)
 		if err == nil {
-			adapterErr.RetryAfter = &durationpb.Duration{
-				Seconds: seconds,
-				Nanos:   0,
-			}
+			duration := time.Duration(seconds) * time.Second
+			adapterErr.RetryAfter = &duration
 		} else {
 			afterTime, err := time.Parse(time.RFC1123, retryAfterHeader)
 			if err == nil {
 				duration := afterTime.UTC().Sub(time.Now().UTC())
-				adapterErr.RetryAfter = &durationpb.Duration{
-					Seconds: int64(duration / time.Second),
-					Nanos:   0,
-				}
+				adapterErr.RetryAfter = &duration
 			}
 		}
 	}
