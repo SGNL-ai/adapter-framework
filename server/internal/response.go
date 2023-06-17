@@ -34,7 +34,7 @@ func getResponse(
 
 	if resp.Success == nil {
 		return api_adapter_v1.NewGetPageResponseError(&api_adapter_v1.Error{
-			Message: api_adapter_v1.ErrMsgAdapterEmptyResponse,
+			Message: api_adapter_v1.ErrorMsgAdapterEmptyResponse,
 			Code:    api_adapter_v1.ErrorCode_ERROR_CODE_INTERNAL,
 		})
 	}
@@ -93,7 +93,7 @@ func getEntityObject(
 
 			if !validExternalId {
 				adapterErr = &api_adapter_v1.Error{
-					Message: api_adapter_v1.ErrMsgAdapterInvalidEntityExternalId,
+					Message: api_adapter_v1.ErrorMsgAdapterInvalidEntityExternalId,
 					Code:    api_adapter_v1.ErrorCode_ERROR_CODE_INTERNAL,
 				}
 
@@ -115,7 +115,7 @@ func getEntityObject(
 
 			if !validExternalId {
 				adapterErr = &api_adapter_v1.Error{
-					Message: api_adapter_v1.ErrMsgAdapterInvalidEntityExternalId,
+					Message: api_adapter_v1.ErrorMsgAdapterInvalidEntityExternalId,
 					Code:    api_adapter_v1.ErrorCode_ERROR_CODE_INTERNAL,
 				}
 

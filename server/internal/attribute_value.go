@@ -105,7 +105,7 @@ func getAttributeValue(value any) (*api_adapter_v1.AttributeValue, *api_adapter_
 		}}, nil
 	default:
 		return nil, &api_adapter_v1.Error{
-			Message: api_adapter_v1.ErrMsgAdapterInvalidAttributeValueType,
+			Message: api_adapter_v1.ErrorMsgAdapterInvalidAttributeValueType,
 			Code:    api_adapter_v1.ErrorCode_ERROR_CODE_INTERNAL,
 		}
 	}
