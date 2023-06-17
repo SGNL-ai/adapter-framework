@@ -261,6 +261,9 @@ enum ErrorCode {
 
     // Unexpected failure due to the adapter implementation.
     ERROR_CODE_INTERNAL = 11;
+
+    // Datasource received too many requests.
+    ERROR_CODE_DATASOURCE_TOO_MANY_REQUESTS = 12;
 }
 
 // An error retrieving a page.

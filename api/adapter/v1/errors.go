@@ -55,6 +55,9 @@ const (
 	// Datasource Auth Failed (ErrorCode_ERROR_CODE_DATASOURCE_AUTHENTICATION_FAILED).
 	ErrorMsgFailedToAuthenticate = "Failed to authenticate with datasource; check datasource configuration details and try again"
 
+	// Datasource Too Many Requests (ErrorCode_ERROR_CODE_DATASOURCE_TOO_MANY_REQUESTS).
+	ErrorMsgDatasourceTooManyRequests = "Datasource received too many requests"
+
 	// Datasource Failed (ErrorCode_ERROR_CODE_DATASOURCE_FAILED).
 	ErrorMsgDatasourceInternalError = "Datasource encountered an internal error"
 
