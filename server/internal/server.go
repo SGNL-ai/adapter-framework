@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package wrapper
+package internal
 
 import (
 	"context"
@@ -32,14 +32,6 @@ type Server[Config any] struct {
 
 	// Adapter is the high-level implementation of the service.
 	Adapter framework.Adapter[Config]
-}
-
-// NewAdapterServer returns an AdapterServer that wraps the given high-level
-// Adapter implementation.
-func NewAdapterServer[Config any](adapter framework.Adapter[Config]) api_adapter_v1.AdapterServer {
-	return &Server[Config]{
-		Adapter: adapter,
-	}
 }
 
 func (s *Server[Config]) GetPage(ctx context.Context, req *api_adapter_v1.GetPageRequest) (*api_adapter_v1.GetPageResponse, error) {
