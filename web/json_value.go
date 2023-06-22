@@ -22,23 +22,9 @@ import (
 	framework "github.com/sgnl-ai/adapter-framework"
 )
 
-var (
-	// SupportedDateTimeFormats is the list of date-time formats that can be
-	// parsed by ParseDateTime.
-	// The formats are ordered by assumed decreasing order of likelihood.
-	SupportedDateTimeFormats = []string{
-		time.RFC3339, time.RFC3339Nano,
-		time.RFC1123, time.RFC1123Z,
-		time.RFC822, time.RFC822Z, time.RFC850,
-		time.UnixDate, time.RubyDate, time.ANSIC,
-		"2006-01-02T15:04:05.000Z0700",
-		"2006-01-02 15:04:05",
-	}
-)
-
-// ConvertJSONAttributeValue parses and converts the value of a JSON object
+// convertJSONAttributeValue parses and converts the value of a JSON object
 // field.
-func ConvertJSONAttributeValue(attribute *framework.AttributeConfig, value any) (any, error) {
+func convertJSONAttributeValue(attribute *framework.AttributeConfig, value any, opts *jsonOptions) (any, error) {
 	if value == nil {
 		return nil, nil
 	}
@@ -59,7 +45,7 @@ func ConvertJSONAttributeValue(attribute *framework.AttributeConfig, value any) 
 		elementAttribute.List = false
 
 		for _, element := range list {
-			parsedElement, err := ConvertJSONAttributeValue(&elementAttribute, element)
+			parsedElement, err := convertJSONAttributeValue(&elementAttribute, element, opts)
 
 			if err != nil {
 				return nil, err
@@ -114,7 +100,7 @@ func ConvertJSONAttributeValue(attribute *framework.AttributeConfig, value any) 
 		if v == "" {
 			return nil, nil
 		}
-		t, err := ParseDateTime(v)
+		t, err := ParseDateTime(opts.dateTimeFormats, v)
 		if err != nil {
 			return nil, fmt.Errorf("attribute %s cannot be parsed into a date-time value: %w", attribute.ExternalId, err)
 		}
@@ -157,8 +143,8 @@ func ConvertJSONAttributeValue(attribute *framework.AttributeConfig, value any) 
 }
 
 // ParseDateTime parses a timestamp against a set of predefined formats.
-func ParseDateTime(dateTimeStr string) (dateTime time.Time, err error) {
-	for _, format := range SupportedDateTimeFormats {
+func ParseDateTime(formats []string, dateTimeStr string) (dateTime time.Time, err error) {
+	for _, format := range formats {
 		dateTime, err = time.Parse(format, dateTimeStr)
 		if err == nil {
 			return

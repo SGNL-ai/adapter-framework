@@ -22,7 +22,17 @@ import (
 
 // ConvertJSONObjectList parses and converts a list of JSON objects received
 // from the given requested entity.
-func ConvertJSONObjectList(entity *framework.EntityConfig, objects []map[string]any) ([]framework.Object, error) {
+func ConvertJSONObjectList(entity *framework.EntityConfig, objects []map[string]any, opts ...JSONOption) ([]framework.Object, error) {
+	options := defaultJSONOptions()
+	for _, opt := range opts {
+		opt.apply(options)
+	}
+	return convertJSONObjectList(entity, objects, options)
+}
+
+// convertJSONObjectList parses and converts a list of JSON objects received
+// from the given requested entity.
+func convertJSONObjectList(entity *framework.EntityConfig, objects []map[string]any, opts *jsonOptions) ([]framework.Object, error) {
 	if len(objects) == 0 {
 		return nil, nil
 	}
@@ -30,7 +40,7 @@ func ConvertJSONObjectList(entity *framework.EntityConfig, objects []map[string]
 	parsedObjects := make([]framework.Object, 0, len(objects))
 
 	for _, object := range objects {
-		parsedObject, err := ConvertJSONObject(entity, object)
+		parsedObject, err := convertJSONObject(entity, object, opts)
 
 		if err != nil {
 			return nil, err
@@ -42,9 +52,11 @@ func ConvertJSONObjectList(entity *framework.EntityConfig, objects []map[string]
 	return parsedObjects, nil
 }
 
-// ConvertJSONObject parses and converts a JSON object received from the given
+// convertJSONObject parses and converts a JSON object received from the given
 //requested entity.
-func ConvertJSONObject(entity *framework.EntityConfig, object map[string]any) (framework.Object, error) {
+//
+// If
+func convertJSONObject(entity *framework.EntityConfig, object map[string]any, opts *jsonOptions) (framework.Object, error) {
 	parsedObject := make(framework.Object)
 
 	// Parse attributes.
@@ -73,7 +85,7 @@ func ConvertJSONObject(entity *framework.EntityConfig, object map[string]any) (f
 			continue
 		}
 
-		parsedValue, err := ConvertJSONAttributeValue(attribute, value)
+		parsedValue, err := convertJSONAttributeValue(attribute, value, opts)
 		if err != nil {
 			return nil, err
 		}
@@ -104,7 +116,7 @@ func ConvertJSONObject(entity *framework.EntityConfig, object map[string]any) (f
 			continue
 		}
 
-		parsedChildObjects, err := ConvertJSONObjectList(childEntity, childObjects)
+		parsedChildObjects, err := convertJSONObjectList(childEntity, childObjects, opts)
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse objects for child entity %s: %w", externalId, err)
 		}
