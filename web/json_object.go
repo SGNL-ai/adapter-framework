@@ -41,10 +41,18 @@ func convertJSONObjectList(entity *framework.EntityConfig, objects []map[string]
 	parsedObjects := make([]framework.Object, 0, len(objects))
 
 	for _, object := range objects {
+		if object == nil {
+			continue
+		}
+
 		parsedObject, err := convertJSONObject(entity, object, opts)
 
 		if err != nil {
 			return nil, err
+		}
+
+		if len(parsedObject) == 0 {
+			continue
 		}
 
 		parsedObjects = append(parsedObjects, parsedObject)
@@ -213,7 +221,7 @@ func convertJSONObject(entity *framework.EntityConfig, object map[string]any, op
 			// the parsed object for that complex attribute.
 
 			externalIdComponents := strings.SplitN(externalId, opts.complexAttributeNameDelimiter, 2)
-			if len(externalIdComponents) != 2 {
+			if len(externalIdComponents) == 2 {
 				localExternalId := externalIdComponents[0]
 				subExternalId := externalIdComponents[1]
 
@@ -241,13 +249,22 @@ func convertJSONObject(entity *framework.EntityConfig, object map[string]any, op
 				continue
 			}
 
-			childObjects, ok := childObjectsRaw.([]map[string]any)
+			childObjectsRawList, ok := childObjectsRaw.([]any)
 			if !ok {
-				return nil, fmt.Errorf("child entity %s is not associated with a list of JSON objects", externalId)
+				return nil, fmt.Errorf("child entity %s is not associated with a list", externalId)
 			}
 
-			if len(childObjects) == 0 {
+			if len(childObjectsRawList) == 0 {
 				continue
+			}
+
+			childObjects := make([]map[string]any, len(childObjectsRawList))
+			for _, childObjectRaw := range childObjectsRawList {
+				childObject, ok := childObjectRaw.(map[string]any)
+				if !ok {
+					return nil, fmt.Errorf("child entity %s is not associated with a list of JSON objects", externalId)
+				}
+				childObjects = append(childObjects, childObject)
 			}
 
 			var err error
