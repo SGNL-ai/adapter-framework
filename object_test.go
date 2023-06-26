@@ -26,13 +26,13 @@ func TestAddAttribute_ValidTypes(t *testing.T) {
 	var timeValue time.Time
 	timeValue, _ = time.Parse(time.RFC3339, "2023-06-23T12:34:56Z")
 	var durationValue time.Duration = 12 * time.Second
-	var float64Value float64 = 123.45
+	var doubleValue float64 = 123.45
 	var int64Value int64 = 123
 	var stringValue string = "abcd"
 	var boolListValue []bool = []bool{true, true, false, true}
 	var timeListValue []time.Time = []time.Time{timeValue, timeValue.Add(10 * time.Second), timeValue.Add(20 * time.Second)}
 	var durationListValue []time.Duration = []time.Duration{2 * time.Second, 4 * time.Second, 5 * time.Second}
-	var float64ListValue []float64 = []float64{1.2, 3.4, 5.6}
+	var doubleListValue []float64 = []float64{1.2, 3.4, 5.6}
 	var int64ListValue []int64 = []int64{1, 2, 3, 5, 8}
 	var stringListValue []string = []string{"a", "b", "c"}
 
@@ -41,13 +41,13 @@ func TestAddAttribute_ValidTypes(t *testing.T) {
 	AddAttribute(object, "bool", boolValue)
 	AddAttribute(object, "time", timeValue)
 	AddAttribute(object, "duration", durationValue)
-	AddAttribute(object, "float64", float64Value)
+	AddAttribute(object, "double", doubleValue)
 	AddAttribute(object, "int64", int64Value)
 	AddAttribute(object, "string", stringValue)
 	AddAttribute(object, "boolList", boolListValue)
 	AddAttribute(object, "timeList", timeListValue)
 	AddAttribute(object, "durationList", durationListValue)
-	AddAttribute(object, "float64List", float64ListValue)
+	AddAttribute(object, "doubleList", doubleListValue)
 	AddAttribute(object, "int64List", int64ListValue)
 	AddAttribute(object, "stringList", stringListValue)
 
@@ -55,13 +55,13 @@ func TestAddAttribute_ValidTypes(t *testing.T) {
 		"bool":         boolValue,
 		"time":         timeValue,
 		"duration":     durationValue,
-		"float64":      float64Value,
+		"double":       doubleValue,
 		"int64":        int64Value,
 		"string":       stringValue,
 		"boolList":     boolListValue,
 		"timeList":     timeListValue,
 		"durationList": durationListValue,
-		"float64List":  float64ListValue,
+		"doubleList":   doubleListValue,
 		"int64List":    int64ListValue,
 		"stringList":   stringListValue,
 	}
