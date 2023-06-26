@@ -55,6 +55,10 @@ func AddAttribute[Value AttributeValue](object Object, attributeExternalId strin
 // Returns an error if an attribute has already been added with the same
 // external ID.
 func AddChildObjects(object Object, entityExternalId string, childObjects ...Object) error {
+	if len(childObjects) == 0 {
+		return nil
+	}
+
 	value, found := object[entityExternalId]
 	if found {
 		currentChildObjects, isListOfObjects := value.([]Object)
