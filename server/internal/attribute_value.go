@@ -30,15 +30,27 @@ func getAttributeValues(value any) (list []*api_adapter_v1.AttributeValue, adapt
 	switch v := value.(type) {
 	case []bool:
 		return getAttributeListValues(v)
+	case []*bool:
+		return getAttributeListValues(v)
 	case []time.Time:
+		return getAttributeListValues(v)
+	case []*time.Time:
 		return getAttributeListValues(v)
 	case []time.Duration:
 		return getAttributeListValues(v)
+	case []*time.Duration:
+		return getAttributeListValues(v)
 	case []float64:
+		return getAttributeListValues(v)
+	case []*float64:
 		return getAttributeListValues(v)
 	case []int64:
 		return getAttributeListValues(v)
+	case []*int64:
+		return getAttributeListValues(v)
 	case []string:
+		return getAttributeListValues(v)
+	case []*string:
 		return getAttributeListValues(v)
 	default: // Non-list attribute value.
 		var singleValue *api_adapter_v1.AttributeValue
@@ -82,6 +94,8 @@ func getAttributeValue(value any) (*api_adapter_v1.AttributeValue, *api_adapter_
 		return &api_adapter_v1.AttributeValue{Value: &api_adapter_v1.AttributeValue_BoolValue{
 			BoolValue: v,
 		}}, nil
+	case *bool:
+		return getAttributeValue(*v)
 	case time.Time:
 		_, timezoneOffset := v.Zone()
 		return &api_adapter_v1.AttributeValue{Value: &api_adapter_v1.AttributeValue_DatetimeValue{
@@ -90,6 +104,8 @@ func getAttributeValue(value any) (*api_adapter_v1.AttributeValue, *api_adapter_
 				TimezoneOffset: int32(timezoneOffset),
 			},
 		}}, nil
+	case *time.Time:
+		return getAttributeValue(*v)
 	case time.Duration:
 		seconds := v / time.Second
 		return &api_adapter_v1.AttributeValue{Value: &api_adapter_v1.AttributeValue_DurationValue{
@@ -98,18 +114,26 @@ func getAttributeValue(value any) (*api_adapter_v1.AttributeValue, *api_adapter_
 				Nanos:   int32(v - seconds*time.Second),
 			},
 		}}, nil
+	case *time.Duration:
+		return getAttributeValue(*v)
 	case float64:
 		return &api_adapter_v1.AttributeValue{Value: &api_adapter_v1.AttributeValue_DoubleValue{
 			DoubleValue: v,
 		}}, nil
+	case *float64:
+		return getAttributeValue(*v)
 	case int64:
 		return &api_adapter_v1.AttributeValue{Value: &api_adapter_v1.AttributeValue_Int64Value{
 			Int64Value: v,
 		}}, nil
+	case *int64:
+		return getAttributeValue(*v)
 	case string:
 		return &api_adapter_v1.AttributeValue{Value: &api_adapter_v1.AttributeValue_StringValue{
 			StringValue: v,
 		}}, nil
+	case *string:
+		return getAttributeValue(*v)
 	default:
 		return nil, &api_adapter_v1.Error{
 			Message: api_adapter_v1.ErrorMsgAdapterInvalidAttributeValueType,
