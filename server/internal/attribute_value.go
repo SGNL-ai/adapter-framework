@@ -19,6 +19,7 @@ import (
 
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
 	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -70,6 +71,12 @@ func getAttributeListValues[Element any](listValue []Element) (list []*api_adapt
 // getAttributeValue converts a single value for an attribute.
 // Returns an error if the value is a list or if its type is invalid.
 func getAttributeValue(value any) (*api_adapter_v1.AttributeValue, *api_adapter_v1.Error) {
+	if value == nil {
+		return &api_adapter_v1.AttributeValue{Value: &api_adapter_v1.AttributeValue_NullValue{
+			NullValue: &emptypb.Empty{},
+		}}, nil
+	}
+
 	switch v := value.(type) {
 	case bool:
 		return &api_adapter_v1.AttributeValue{Value: &api_adapter_v1.AttributeValue_BoolValue{
