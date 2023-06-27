@@ -164,7 +164,7 @@ func getAttributeValue(value any) (*api_adapter_v1.AttributeValue, *api_adapter_
 		return getAttributeValue(*v)
 	default:
 		return nil, &api_adapter_v1.Error{
-			Message: fmt.Sprintf(api_adapter_v1.ErrorMsgAdapterInvalidAttributeValueTypeFmt, value),
+			Message: fmt.Sprintf("Adapter returned an attribute value with invalid type: %T. This is always indicative of a bug within the Adapter implementation.", value),
 			Code:    api_adapter_v1.ErrorCode_ERROR_CODE_INTERNAL,
 		}
 	}

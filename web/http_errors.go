@@ -15,6 +15,7 @@
 package web
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -52,38 +53,41 @@ func HTTPError(statusCode int, retryAfterHeader string) (adapterErr *framework.E
 		// In the case of 3xx, this is an internal error since the adapter
 		// should be responsible for handling redirects if the datasource
 		// supports them.
-		adapterErr.Message = api_adapter_v1.ErrorMsgUnhandledStatusCode
+		adapterErr.Message = fmt.Sprintf("Adapter could not handle redirect status code returned by datasource: %d.", statusCode)
 		adapterErr.Code = api_adapter_v1.ErrorCode_ERROR_CODE_INTERNAL
 	} else if statusCode >= 400 && statusCode < 500 {
 		switch statusCode {
-		case http.StatusUnauthorized, http.StatusForbidden:
-			adapterErr.Message = api_adapter_v1.ErrorMsgFailedToAuthenticate
+		case http.StatusUnauthorized:
+			adapterErr.Message = "Failed to authenticate with datasource. Check datasource configuration details and try again."
+			adapterErr.Code = api_adapter_v1.ErrorCode_ERROR_CODE_DATASOURCE_AUTHENTICATION_FAILED
+		case http.StatusForbidden:
+			adapterErr.Message = "Access forbidden by datasource. Check datasource configuration details and try again."
 			adapterErr.Code = api_adapter_v1.ErrorCode_ERROR_CODE_DATASOURCE_AUTHENTICATION_FAILED
 		case http.StatusTooManyRequests:
-			adapterErr.Message = api_adapter_v1.ErrorMsgDatasourceTooManyRequests
+			adapterErr.Message = "Datasource received too many requests. Adjust datasource sync frequency and try again."
 			adapterErr.Code = api_adapter_v1.ErrorCode_ERROR_CODE_DATASOURCE_TOO_MANY_REQUESTS
 		default:
 			// In the case of other 4xx responses, indicate the adapter
 			// constructed an invalid request.
-			adapterErr.Message = api_adapter_v1.ErrorMsgDatasourceRejectedRequest
+			adapterErr.Message = fmt.Sprintf("Datasource rejected request, returned status code: %d.", statusCode)
 			adapterErr.Code = api_adapter_v1.ErrorCode_ERROR_CODE_INTERNAL
 		}
 	} else if statusCode >= 500 && statusCode < 600 {
 		switch statusCode {
 		case http.StatusInternalServerError:
-			adapterErr.Message = api_adapter_v1.ErrorMsgDatasourceInternalError
+			adapterErr.Message = "Datasource encountered an internal error. Contact datasource support for assistance."
 			adapterErr.Code = api_adapter_v1.ErrorCode_ERROR_CODE_DATASOURCE_FAILED
 		case http.StatusBadGateway, http.StatusServiceUnavailable, http.StatusGatewayTimeout:
-			adapterErr.Message = api_adapter_v1.ErrorMsgDatasourceTemporarilyUnavailable
+			adapterErr.Message = fmt.Sprintf("Datasource is temporarily unavailable; try again later, returned status code: %d.", statusCode)
 			adapterErr.Code = api_adapter_v1.ErrorCode_ERROR_CODE_DATASOURCE_TEMPORARILY_UNAVAILABLE
 		default:
 			// In the case of other 5xx responses, indicate that the datasource
 			// is permanently unavailable.
-			adapterErr.Message = api_adapter_v1.ErrorMsgDatasourcePermanentlyUnavailable
+			adapterErr.Message = "Datasource is permanently unavailable. Contact datasource support for assistance."
 			adapterErr.Code = api_adapter_v1.ErrorCode_ERROR_CODE_DATASOURCE_PERMANENTLY_UNAVAILABLE
 		}
 	} else {
-		adapterErr.Message = api_adapter_v1.ErrorMsgUnexpectedErrorCode
+		adapterErr.Message = fmt.Sprintf("Datasource returned unexpected status code: %d.", statusCode)
 		adapterErr.Code = api_adapter_v1.ErrorCode_ERROR_CODE_INTERNAL
 	}
 

@@ -15,6 +15,8 @@
 package internal
 
 import (
+	"fmt"
+
 	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
 )
@@ -41,13 +43,13 @@ func getAdapterRequest[Config any](
 
 	switch {
 	case req == nil:
-		errMsg = api_adapter_v1.ErrorNoDatasourceConfig
+		errMsg = "Request is nil"
 	case req.Datasource == nil:
-		errMsg = api_adapter_v1.ErrorNoDatasourceConfig
+		errMsg = "Request contains no datasource config"
 	case req.Entity == nil:
-		errMsg = api_adapter_v1.ErrorNoEntityConfig
+		errMsg = "Request contains no entity config"
 	case req.PageSize <= 0:
-		errMsg = api_adapter_v1.ErrorMsgEntityPageSizeTooSmall
+		errMsg = fmt.Sprintf("Request contains an invalid page size: %d. Must be greater than 0.", req.PageSize)
 	}
 
 	if errMsg != "" {
@@ -121,11 +123,11 @@ func getEntity(
 
 	switch {
 	case entity.Id == "":
-		errMsg = api_adapter_v1.ErrorMsgNoIdProvidedInEntity
+		errMsg = "Entity config contains no ID."
 	case entity.ExternalId == "":
-		errMsg = api_adapter_v1.ErrorMsgNoExternalIdProvidedInEntity
+		errMsg = "Entity config contains no external ID."
 	case len(entity.Attributes) == 0:
-		errMsg = api_adapter_v1.ErrorMsgEntityProvidedWithNoAttributes
+		errMsg = "Entity config contains no attributes."
 	}
 
 	if errMsg != "" {
@@ -137,26 +139,29 @@ func getEntity(
 		return
 	}
 
-	reverseMapping = &entityReverseIdMapping{}
 	adapterEntity = &framework.EntityConfig{}
+	reverseMapping = &entityReverseIdMapping{}
 
-	reverseMapping.Id = entity.Id
 	adapterEntity.ExternalId = entity.ExternalId
+	reverseMapping.Id = entity.Id
 
-	reverseMapping.Attributes = make(map[string]*api_adapter_v1.AttributeConfig, len(entity.Attributes))
+	attributeIds := make(map[string]bool, len(entity.Attributes))
 	adapterEntity.Attributes = make([]*framework.AttributeConfig, 0, len(entity.Attributes))
+	reverseMapping.Attributes = make(map[string]*api_adapter_v1.AttributeConfig, len(entity.Attributes))
 	for _, attribute := range entity.Attributes {
 		switch {
 		case attribute.Id == "":
-			errMsg = api_adapter_v1.ErrorMsgNoIdProvidedInAttribute
+			errMsg = "Attribute in entity config contains no ID."
 		case attribute.ExternalId == "":
-			errMsg = api_adapter_v1.ErrorMsgNoExternalIdProvidedInAttribute
-		case api_adapter_v1.AttributeType_name[int32(attribute.Type)] == "":
-			errMsg = api_adapter_v1.ErrorMsgAttributeInvalidType
-		case attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_UNSPECIFIED:
-			errMsg = api_adapter_v1.ErrorMsgAttributeInvalidType
+			errMsg = fmt.Sprintf("Attribute in entity config contains no external ID: %s.", attribute.Id)
+		case attributeIds[attribute.Id]:
+			errMsg = fmt.Sprintf("Attribute in entity config contains duplicate ID: %s (%s).", attribute.Id, attribute.ExternalId)
 		case reverseMapping.Attributes[attribute.ExternalId] != nil:
-			errMsg = api_adapter_v1.ErrorMsgEntityDuplicateAttributeExternalId
+			errMsg = fmt.Sprintf("Attribute in entity config contains duplicate external ID: %s (%s).", attribute.Id, attribute.ExternalId)
+		case attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_UNSPECIFIED:
+			errMsg = fmt.Sprintf("Attribute in entity config contains unspecified type: %s (%s) %s.", attribute.Id, attribute.ExternalId, attribute.Type)
+		case api_adapter_v1.AttributeType_name[int32(attribute.Type)] == "":
+			errMsg = fmt.Sprintf("Attribute in entity config contains invalid type: %s (%s) %s.", attribute.Id, attribute.ExternalId, attribute.Type)
 		}
 
 		if errMsg != "" {
@@ -168,25 +173,34 @@ func getEntity(
 			return
 		}
 
-		reverseMapping.Attributes[attribute.ExternalId] = attribute
+		attributeIds[attribute.Id] = true
 
 		adapterEntity.Attributes = append(adapterEntity.Attributes, &framework.AttributeConfig{
 			ExternalId: attribute.ExternalId,
 			Type:       framework.AttributeType(attribute.Type),
 			List:       attribute.List,
 		})
+
+		reverseMapping.Attributes[attribute.ExternalId] = attribute
 	}
 
 	if len(entity.ChildEntities) > 0 {
-		reverseMapping.ChildEntities = make(map[string]*entityReverseIdMapping, len(entity.ChildEntities))
+		childEntityIds := make(map[string]bool, len(entity.ChildEntities))
 		adapterEntity.ChildEntities = make([]*framework.EntityConfig, 0, len(entity.ChildEntities))
+		reverseMapping.ChildEntities = make(map[string]*entityReverseIdMapping, len(entity.ChildEntities))
 
 		for _, childEntity := range entity.ChildEntities {
 			switch {
+			case childEntity.Id == "":
+				errMsg = "Child entity in entity config contains no ID."
+			case childEntity.ExternalId == "":
+				errMsg = fmt.Sprintf("Child entity in entity config contains no external ID: %s.", childEntity.Id)
+			case childEntityIds[childEntity.Id]:
+				errMsg = fmt.Sprintf("Child entity in entity config contains duplicate ID: %s (%s).", childEntity.Id, childEntity.ExternalId)
 			case reverseMapping.ChildEntities[childEntity.ExternalId] != nil:
-				errMsg = api_adapter_v1.ErrorMsgEntityDuplicateChildEntityExternalId
+				errMsg = fmt.Sprintf("Child entity in entity config contains duplicate external ID: %s (%s).", childEntity.Id, childEntity.ExternalId)
 			case reverseMapping.Attributes[childEntity.ExternalId] != nil:
-				errMsg = api_adapter_v1.ErrorMsgEntityChildEntityExternalIdSameAsAttribute
+				errMsg = fmt.Sprintf("Child entity in entity config contains same external ID as attribute: %s (%s).", childEntity.Id, childEntity.ExternalId)
 			}
 
 			if errMsg != "" {
@@ -198,6 +212,8 @@ func getEntity(
 				return
 			}
 
+			childEntityIds[childEntity.Id] = true
+
 			var adapterChildEntity *framework.EntityConfig
 			var childReverseMapping *entityReverseIdMapping
 
@@ -207,8 +223,8 @@ func getEntity(
 				return
 			}
 
-			reverseMapping.ChildEntities[childEntity.ExternalId] = childReverseMapping
 			adapterEntity.ChildEntities = append(adapterEntity.ChildEntities, adapterChildEntity)
+			reverseMapping.ChildEntities[childEntity.ExternalId] = childReverseMapping
 		}
 	}
 

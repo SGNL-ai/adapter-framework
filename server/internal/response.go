@@ -15,6 +15,8 @@
 package internal
 
 import (
+	"fmt"
+
 	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
 )
@@ -34,7 +36,7 @@ func getResponse(
 
 	if resp.Success == nil {
 		return api_adapter_v1.NewGetPageResponseError(&api_adapter_v1.Error{
-			Message: api_adapter_v1.ErrorMsgAdapterEmptyResponse,
+			Message: "Adapter returned an empty response. This is always indicative of a bug within the Adapter implementation.",
 			Code:    api_adapter_v1.ErrorCode_ERROR_CODE_INTERNAL,
 		})
 	}
@@ -93,7 +95,7 @@ func getEntityObject(
 
 			if !validExternalId {
 				adapterErr = &api_adapter_v1.Error{
-					Message: api_adapter_v1.ErrorMsgAdapterInvalidEntityExternalId,
+					Message: fmt.Sprintf("Adapter returned child objects with an invalid entity external ID: %s. This is always indicative of a bug within the Adapter implementation.", externalId),
 					Code:    api_adapter_v1.ErrorCode_ERROR_CODE_INTERNAL,
 				}
 
@@ -115,7 +117,7 @@ func getEntityObject(
 
 			if !validExternalId {
 				adapterErr = &api_adapter_v1.Error{
-					Message: api_adapter_v1.ErrorMsgAdapterInvalidEntityExternalId,
+					Message: fmt.Sprintf("Adapter returned an attribute with an invalid external ID: %s. This is always indicative of a bug within the Adapter implementation.", externalId),
 					Code:    api_adapter_v1.ErrorCode_ERROR_CODE_INTERNAL,
 				}
 
