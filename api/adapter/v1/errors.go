@@ -68,7 +68,7 @@ const (
 	ErrorMsgDatasourcePermanentlyUnavailable = "Datasource permanently unavailable; check datasource configuration details or contact datasource support for assistance"
 
 	// Internal (ErrorCode_ERROR_CODE_INTERNAL).
-	ErrorMsgAdapterEmptyResponse             = "Adapter returned an empty response"
-	ErrorMsgAdapterInvalidEntityExternalId   = "Adapter returned an invalid entity external ID"
-	ErrorMsgAdapterInvalidAttributeValueType = "Adapter returned an attribute value with an invalid type"
+	ErrorMsgAdapterEmptyResponse                = "Adapter returned an empty response"
+	ErrorMsgAdapterInvalidEntityExternalId      = "Adapter returned an invalid entity external ID"
+	ErrorMsgAdapterInvalidAttributeValueTypeFmt = "Adapter returned an attribute value with invalid type: %T"
 )

@@ -15,6 +15,7 @@
 package internal
 
 import (
+	"fmt"
 	"time"
 
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
@@ -136,7 +137,7 @@ func getAttributeValue(value any) (*api_adapter_v1.AttributeValue, *api_adapter_
 		return getAttributeValue(*v)
 	default:
 		return nil, &api_adapter_v1.Error{
-			Message: api_adapter_v1.ErrorMsgAdapterInvalidAttributeValueType,
+			Message: fmt.Sprintf(api_adapter_v1.ErrorMsgAdapterInvalidAttributeValueTypeFmt, value),
 			Code:    api_adapter_v1.ErrorCode_ERROR_CODE_INTERNAL,
 		}
 	}
