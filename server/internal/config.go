@@ -22,6 +22,10 @@ import (
 // ParseConfig parses a configuration for a datasource from the given marshaled
 // JSON object.
 func ParseConfig[Config any](data []byte) (*Config, error) {
+	if data == nil {
+		return nil, nil
+	}
+
 	config := new(Config)
 
 	err := json.Unmarshal(data, config)
