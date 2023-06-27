@@ -24,6 +24,12 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
+var (
+	nullValue = &api_adapter_v1.AttributeValue{Value: &api_adapter_v1.AttributeValue_NullValue{
+		NullValue: &emptypb.Empty{},
+	}}
+)
+
 // getAttributeValues converts the singleton value or list of values for an
 // attribute.
 // Returns an error if the value's type is invalid.
@@ -70,10 +76,15 @@ func getAttributeValues(value any) (list []*api_adapter_v1.AttributeValue, adapt
 // getAttributeListValues converts a list of values for an attribute.
 // Returns an error if the value is a list or if its type is invalid.
 func getAttributeListValues[Element any](listValue []Element) (list []*api_adapter_v1.AttributeValue, adapterErr *api_adapter_v1.Error) {
+	if len(listValue) == 0 {
+		return nil, nil
+	}
+
 	list = make([]*api_adapter_v1.AttributeValue, len(listValue))
 	for i, e := range listValue {
 		list[i], adapterErr = getAttributeValue(e)
 		if adapterErr != nil {
+			list = nil
 			return
 		}
 	}
@@ -85,9 +96,7 @@ func getAttributeListValues[Element any](listValue []Element) (list []*api_adapt
 // Returns an error if the value is a list or if its type is invalid.
 func getAttributeValue(value any) (*api_adapter_v1.AttributeValue, *api_adapter_v1.Error) {
 	if value == nil {
-		return &api_adapter_v1.AttributeValue{Value: &api_adapter_v1.AttributeValue_NullValue{
-			NullValue: &emptypb.Empty{},
-		}}, nil
+		return nullValue, nil
 	}
 
 	switch v := value.(type) {
@@ -96,6 +105,9 @@ func getAttributeValue(value any) (*api_adapter_v1.AttributeValue, *api_adapter_
 			BoolValue: v,
 		}}, nil
 	case *bool:
+		if v == nil {
+			return nullValue, nil
+		}
 		return getAttributeValue(*v)
 	case time.Time:
 		_, timezoneOffset := v.Zone()
@@ -106,6 +118,9 @@ func getAttributeValue(value any) (*api_adapter_v1.AttributeValue, *api_adapter_
 			},
 		}}, nil
 	case *time.Time:
+		if v == nil {
+			return nullValue, nil
+		}
 		return getAttributeValue(*v)
 	case time.Duration:
 		seconds := v / time.Second
@@ -116,24 +131,36 @@ func getAttributeValue(value any) (*api_adapter_v1.AttributeValue, *api_adapter_
 			},
 		}}, nil
 	case *time.Duration:
+		if v == nil {
+			return nullValue, nil
+		}
 		return getAttributeValue(*v)
 	case float64:
 		return &api_adapter_v1.AttributeValue{Value: &api_adapter_v1.AttributeValue_DoubleValue{
 			DoubleValue: v,
 		}}, nil
 	case *float64:
+		if v == nil {
+			return nullValue, nil
+		}
 		return getAttributeValue(*v)
 	case int64:
 		return &api_adapter_v1.AttributeValue{Value: &api_adapter_v1.AttributeValue_Int64Value{
 			Int64Value: v,
 		}}, nil
 	case *int64:
+		if v == nil {
+			return nullValue, nil
+		}
 		return getAttributeValue(*v)
 	case string:
 		return &api_adapter_v1.AttributeValue{Value: &api_adapter_v1.AttributeValue_StringValue{
 			StringValue: v,
 		}}, nil
 	case *string:
+		if v == nil {
+			return nullValue, nil
+		}
 		return getAttributeValue(*v)
 	default:
 		return nil, &api_adapter_v1.Error{

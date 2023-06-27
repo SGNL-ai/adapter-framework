@@ -23,6 +23,69 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
+func TestGetAttributeListValues(t *testing.T) {
+	testGetAttributeListValues[string](t, nil, "", nil)
+	testGetAttributeListValues(t, []string{}, "", nil)
+	testGetAttributeListValues(t, []string{"abcd"}, `[{"stringValue":"abcd"}]`, nil)
+	testGetAttributeListValues(t, []string{"a", "b", "c"}, `[{"stringValue":"a"},{"stringValue":"b"},{"stringValue":"c"}]`, nil)
+	testGetAttributeListValues(t, []*string{nil}, `[{"nullValue":{}}]`, nil)
+	testGetAttributeListValues(t, []*string{Ptr("a"), nil, Ptr("c")}, `[{"stringValue":"a"},{"nullValue":{}},{"stringValue":"c"}]`, nil)
+	testGetAttributeListValues(t, []int64{}, "", nil)
+	testGetAttributeListValues(t, []int64{123}, `[{"int64Value":"123"}]`, nil)
+	testGetAttributeListValues(t, []int64{12, 34, 56}, `[{"int64Value":"12"},{"int64Value":"34"},{"int64Value":"56"}]`, nil)
+	testGetAttributeListValues(t, []*int64{nil}, `[{"nullValue":{}}]`, nil)
+	testGetAttributeListValues(t, []*int64{Ptr(int64(12)), nil, Ptr(int64(56))}, `[{"int64Value":"12"},{"nullValue":{}},{"int64Value":"56"}]`, nil)
+
+	testGetAttributeListValues(t, []int32{12, 34, 56}, "",
+		&api_adapter_v1.Error{
+			Message: "Adapter returned an attribute value with invalid type: int32",
+			Code:    11, // ERROR_CODE_INTERNAL
+		})
+	testGetAttributeListValues(t, []**int64{Ptr(Ptr(int64(12))), nil, Ptr(Ptr(int64(56)))}, "",
+		&api_adapter_v1.Error{
+			Message: "Adapter returned an attribute value with invalid type: **int64",
+			Code:    11, // ERROR_CODE_INTERNAL
+		})
+}
+
+func testGetAttributeListValues[Element any](t *testing.T, listValue []Element, wantListAsJSON string, wantError *api_adapter_v1.Error) {
+	t.Helper()
+
+	var wantListOfMaps []map[string]any
+	if wantListAsJSON != "" {
+		err := json.Unmarshal([]byte(wantListAsJSON), &wantListOfMaps)
+		if err != nil {
+			t.Fatalf("Failed to unmarshal expected list of Protocol Buffer message: %v", err)
+		}
+	}
+
+	gotList, gotError := getAttributeListValues(listValue)
+
+	var gotListOfMaps []map[string]any
+	if gotList != nil {
+		gotListOfMaps = make([]map[string]any, 0, len(gotList))
+		for _, gotAttributeValue := range gotList {
+			var gotAttributeValueAsMap map[string]any
+			if gotAttributeValue != nil {
+				gotAttributeValueJSON, err := protojson.MarshalOptions{}.Marshal(gotAttributeValue)
+				if err != nil {
+					t.Fatalf("Failed to marshal Protocol Buffer message: %v", err)
+				}
+
+				gotAttributeValueAsMap = make(map[string]any)
+				err = json.Unmarshal(gotAttributeValueJSON, &gotAttributeValueAsMap)
+				if err != nil {
+					t.Fatalf("Failed to unmarshal Protocol Buffer message: %v", err)
+				}
+			}
+			gotListOfMaps = append(gotListOfMaps, gotAttributeValueAsMap)
+		}
+	}
+
+	AssertDeepEqual(t, wantError, gotError)
+	AssertDeepEqual(t, wantListOfMaps, gotListOfMaps)
+}
+
 func TestGetAttributeValue(t *testing.T) {
 	timeValue, _ := time.Parse(time.RFC3339, "2023-06-23T12:34:56-07:00")
 
@@ -101,6 +164,11 @@ func TestGetAttributeValue(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			// Unmarshal the expected protobuf message marshaled into JSON so
+			// that it can be compared using reflect.DeepEqual with the
+			// protobuf message returned by getAttributeValue.
+			// Using JSON in test cases is more readable than instantiating of
+			// protobuf structs.
 			var wantAttributeValueAsMap map[string]any
 			if tc.wantAttributeValueJSON != nil {
 				wantAttributeValueAsMap = make(map[string]any)
