@@ -134,14 +134,14 @@ func TestGetAttributeValues(t *testing.T) {
 		"invalid_int32": {
 			value: int32(1234),
 			wantError: &api_adapter_v1.Error{
-				Message: "Adapter returned an attribute value with invalid type: int32",
+				Message: "Adapter returned an attribute value with invalid type: int32. This is always indicative of a bug within the Adapter implementation.",
 				Code:    11, // ERROR_CODE_INTERNAL
 			},
 		},
 		"invalid_int64_pointer_pointer": {
 			value: Ptr(Ptr(int64(1234))),
 			wantError: &api_adapter_v1.Error{
-				Message: "Adapter returned an attribute value with invalid type: **int64",
+				Message: "Adapter returned an attribute value with invalid type: **int64. This is always indicative of a bug within the Adapter implementation.",
 				Code:    11, // ERROR_CODE_INTERNAL
 			},
 		},
@@ -206,12 +206,12 @@ func TestGetAttributeListValues(t *testing.T) {
 
 	testGetAttributeListValues(t, []int32{12, 34, 56}, "",
 		&api_adapter_v1.Error{
-			Message: "Adapter returned an attribute value with invalid type: int32",
+			Message: "Adapter returned an attribute value with invalid type: int32. This is always indicative of a bug within the Adapter implementation.",
 			Code:    11, // ERROR_CODE_INTERNAL
 		})
 	testGetAttributeListValues(t, []**int64{Ptr(Ptr(int64(12))), nil, Ptr(Ptr(int64(56)))}, "",
 		&api_adapter_v1.Error{
-			Message: "Adapter returned an attribute value with invalid type: **int64",
+			Message: "Adapter returned an attribute value with invalid type: **int64. This is always indicative of a bug within the Adapter implementation.",
 			Code:    11, // ERROR_CODE_INTERNAL
 		})
 }
@@ -341,14 +341,14 @@ func TestGetAttributeValue(t *testing.T) {
 		"invalid_int32": {
 			value: int32(1234),
 			wantError: &api_adapter_v1.Error{
-				Message: "Adapter returned an attribute value with invalid type: int32",
+				Message: "Adapter returned an attribute value with invalid type: int32. This is always indicative of a bug within the Adapter implementation.",
 				Code:    11, // ERROR_CODE_INTERNAL
 			},
 		},
 		"invalid_int64_pointer_pointer": {
 			value: Ptr(Ptr(int64(1234))),
 			wantError: &api_adapter_v1.Error{
-				Message: "Adapter returned an attribute value with invalid type: **int64",
+				Message: "Adapter returned an attribute value with invalid type: **int64. This is always indicative of a bug within the Adapter implementation.",
 				Code:    11, // ERROR_CODE_INTERNAL
 			},
 		},
