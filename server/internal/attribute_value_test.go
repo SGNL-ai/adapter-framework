@@ -23,6 +23,272 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
+func TestValidateAttributeValue(t *testing.T) {
+	timeValue, _ := time.Parse(time.RFC3339, "2023-06-23T12:34:56-07:00")
+
+	tests := map[string]struct {
+		attribute      *api_adapter_v1.AttributeConfig
+		value          any
+		wantAdapterErr *api_adapter_v1.Error
+	}{
+		"null": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+			},
+			value: nil,
+		},
+		"bool": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_BOOL,
+			},
+			value: true,
+		},
+		"bool_pointer": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_BOOL,
+			},
+			value: Ptr(true),
+		},
+		"bool_list": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_BOOL,
+				List:       true,
+			},
+			value: []bool{true, false, true},
+		},
+		"bool_pointer_list": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_BOOL,
+				List:       true,
+			},
+			value: []*bool{Ptr(true), (*bool)(nil), Ptr(true)},
+		},
+		"time": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DATE_TIME,
+			},
+			value: timeValue,
+		},
+		"time_pointer": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DATE_TIME,
+			},
+			value: Ptr(timeValue),
+		},
+		"time_list": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DATE_TIME,
+				List:       true,
+			},
+			value: []time.Time{timeValue, timeValue.Add(2 * time.Second)},
+		},
+		"time_pointer_list": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DATE_TIME,
+				List:       true,
+			},
+			value: []*time.Time{Ptr(timeValue), (*time.Time)(nil)},
+		},
+		"duration": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DURATION,
+			},
+			value: 12345 * time.Millisecond,
+		},
+		"duration_pointer": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DURATION,
+			},
+			value: Ptr(12345 * time.Millisecond),
+		},
+		"duration_list": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DURATION,
+				List:       true,
+			},
+			value: []time.Duration{12345 * time.Millisecond, 13579 * time.Millisecond},
+		},
+		"duration_pointer_list": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DURATION,
+				List:       true,
+			},
+			value: []*time.Duration{Ptr(12345 * time.Millisecond), (*time.Duration)(nil)},
+		},
+		"double": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DOUBLE,
+			},
+			value: float64(123.45),
+		},
+		"double_pointer": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DOUBLE,
+			},
+			value: Ptr(float64(123.45)),
+		},
+		"double_list": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DOUBLE,
+				List:       true,
+			},
+			value: []float64{float64(123.45), float64(136.56)},
+		},
+		"double_pointer_list": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DOUBLE,
+				List:       true,
+			},
+			value: []*float64{Ptr(float64(123.45)), (*float64)(nil)},
+		},
+		"int64": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_INT64,
+			},
+			value: int64(1234),
+		},
+		"int64_pointer": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_INT64,
+			},
+			value: Ptr(int64(1234)),
+		},
+		"int64_list": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_INT64,
+				List:       true,
+			},
+			value: []int64{int64(1234), int64(1357)},
+		},
+		"int64_pointer_list": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_INT64,
+				List:       true,
+			},
+			value: []*int64{Ptr(int64(1234)), (*int64)(nil)},
+		},
+		"string": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+			},
+			value: "abcd",
+		},
+		"string_pointer": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+			},
+			value: Ptr("abcd"),
+		},
+		"string_list": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+				List:       true,
+			},
+			value: []string{"a", "b"},
+		},
+		"string_pointer_list": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+				List:       true,
+			},
+			value: []*string{Ptr("a"), (*string)(nil)},
+		},
+		"invalid_int32": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_INT64,
+			},
+			value: int32(1234),
+			wantAdapterErr: &api_adapter_v1.Error{
+				Message: "Adapter returned a value with invalid type int32 for attribute 12268f03-f99d-476f-91cc-5fe3404e1654 (something) with type ATTRIBUTE_TYPE_INT64 (list=false). This is always indicative of a bug within the Adapter implementation.",
+				Code:    11, // ERROR_CODE_INTERNAL
+			},
+		},
+		"invalid_int64_pointer_pointer": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_INT64,
+			},
+			value: Ptr(Ptr(int64(1234))),
+			wantAdapterErr: &api_adapter_v1.Error{
+				Message: "Adapter returned a value with invalid type **int64 for attribute 12268f03-f99d-476f-91cc-5fe3404e1654 (something) with type ATTRIBUTE_TYPE_INT64 (list=false). This is always indicative of a bug within the Adapter implementation.",
+				Code:    11, // ERROR_CODE_INTERNAL
+			},
+		},
+		"mismatched_types": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DOUBLE,
+			},
+			value: int64(1234),
+			wantAdapterErr: &api_adapter_v1.Error{
+				Message: "Adapter returned a value with invalid type int64 for attribute 12268f03-f99d-476f-91cc-5fe3404e1654 (something) with type ATTRIBUTE_TYPE_DOUBLE (list=false). This is always indicative of a bug within the Adapter implementation.",
+				Code:    11, // ERROR_CODE_INTERNAL
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			gotAdapterErr := validateAttributeValue(tc.attribute, tc.value)
+			AssertDeepEqual(t, tc.wantAdapterErr, gotAdapterErr)
+		})
+	}
+}
+
 func TestGetAttributeValues(t *testing.T) {
 	timeValue, _ := time.Parse(time.RFC3339, "2023-06-23T12:34:56-07:00")
 
@@ -33,7 +299,11 @@ func TestGetAttributeValues(t *testing.T) {
 	}{
 		"null": {
 			value:                       nil,
-			wantAttributeValuesListJSON: Ptr(`[{"nullValue":{}}]`),
+			wantAttributeValuesListJSON: nil,
+		},
+		"empty_list": {
+			value:                       []bool{},
+			wantAttributeValuesListJSON: Ptr(`[]`),
 		},
 		"bool": {
 			value:                       true,
@@ -192,13 +462,16 @@ func TestGetAttributeValues(t *testing.T) {
 }
 
 func TestGetAttributeListValues(t *testing.T) {
-	testGetAttributeListValues[string](t, nil, "", nil)
-	testGetAttributeListValues(t, []string{}, "", nil)
+	gotList, gotError := getAttributeListValues[string](nil)
+	AssertDeepEqual(t, (*api_adapter_v1.Error)(nil), gotError)
+	AssertDeepEqual(t, []*api_adapter_v1.AttributeValue(nil), gotList)
+
+	testGetAttributeListValues(t, []string{}, "[]", nil)
 	testGetAttributeListValues(t, []string{"abcd"}, `[{"stringValue":"abcd"}]`, nil)
 	testGetAttributeListValues(t, []string{"a", "b", "c"}, `[{"stringValue":"a"},{"stringValue":"b"},{"stringValue":"c"}]`, nil)
 	testGetAttributeListValues(t, []*string{nil}, `[{"nullValue":{}}]`, nil)
 	testGetAttributeListValues(t, []*string{Ptr("a"), nil, Ptr("c")}, `[{"stringValue":"a"},{"nullValue":{}},{"stringValue":"c"}]`, nil)
-	testGetAttributeListValues(t, []int64{}, "", nil)
+	testGetAttributeListValues(t, []int64{}, "[]", nil)
 	testGetAttributeListValues(t, []int64{123}, `[{"int64Value":"123"}]`, nil)
 	testGetAttributeListValues(t, []int64{12, 34, 56}, `[{"int64Value":"12"},{"int64Value":"34"},{"int64Value":"56"}]`, nil)
 	testGetAttributeListValues(t, []*int64{nil}, `[{"nullValue":{}}]`, nil)

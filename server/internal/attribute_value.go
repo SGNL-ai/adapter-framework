@@ -30,6 +30,74 @@ var (
 	}}
 )
 
+func validateAttributeValue(attribute *api_adapter_v1.AttributeConfig, value any) (adapterErr *api_adapter_v1.Error) {
+	if value == nil {
+		return nil
+	}
+
+	valid := false
+	switch value.(type) {
+	case []bool:
+		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_BOOL && attribute.List
+	case []*bool:
+		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_BOOL && attribute.List
+	case []time.Time:
+		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DATE_TIME && attribute.List
+	case []*time.Time:
+		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DATE_TIME && attribute.List
+	case []time.Duration:
+		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DURATION && attribute.List
+	case []*time.Duration:
+		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DURATION && attribute.List
+	case []float64:
+		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DOUBLE && attribute.List
+	case []*float64:
+		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DOUBLE && attribute.List
+	case []int64:
+		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_INT64 && attribute.List
+	case []*int64:
+		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_INT64 && attribute.List
+	case []string:
+		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING && attribute.List
+	case []*string:
+		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING && attribute.List
+	case bool:
+		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_BOOL && !attribute.List
+	case *bool:
+		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_BOOL && !attribute.List
+	case time.Time:
+		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DATE_TIME && !attribute.List
+	case *time.Time:
+		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DATE_TIME && !attribute.List
+	case time.Duration:
+		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DURATION && !attribute.List
+	case *time.Duration:
+		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DURATION && !attribute.List
+	case float64:
+		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DOUBLE && !attribute.List
+	case *float64:
+		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DOUBLE && !attribute.List
+	case int64:
+		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_INT64 && !attribute.List
+	case *int64:
+		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_INT64 && !attribute.List
+	case string:
+		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING && !attribute.List
+	case *string:
+		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING && !attribute.List
+	}
+
+	if !valid {
+		return &api_adapter_v1.Error{
+			Message: fmt.Sprintf("Adapter returned a value with invalid type %T for attribute %s (%s) with type %s (list=%t). This is always indicative of a bug within the Adapter implementation.",
+				value, attribute.Id, attribute.ExternalId, attribute.Type, attribute.List),
+			Code: api_adapter_v1.ErrorCode_ERROR_CODE_INTERNAL,
+		}
+	}
+
+	return nil
+}
+
 // getAttributeValues converts the singleton value or list of values for an
 // attribute.
 // Returns an error if the value's type is invalid.
@@ -67,7 +135,9 @@ func getAttributeValues(value any) (list []*api_adapter_v1.AttributeValue, adapt
 			return
 		}
 
-		list = []*api_adapter_v1.AttributeValue{singleValue}
+		if singleValue != nullValue {
+			list = []*api_adapter_v1.AttributeValue{singleValue}
+		}
 
 		return
 	}
@@ -76,7 +146,7 @@ func getAttributeValues(value any) (list []*api_adapter_v1.AttributeValue, adapt
 // getAttributeListValues converts a list of values for an attribute.
 // Returns an error if the value is a list or if its type is invalid.
 func getAttributeListValues[Element any](listValue []Element) (list []*api_adapter_v1.AttributeValue, adapterErr *api_adapter_v1.Error) {
-	if len(listValue) == 0 {
+	if listValue == nil {
 		return nil, nil
 	}
 
@@ -84,8 +154,7 @@ func getAttributeListValues[Element any](listValue []Element) (list []*api_adapt
 	for i, e := range listValue {
 		list[i], adapterErr = getAttributeValue(e)
 		if adapterErr != nil {
-			list = nil
-			return
+			return nil, adapterErr
 		}
 	}
 
@@ -123,12 +192,8 @@ func getAttributeValue(value any) (*api_adapter_v1.AttributeValue, *api_adapter_
 		}
 		return getAttributeValue(*v)
 	case time.Duration:
-		seconds := v / time.Second
 		return &api_adapter_v1.AttributeValue{Value: &api_adapter_v1.AttributeValue_DurationValue{
-			DurationValue: &durationpb.Duration{
-				Seconds: int64(seconds),
-				Nanos:   int32(v - seconds*time.Second),
-			},
+			DurationValue: durationpb.New(v),
 		}}, nil
 	case *time.Duration:
 		if v == nil {
