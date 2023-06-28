@@ -30,36 +30,22 @@ func convertJSONAttributeValue(attribute *framework.AttributeConfig, value any, 
 	}
 
 	if attribute.List {
-		list, ok := value.([]any)
-		if !ok {
-			return nil, fmt.Errorf("list attribute %s cannot be parsed into a list value", attribute.ExternalId)
+		switch attribute.Type {
+		case framework.AttributeTypeBool:
+			return convertJSONAttributeListValue[bool](attribute, value, opts)
+		case framework.AttributeTypeDateTime:
+			return convertJSONAttributeListValue[time.Time](attribute, value, opts)
+		case framework.AttributeTypeDouble:
+			return convertJSONAttributeListValue[float64](attribute, value, opts)
+		case framework.AttributeTypeDuration:
+			return convertJSONAttributeListValue[time.Duration](attribute, value, opts)
+		case framework.AttributeTypeInt64:
+			return convertJSONAttributeListValue[int64](attribute, value, opts)
+		case framework.AttributeTypeString:
+			return convertJSONAttributeListValue[string](attribute, value, opts)
+		default:
+			panic("invalid attribute type")
 		}
-
-		if len(list) == 0 {
-			return list, nil
-		}
-
-		parsedList := make([]any, 0, len(list))
-
-		elementAttribute := *attribute
-		elementAttribute.List = false
-
-		for _, element := range list {
-			parsedElement, err := convertJSONAttributeValue(&elementAttribute, element, opts)
-
-			if err != nil {
-				return nil, err
-			}
-
-			// Do not return null attribute values.
-			if parsedElement == nil {
-				continue
-			}
-
-			parsedList = append(parsedList, parsedElement)
-		}
-
-		return parsedList, nil
 	}
 
 	switch attribute.Type {
@@ -89,6 +75,8 @@ func convertJSONAttributeValue(attribute *framework.AttributeConfig, value any, 
 			default:
 				return nil, fmt.Errorf("attribute %s cannot be parsed into a bool value", attribute.ExternalId)
 			}
+		default:
+			return nil, fmt.Errorf("attribute %s cannot be parsed into a bool value", attribute.ExternalId)
 		}
 		return boolValue, nil
 
@@ -114,13 +102,20 @@ func convertJSONAttributeValue(attribute *framework.AttributeConfig, value any, 
 		return v, nil
 
 	case framework.AttributeTypeDuration:
-		// Duration is assumed to be a number of seconds, as a float64,
-		// possibly with a fractional part, e.g.: 3.5.
-		v, ok := value.(float64)
-		if !ok {
-			return nil, fmt.Errorf("attribute %s cannot be parsed into a float64 duration value", attribute.ExternalId)
+		switch v := value.(type) {
+		case float64:
+			// Duration is assumed to be a number of seconds, as a float64,
+			// possibly with a fractional part, e.g.: 3.5.
+			return time.Duration(v * float64(time.Second)), nil
+		case string:
+			d, err := time.ParseDuration(v)
+			if err != nil {
+				return nil, fmt.Errorf("attribute %s cannot be parsed into a duration value: %w", attribute.ExternalId, err)
+			}
+			return d, nil
+		default:
+			return nil, fmt.Errorf("attribute %s cannot be parsed into a duration value", attribute.ExternalId)
 		}
-		return time.Duration(v * float64(time.Second)), nil
 
 	case framework.AttributeTypeInt64:
 		// All numbers are unmarshalled into float64. Convert into int64.
@@ -128,7 +123,7 @@ func convertJSONAttributeValue(attribute *framework.AttributeConfig, value any, 
 		if !ok {
 			return nil, fmt.Errorf("attribute %s cannot be parsed into an int64 value", attribute.ExternalId)
 		}
-		return v, nil
+		return int64(v), nil
 
 	case framework.AttributeTypeString:
 		v, ok := value.(string)
@@ -140,6 +135,39 @@ func convertJSONAttributeValue(attribute *framework.AttributeConfig, value any, 
 	default:
 		panic("invalid attribute type")
 	}
+}
+
+func convertJSONAttributeListValue[Element any](attribute *framework.AttributeConfig, value any, opts *jsonOptions) (any, error) {
+	list, ok := value.([]any)
+	if !ok {
+		return nil, fmt.Errorf("list attribute %s cannot be parsed into a list value", attribute.ExternalId)
+	}
+
+	if len(list) == 0 {
+		return list, nil
+	}
+
+	parsedList := make([]Element, 0, len(list))
+
+	elementAttribute := *attribute
+	elementAttribute.List = false
+
+	for _, element := range list {
+		parsedElement, err := convertJSONAttributeValue(&elementAttribute, element, opts)
+
+		if err != nil {
+			return nil, err
+		}
+
+		// Do not return null attribute values.
+		if parsedElement == nil {
+			continue
+		}
+
+		parsedList = append(parsedList, parsedElement.(Element))
+	}
+
+	return parsedList, nil
 }
 
 // ParseDateTime parses a timestamp against a set of predefined formats.

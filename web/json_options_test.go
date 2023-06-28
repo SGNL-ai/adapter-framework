@@ -15,23 +15,28 @@
 package web
 
 import (
-	"reflect"
 	"testing"
 	"time"
 )
 
-func AssertDeepEqual(t *testing.T, want, got any) {
-	t.Helper()
+func TestWithComplexAttributeNameDelimiter(t *testing.T) {
+	var opts jsonOptions
 
-	if !reflect.DeepEqual(want, got) {
-		t.Errorf("Expected %#v, got %#v", want, got)
-	}
+	opt := WithComplexAttributeNameDelimiter("->")
+
+	opt.apply(&opts)
+
+	AssertDeepEqual(t, "->", opts.complexAttributeNameDelimiter)
 }
 
-func MustParseTime(t *testing.T, v string) time.Time {
-	ts, err := time.Parse(time.RFC3339, v)
-	if err != nil {
-		t.Fatalf("Failed to parse %s as an RFC 3339 timestamp: %s", v, err)
-	}
-	return ts
+func TestWithDateTimeFormats(t *testing.T) {
+	var opts jsonOptions
+
+	dateTimeFormats := []string{time.RFC3339, time.RFC3339Nano}
+
+	opt := WithDateTimeFormats(dateTimeFormats...)
+
+	opt.apply(&opts)
+
+	AssertDeepEqual(t, dateTimeFormats, opts.dateTimeFormats)
 }

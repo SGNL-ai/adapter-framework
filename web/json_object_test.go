@@ -308,7 +308,7 @@ func TestConvertJSONObject_NoFlattening(t *testing.T) {
 				},
 				"addresses": []framework.Object{
 					{
-						"streetLines": []any{
+						"streetLines": []string{
 							"1234 Somewhere St",
 						},
 						"region":  "CA",
