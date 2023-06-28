@@ -159,7 +159,7 @@ func TestGetResponse(t *testing.T) {
 							},
 						},
 					},
-					NextCursor: "nextCursor",
+					NextCursor: "next cursor",
 				},
 			},
 			wantRpcResponse: &api_adapter_v1.GetPageResponse{
@@ -231,7 +231,7 @@ func TestGetResponse(t *testing.T) {
 								},
 							},
 						},
-						NextCursor: "nextCursor",
+						NextCursor: "next cursor",
 					},
 				},
 			},
