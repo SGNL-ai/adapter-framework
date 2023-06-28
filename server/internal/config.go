@@ -16,7 +16,6 @@ package internal
 
 import (
 	"encoding/json"
-	"fmt"
 )
 
 // ParseConfig parses a configuration for a datasource from the given marshaled
@@ -30,7 +29,7 @@ func ParseConfig[Config any](data []byte) (*Config, error) {
 
 	err := json.Unmarshal(data, config)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse datasource JSON config: %w", err)
+		return nil, err
 	}
 
 	return config, nil

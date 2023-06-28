@@ -21,6 +21,293 @@ import (
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
 )
 
+func TestGetAdapterRequest(t *testing.T) {
+	tests := map[string]struct {
+		req                *api_adapter_v1.GetPageRequest
+		wantAdapterRequest *framework.Request[TestConfig]
+		wantReverseMapping *entityReverseIdMapping
+		wantAdapterErr     *api_adapter_v1.Error
+	}{
+		"invalid_nil": {
+			wantAdapterErr: &api_adapter_v1.Error{
+				Message: "Request is nil.",
+				Code:    1, // INVALID_PAGE_REQUEST_CONFIG
+			},
+		},
+		"invalid_no_datasource_config": {
+			req: &api_adapter_v1.GetPageRequest{
+				Entity: &api_adapter_v1.EntityConfig{
+					Id:         "00d58abb-0b80-4745-927a-af9b2fb612dd",
+					ExternalId: "users",
+					Attributes: []*api_adapter_v1.AttributeConfig{
+						{
+							Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+							ExternalId: "name",
+							Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+						},
+					},
+					Ordered: true,
+				},
+				PageSize: 100,
+			},
+			wantAdapterErr: &api_adapter_v1.Error{
+				Message: "Request contains no datasource config.",
+				Code:    1, // INVALID_PAGE_REQUEST_CONFIG
+			},
+		},
+		"invalid_no_entity_config": {
+			req: &api_adapter_v1.GetPageRequest{
+				Datasource: &api_adapter_v1.DatasourceConfig{
+					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
+					Config:  []byte(`{"a":"a value","b":"b value"}`),
+					Address: "http://example.com/",
+					Auth: &api_adapter_v1.DatasourceAuthCredentials{
+						AuthMechanism: &api_adapter_v1.DatasourceAuthCredentials_HttpAuthorization{
+							HttpAuthorization: "Bearer mysecret",
+						},
+					},
+				},
+				PageSize: 100,
+			},
+			wantAdapterErr: &api_adapter_v1.Error{
+				Message: "Request contains no entity config.",
+				Code:    1, // INVALID_PAGE_REQUEST_CONFIG
+			},
+		},
+		"invalid_non_positive_page_size": {
+			req: &api_adapter_v1.GetPageRequest{
+				Datasource: &api_adapter_v1.DatasourceConfig{
+					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
+					Config:  []byte(`{"a":"a value","b":"b value"}`),
+					Address: "http://example.com/",
+					Auth: &api_adapter_v1.DatasourceAuthCredentials{
+						AuthMechanism: &api_adapter_v1.DatasourceAuthCredentials_HttpAuthorization{
+							HttpAuthorization: "Bearer mysecret",
+						},
+					},
+				},
+				Entity: &api_adapter_v1.EntityConfig{
+					Id:         "00d58abb-0b80-4745-927a-af9b2fb612dd",
+					ExternalId: "users",
+					Attributes: []*api_adapter_v1.AttributeConfig{
+						{
+							Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+							ExternalId: "name",
+							Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+						},
+					},
+					Ordered: true,
+				},
+				PageSize: 0,
+			},
+			wantAdapterErr: &api_adapter_v1.Error{
+				Message: "Request contains an invalid page size: 0. Must be greater than 0.",
+				Code:    1, // INVALID_PAGE_REQUEST_CONFIG
+			},
+		},
+		"invalid_datasource_config_no_id": {
+			req: &api_adapter_v1.GetPageRequest{
+				Datasource: &api_adapter_v1.DatasourceConfig{
+					Config:  []byte(`{"a":"a value","b":"b value"}`),
+					Address: "http://example.com/",
+					Auth: &api_adapter_v1.DatasourceAuthCredentials{
+						AuthMechanism: &api_adapter_v1.DatasourceAuthCredentials_HttpAuthorization{
+							HttpAuthorization: "Bearer mysecret",
+						},
+					},
+				},
+				Entity: &api_adapter_v1.EntityConfig{
+					Id:         "00d58abb-0b80-4745-927a-af9b2fb612dd",
+					ExternalId: "users",
+					Attributes: []*api_adapter_v1.AttributeConfig{
+						{
+							Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+							ExternalId: "name",
+							Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+						},
+					},
+					Ordered: true,
+				},
+				PageSize: 100,
+			},
+			wantAdapterErr: &api_adapter_v1.Error{
+				Message: "Datasource config contains no ID.",
+				Code:    2, // INVALID_DATASOURCE_CONFIG
+			},
+		},
+		"invalid_entity_config_config_not_json": {
+			req: &api_adapter_v1.GetPageRequest{
+				Datasource: &api_adapter_v1.DatasourceConfig{
+					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
+					Config:  []byte(`invalid JSON`),
+					Address: "http://example.com/",
+					Auth: &api_adapter_v1.DatasourceAuthCredentials{
+						AuthMechanism: &api_adapter_v1.DatasourceAuthCredentials_HttpAuthorization{
+							HttpAuthorization: "Bearer mysecret",
+						},
+					},
+				},
+				Entity: &api_adapter_v1.EntityConfig{
+					ExternalId: "users",
+					Attributes: []*api_adapter_v1.AttributeConfig{
+						{
+							Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+							ExternalId: "name",
+							Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+						},
+					},
+					Ordered: true,
+				},
+				PageSize: 100,
+			},
+			wantAdapterErr: &api_adapter_v1.Error{
+				Message: "Config in datasource config could not parsed as JSON: invalid character 'i' looking for beginning of value.",
+				Code:    2, // INVALID_DATASOURCE_CONFIG
+			},
+		},
+		"invalid_entity_config_no_id": {
+			req: &api_adapter_v1.GetPageRequest{
+				Datasource: &api_adapter_v1.DatasourceConfig{
+					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
+					Config:  []byte(`{"a":"a value","b":"b value"}`),
+					Address: "http://example.com/",
+					Auth: &api_adapter_v1.DatasourceAuthCredentials{
+						AuthMechanism: &api_adapter_v1.DatasourceAuthCredentials_HttpAuthorization{
+							HttpAuthorization: "Bearer mysecret",
+						},
+					},
+				},
+				Entity: &api_adapter_v1.EntityConfig{
+					ExternalId: "users",
+					Attributes: []*api_adapter_v1.AttributeConfig{
+						{
+							Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+							ExternalId: "name",
+							Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+						},
+					},
+					Ordered: true,
+				},
+				PageSize: 100,
+			},
+			wantAdapterErr: &api_adapter_v1.Error{
+				Message: "Entity config contains no ID.",
+				Code:    4, // INVALID_ENTITY_CONFIG
+			},
+		},
+		"all_fields_set": {
+			req: &api_adapter_v1.GetPageRequest{
+				Datasource: &api_adapter_v1.DatasourceConfig{
+					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
+					Config:  []byte(`{"a":"a value","b":"b value"}`),
+					Address: "http://example.com/",
+					Auth: &api_adapter_v1.DatasourceAuthCredentials{
+						AuthMechanism: &api_adapter_v1.DatasourceAuthCredentials_HttpAuthorization{
+							HttpAuthorization: "Bearer mysecret",
+						},
+					},
+				},
+				Entity: &api_adapter_v1.EntityConfig{
+					Id:         "00d58abb-0b80-4745-927a-af9b2fb612dd",
+					ExternalId: "users",
+					Attributes: []*api_adapter_v1.AttributeConfig{
+						{
+							Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+							ExternalId: "name",
+							Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+						},
+					},
+					Ordered: true,
+				},
+				PageSize: 100,
+				Cursor:   "the cursor",
+			},
+			wantAdapterRequest: &framework.Request[TestConfig]{
+				Config: &TestConfig{
+					A: "a value",
+					B: "b value",
+				},
+				Address: "http://example.com/",
+				Auth: &framework.DatasourceAuthCredentials{
+					HTTPAuthorization: "Bearer mysecret",
+				},
+				Entity: framework.EntityConfig{
+					ExternalId: "users",
+					Attributes: []*framework.AttributeConfig{
+						{
+							ExternalId: "name",
+							Type:       framework.AttributeTypeString,
+						},
+					},
+				},
+				Ordered:  true,
+				PageSize: 100,
+				Cursor:   "the cursor",
+			},
+			wantReverseMapping: &entityReverseIdMapping{
+				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
+				Attributes: map[string]*api_adapter_v1.AttributeConfig{
+					"name": {
+						Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+						ExternalId: "name",
+						Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+					},
+				},
+			},
+		},
+		"all_optional_fields_unset": {
+			req: &api_adapter_v1.GetPageRequest{
+				Datasource: &api_adapter_v1.DatasourceConfig{
+					Id: "1f530a64-0565-49e6-8647-b88e908b7229",
+				},
+				Entity: &api_adapter_v1.EntityConfig{
+					Id:         "00d58abb-0b80-4745-927a-af9b2fb612dd",
+					ExternalId: "users",
+					Attributes: []*api_adapter_v1.AttributeConfig{
+						{
+							Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+							ExternalId: "name",
+							Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+						},
+					},
+				},
+				PageSize: 100,
+			},
+			wantAdapterRequest: &framework.Request[TestConfig]{
+				Entity: framework.EntityConfig{
+					ExternalId: "users",
+					Attributes: []*framework.AttributeConfig{
+						{
+							ExternalId: "name",
+							Type:       framework.AttributeTypeString,
+						},
+					},
+				},
+				PageSize: 100,
+			},
+			wantReverseMapping: &entityReverseIdMapping{
+				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
+				Attributes: map[string]*api_adapter_v1.AttributeConfig{
+					"name": {
+						Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+						ExternalId: "name",
+						Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+					},
+				},
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			gotAdapterRequest, gotReverseMapping, gotAdapterErr := getAdapterRequest[TestConfig](tc.req)
+			AssertDeepEqual(t, tc.wantAdapterRequest, gotAdapterRequest)
+			AssertDeepEqual(t, tc.wantReverseMapping, gotReverseMapping)
+			AssertDeepEqual(t, tc.wantAdapterErr, gotAdapterErr)
+		})
+	}
+}
+
 func TestGetAdapterAuth(t *testing.T) {
 	tests := map[string]struct {
 		auth     *api_adapter_v1.DatasourceAuthCredentials
@@ -722,9 +1009,9 @@ func TestGetEntity(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			gotAdapterEntity, gotReverseMapping, gotAdapterErr := getEntity(tc.entity)
-			AssertDeepEqual(t, tc.wantAdapterErr, gotAdapterErr)
 			AssertDeepEqual(t, tc.wantAdapterEntity, gotAdapterEntity)
 			AssertDeepEqual(t, tc.wantReverseMapping, gotReverseMapping)
+			AssertDeepEqual(t, tc.wantAdapterErr, gotAdapterErr)
 		})
 	}
 }

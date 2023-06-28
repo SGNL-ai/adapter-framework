@@ -40,7 +40,7 @@ func TestParseConfig(t *testing.T) {
 	AssertDeepEqual(t, wantConfig, gotConfig)
 
 	_, err = ParseConfig[TestConfig]([]byte(`invalid JSON`))
-	if err == nil || err.Error() != "failed to parse datasource JSON config: invalid character 'i' looking for beginning of value" {
-		t.Errorf("Expected %v, got %v", "failed to parse datasource JSON config: invalid character 'i' looking for beginning of value", err)
+	if err == nil || err.Error() != "invalid character 'i' looking for beginning of value" {
+		t.Errorf("Expected %v, got %v", "invalid character 'i' looking for beginning of value", err)
 	}
 }

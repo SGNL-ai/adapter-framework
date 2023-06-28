@@ -43,11 +43,11 @@ func getAdapterRequest[Config any](
 
 	switch {
 	case req == nil:
-		errMsg = "Request is nil"
+		errMsg = "Request is nil."
 	case req.Datasource == nil:
-		errMsg = "Request contains no datasource config"
+		errMsg = "Request contains no datasource config."
 	case req.Entity == nil:
-		errMsg = "Request contains no entity config"
+		errMsg = "Request contains no entity config."
 	case req.PageSize <= 0:
 		errMsg = fmt.Sprintf("Request contains an invalid page size: %d. Must be greater than 0.", req.PageSize)
 	}
@@ -58,7 +58,21 @@ func getAdapterRequest[Config any](
 			Code:    api_adapter_v1.ErrorCode_ERROR_CODE_INVALID_PAGE_REQUEST_CONFIG,
 		}
 
-		return
+		return nil, nil, adapterErr
+	}
+
+	switch {
+	case req.Datasource.Id == "":
+		errMsg = "Datasource config contains no ID."
+	}
+
+	if errMsg != "" {
+		adapterErr = &api_adapter_v1.Error{
+			Message: errMsg,
+			Code:    api_adapter_v1.ErrorCode_ERROR_CODE_INVALID_DATASOURCE_CONFIG,
+		}
+
+		return nil, nil, adapterErr
 	}
 
 	adapterRequest = &framework.Request[Config]{}
@@ -67,7 +81,12 @@ func getAdapterRequest[Config any](
 		config, err := ParseConfig[Config](req.Datasource.Config)
 
 		if err != nil {
-			return
+			adapterErr = &api_adapter_v1.Error{
+				Message: fmt.Sprintf("Config in datasource config could not parsed as JSON: %s.", err),
+				Code:    api_adapter_v1.ErrorCode_ERROR_CODE_INVALID_DATASOURCE_CONFIG,
+			}
+
+			return nil, nil, adapterErr
 		}
 
 		adapterRequest.Config = config
@@ -78,7 +97,7 @@ func getAdapterRequest[Config any](
 	entityConfig, reverseMapping, adapterErr = getEntity(req.Entity)
 
 	if adapterErr != nil {
-		return
+		return nil, nil, adapterErr
 	}
 
 	adapterRequest.Address = req.Datasource.Address
