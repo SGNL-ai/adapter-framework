@@ -96,6 +96,10 @@ func getAdapterRequest[Config any](
 func getAdapterAuth(
 	auth *api_adapter_v1.DatasourceAuthCredentials,
 ) *framework.DatasourceAuthCredentials {
+	if auth == nil || auth.AuthMechanism == nil {
+		return nil
+	}
+
 	switch a := auth.AuthMechanism.(type) {
 	case *api_adapter_v1.DatasourceAuthCredentials_Basic_:
 		return &framework.DatasourceAuthCredentials{

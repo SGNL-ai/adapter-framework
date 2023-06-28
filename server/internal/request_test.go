@@ -21,6 +21,55 @@ import (
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
 )
 
+func TestGetAdapterAuth(t *testing.T) {
+	tests := map[string]struct {
+		auth     *api_adapter_v1.DatasourceAuthCredentials
+		wantAuth *framework.DatasourceAuthCredentials
+	}{
+		"basic": {
+			auth: &api_adapter_v1.DatasourceAuthCredentials{
+				AuthMechanism: &api_adapter_v1.DatasourceAuthCredentials_Basic_{
+					Basic: &api_adapter_v1.DatasourceAuthCredentials_Basic{
+						Username: "john",
+						Password: "password123",
+					},
+				},
+			},
+			wantAuth: &framework.DatasourceAuthCredentials{
+				Basic: &framework.BasicAuthCredentials{
+					Username: "john",
+					Password: "password123",
+				},
+			},
+		},
+		"http_authorization": {
+			auth: &api_adapter_v1.DatasourceAuthCredentials{
+				AuthMechanism: &api_adapter_v1.DatasourceAuthCredentials_HttpAuthorization{
+					HttpAuthorization: "Bearer mysecret",
+				},
+			},
+			wantAuth: &framework.DatasourceAuthCredentials{
+				HTTPAuthorization: "Bearer mysecret",
+			},
+		},
+		"nil": {
+			auth:     nil,
+			wantAuth: nil,
+		},
+		"all_fields_nil": {
+			auth:     &api_adapter_v1.DatasourceAuthCredentials{},
+			wantAuth: nil,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			gotAuth := getAdapterAuth(tc.auth)
+			AssertDeepEqual(t, tc.wantAuth, gotAuth)
+		})
+	}
+}
+
 func TestGetEntity(t *testing.T) {
 	tests := map[string]struct {
 		entity             *api_adapter_v1.EntityConfig
