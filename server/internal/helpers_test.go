@@ -19,10 +19,20 @@ import (
 	"testing"
 )
 
+// TestConfig is an example Config type which can be used as the Config type
+// parameter of an Adapter for testing.
+type TestConfig struct {
+	A string `json:"a"`
+	B string `json:"b"`
+}
+
+// Ptr returns a pointer to the given value.
 func Ptr[T any](v T) *T {
 	return &v
 }
 
+// AssertDeepEqual asserts whether want and got are equal using
+// reflect.DeepEqual.
 func AssertDeepEqual(t *testing.T, want, got any) {
 	t.Helper()
 

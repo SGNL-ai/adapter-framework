@@ -19,11 +19,6 @@ import (
 )
 
 func TestParseConfig(t *testing.T) {
-	type TestConfig struct {
-		A string `json:"a"`
-		B string `json:"b"`
-	}
-
 	var wantConfig, gotConfig *TestConfig
 	var err error
 

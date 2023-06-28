@@ -125,9 +125,9 @@ func getEntity(
 	case entity.Id == "":
 		errMsg = "Entity config contains no ID."
 	case entity.ExternalId == "":
-		errMsg = "Entity config contains no external ID."
+		errMsg = fmt.Sprintf("Entity config %s contains no external ID.", entity.Id)
 	case len(entity.Attributes) == 0:
-		errMsg = "Entity config contains no attributes."
+		errMsg = fmt.Sprintf("Entity config %s (%s) contains no attributes.", entity.Id, entity.ExternalId)
 	}
 
 	if errMsg != "" {
@@ -136,7 +136,7 @@ func getEntity(
 			Code:    api_adapter_v1.ErrorCode_ERROR_CODE_INVALID_ENTITY_CONFIG,
 		}
 
-		return
+		return nil, nil, adapterErr
 	}
 
 	adapterEntity = &framework.EntityConfig{}
@@ -151,17 +151,17 @@ func getEntity(
 	for _, attribute := range entity.Attributes {
 		switch {
 		case attribute.Id == "":
-			errMsg = "Attribute in entity config contains no ID."
+			errMsg = fmt.Sprintf("Attribute in entity config %s (%s) contains no ID.", entity.Id, entity.ExternalId)
 		case attribute.ExternalId == "":
-			errMsg = fmt.Sprintf("Attribute in entity config contains no external ID: %s.", attribute.Id)
+			errMsg = fmt.Sprintf("Attribute in entity config %s (%s) contains no external ID: %s.", entity.Id, entity.ExternalId, attribute.Id)
 		case attributeIds[attribute.Id]:
-			errMsg = fmt.Sprintf("Attribute in entity config contains duplicate ID: %s (%s).", attribute.Id, attribute.ExternalId)
+			errMsg = fmt.Sprintf("Attribute in entity config %s (%s) contains duplicate ID: %s (%s).", entity.Id, entity.ExternalId, attribute.Id, attribute.ExternalId)
 		case reverseMapping.Attributes[attribute.ExternalId] != nil:
-			errMsg = fmt.Sprintf("Attribute in entity config contains duplicate external ID: %s (%s).", attribute.Id, attribute.ExternalId)
+			errMsg = fmt.Sprintf("Attribute in entity config %s (%s) contains duplicate external ID: %s (%s).", entity.Id, entity.ExternalId, attribute.Id, attribute.ExternalId)
 		case attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_UNSPECIFIED:
-			errMsg = fmt.Sprintf("Attribute in entity config contains unspecified type: %s (%s) %s.", attribute.Id, attribute.ExternalId, attribute.Type)
+			errMsg = fmt.Sprintf("Attribute in entity config %s (%s) contains unspecified type %s: %s (%s).", entity.Id, entity.ExternalId, attribute.Type, attribute.Id, attribute.ExternalId)
 		case api_adapter_v1.AttributeType_name[int32(attribute.Type)] == "":
-			errMsg = fmt.Sprintf("Attribute in entity config contains invalid type: %s (%s) %s.", attribute.Id, attribute.ExternalId, attribute.Type)
+			errMsg = fmt.Sprintf("Attribute in entity config %s (%s) contains invalid type %s: %s (%s).", entity.Id, entity.ExternalId, attribute.Type, attribute.Id, attribute.ExternalId)
 		}
 
 		if errMsg != "" {
@@ -170,7 +170,7 @@ func getEntity(
 				Code:    api_adapter_v1.ErrorCode_ERROR_CODE_INVALID_ENTITY_CONFIG,
 			}
 
-			return
+			return nil, nil, adapterErr
 		}
 
 		attributeIds[attribute.Id] = true
@@ -192,15 +192,15 @@ func getEntity(
 		for _, childEntity := range entity.ChildEntities {
 			switch {
 			case childEntity.Id == "":
-				errMsg = "Child entity in entity config contains no ID."
+				errMsg = fmt.Sprintf("Child entity in entity config %s (%s) contains no ID.", entity.Id, entity.ExternalId)
 			case childEntity.ExternalId == "":
-				errMsg = fmt.Sprintf("Child entity in entity config contains no external ID: %s.", childEntity.Id)
+				errMsg = fmt.Sprintf("Child entity in entity config %s (%s) contains no external ID: %s.", entity.Id, entity.ExternalId, childEntity.Id)
 			case childEntityIds[childEntity.Id]:
-				errMsg = fmt.Sprintf("Child entity in entity config contains duplicate ID: %s (%s).", childEntity.Id, childEntity.ExternalId)
+				errMsg = fmt.Sprintf("Child entity in entity config %s (%s) contains duplicate ID: %s (%s).", entity.Id, entity.ExternalId, childEntity.Id, childEntity.ExternalId)
 			case reverseMapping.ChildEntities[childEntity.ExternalId] != nil:
-				errMsg = fmt.Sprintf("Child entity in entity config contains duplicate external ID: %s (%s).", childEntity.Id, childEntity.ExternalId)
+				errMsg = fmt.Sprintf("Child entity in entity config %s (%s) contains duplicate external ID: %s (%s).", entity.Id, entity.ExternalId, childEntity.Id, childEntity.ExternalId)
 			case reverseMapping.Attributes[childEntity.ExternalId] != nil:
-				errMsg = fmt.Sprintf("Child entity in entity config contains same external ID as attribute: %s (%s).", childEntity.Id, childEntity.ExternalId)
+				errMsg = fmt.Sprintf("Child entity in entity config %s (%s) contains same external ID as attribute: %s (%s).", entity.Id, entity.ExternalId, childEntity.Id, childEntity.ExternalId)
 			}
 
 			if errMsg != "" {
@@ -209,7 +209,7 @@ func getEntity(
 					Code:    api_adapter_v1.ErrorCode_ERROR_CODE_INVALID_ENTITY_CONFIG,
 				}
 
-				return
+				return nil, nil, adapterErr
 			}
 
 			childEntityIds[childEntity.Id] = true
@@ -220,7 +220,7 @@ func getEntity(
 			adapterChildEntity, childReverseMapping, adapterErr = getEntity(childEntity)
 
 			if adapterErr != nil {
-				return
+				return nil, nil, adapterErr
 			}
 
 			adapterEntity.ChildEntities = append(adapterEntity.ChildEntities, adapterChildEntity)
