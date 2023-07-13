@@ -32,7 +32,9 @@ func defaultJSONOptions() *jsonOptions {
 			time.RFC822, time.RFC822Z, time.RFC850,
 			time.UnixDate, time.RubyDate, time.ANSIC,
 			"2006-01-02T15:04:05.000Z0700",
-			"2006-01-02 15:04:05",
+			"2006-01-02 15:04:05", "2006-01-02",
+			"2006/01/02", "01-02-2006", "01/02/2006",
+			"01/02/06",
 		},
 	}
 }
