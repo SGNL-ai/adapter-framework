@@ -20,22 +20,46 @@ import "time"
 // JSONOption values passed to ConvertJSONObjectList.
 type jsonOptions struct {
 	complexAttributeNameDelimiter string
-	dateTimeFormats               []string
+	dateTimeFormats               []DateTimeFormatWithTz
+	localTimeZoneOffset           int
+}
+
+// DateTimeFormatWithTz represents a valid date time format to try parsing
+// date-time attribute values from strings.
+type DateTimeFormatWithTz struct {
+	// Format must be a valid time format accepted by time.Parse.
+	Format string
+
+	// HasTz indicates whether the above time format supports specifying a time zone.
+	// If it does, this should be set to true.
+	// If it does not, this can be set to false to use the specified localTimeZoneOffset
+	// as a time zone in the resulting date time. If this value is false and
+	// localTimeZoneOffset is not set, the resulting date time will be set to UTC.
+	HasTz bool
 }
 
 func defaultJSONOptions() *jsonOptions {
 	return &jsonOptions{
 		complexAttributeNameDelimiter: "", // Disabled.
-		dateTimeFormats: []string{
-			time.RFC3339, time.RFC3339Nano,
-			time.RFC1123, time.RFC1123Z,
-			time.RFC822, time.RFC822Z, time.RFC850,
-			time.UnixDate, time.RubyDate, time.ANSIC,
-			"2006-01-02T15:04:05.000Z0700",
-			"2006-01-02 15:04:05", "2006-01-02",
-			"2006/01/02", "01-02-2006", "01/02/2006",
-			"01/02/06",
+		dateTimeFormats: []DateTimeFormatWithTz{
+			{time.RFC3339, true},
+			{time.RFC3339Nano, true},
+			{time.RFC1123Z, true},
+			{time.RFC822, true},
+			{time.RFC822Z, true},
+			{time.RFC850, true},
+			{time.UnixDate, true},
+			{time.RubyDate, true},
+			{"2006-01-02T15:04:05.000Z0700", true},
+			{"2006-01-02 15:04:05", false},
+			{time.ANSIC, false},
+			{"2006-01-02", false},
+			{"2006/01/02", false},
+			{"01-02-2006", false},
+			{"01/02/2006", false},
+			{"01/02/06", false},
 		},
+		localTimeZoneOffset: 0,
 	}
 }
 
@@ -61,13 +85,13 @@ func (o *funcJSONOption) apply(opts *jsonOptions) {
 //
 // For instance, if set to ".", and the JSON object to parse is:
 //
-// {
-//   "attr1": {
-//     "attr2": {
-//       "attr3": "the value"
-//     }
-//   }
-// }
+//	{
+//	  "attr1": {
+//	    "attr2": {
+//	      "attr3": "the value"
+//	    }
+//	  }
+//	}
 //
 // then the value returned for the attribute with external ID
 // "attr1.attr2.attr3" is "the value".
@@ -85,7 +109,7 @@ func WithComplexAttributeNameDelimiter(delimiter string) JSONOption {
 // attribute values from strings.
 // The formats must be ordered by decreasing likelihood of matching.
 // Each format must be a valid time format accepted by time.Parse.
-func WithDateTimeFormats(formats ...string) JSONOption {
+func WithDateTimeFormats(formats ...DateTimeFormatWithTz) JSONOption {
 	return &funcJSONOption{
 		f: func(jo *jsonOptions) {
 			jo.dateTimeFormats = formats

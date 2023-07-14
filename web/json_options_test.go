@@ -32,7 +32,10 @@ func TestWithComplexAttributeNameDelimiter(t *testing.T) {
 func TestWithDateTimeFormats(t *testing.T) {
 	var opts jsonOptions
 
-	dateTimeFormats := []string{time.RFC3339, time.RFC3339Nano}
+	dateTimeFormats := []DateTimeFormatWithTz{
+		{time.RFC3339, true},
+		{time.RFC3339Nano, true},
+	}
 
 	opt := WithDateTimeFormats(dateTimeFormats...)
 

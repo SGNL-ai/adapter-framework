@@ -88,7 +88,7 @@ func convertJSONAttributeValue(attribute *framework.AttributeConfig, value any, 
 		if v == "" {
 			return nil, nil
 		}
-		t, err := ParseDateTime(opts.dateTimeFormats, v)
+		t, err := ParseDateTime(opts.dateTimeFormats, opts.localTimeZoneOffset, v)
 		if err != nil {
 			return nil, fmt.Errorf("attribute %s cannot be parsed into a date-time value: %w", attribute.ExternalId, err)
 		}
@@ -171,10 +171,32 @@ func convertJSONAttributeListValue[Element any](attribute *framework.AttributeCo
 }
 
 // ParseDateTime parses a timestamp against a set of predefined formats.
-func ParseDateTime(formats []string, dateTimeStr string) (dateTime time.Time, err error) {
-	for _, format := range formats {
-		dateTime, err = time.Parse(format, dateTimeStr)
+func ParseDateTime(dateTimeFormats []DateTimeFormatWithTz, localTimeZoneOffset int, dateTimeStr string) (dateTime time.Time, err error) {
+	for _, format := range dateTimeFormats {
+		dateTime, err = time.Parse(format.Format, dateTimeStr)
 		if err == nil {
+			if !format.HasTz {
+				var loc *time.Location
+
+				if localTimeZoneOffset == 0 {
+					loc = time.UTC
+				} else {
+					secondsEastOfUTC := localTimeZoneOffset * 60 * 60
+					loc = time.FixedZone("", secondsEastOfUTC)
+				}
+
+				dateTime = time.Date(
+					dateTime.Year(),
+					dateTime.Month(),
+					dateTime.Day(),
+					dateTime.Hour(),
+					dateTime.Minute(),
+					dateTime.Second(),
+					dateTime.Nanosecond(),
+					loc,
+				)
+			}
+
 			return
 		}
 	}
