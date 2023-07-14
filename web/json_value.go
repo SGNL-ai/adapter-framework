@@ -181,8 +181,7 @@ func ParseDateTime(dateTimeFormats []DateTimeFormatWithTz, localTimeZoneOffset i
 				if localTimeZoneOffset == 0 {
 					loc = time.UTC
 				} else {
-					secondsEastOfUTC := localTimeZoneOffset * 60 * 60
-					loc = time.FixedZone("", secondsEastOfUTC)
+					loc = time.FixedZone("", localTimeZoneOffset)
 				}
 
 				dateTime = time.Date(
