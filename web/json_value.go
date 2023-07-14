@@ -175,7 +175,7 @@ func ParseDateTime(dateTimeFormats []DateTimeFormatWithTimeZone, localTimeZoneOf
 	for _, format := range dateTimeFormats {
 		dateTime, err = time.Parse(format.Format, dateTimeStr)
 		if err == nil {
-			if !format.HasTz {
+			if !format.HasTimeZone {
 				var loc *time.Location
 
 				if localTimeZoneOffset == 0 {

@@ -35,12 +35,12 @@ type DateTimeFormatWithTimeZone struct {
 	// Format must be a valid time format accepted by time.Parse.
 	Format string
 
-	// HasTz indicates whether the above time format supports specifying a time zone.
+	// HasTimeZone indicates whether the above time format supports specifying a time zone.
 	// If it does, this should be set to true.
 	// If it does not, this can be set to false to use the specified localTimeZoneOffset
 	// as a time zone in the resulting date time. If this value is false and
 	// localTimeZoneOffset is not set, the resulting date time will be set to UTC.
-	HasTz bool
+	HasTimeZone bool
 }
 
 func defaultJSONOptions() *jsonOptions {
