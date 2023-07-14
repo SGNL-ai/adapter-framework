@@ -22,10 +22,10 @@ type jsonOptions struct {
 	complexAttributeNameDelimiter string
 	dateTimeFormats               []DateTimeFormatWithTimeZone
 
-	// localTimeZoneOffset is the default local timezone offset that should
-	// be used for parsing date-time attributes lacking any time zone info.
-	// This should be set to the number of seconds east of UTC. If this is
-	// set to 0, this will default to UTC.
+	// localTimeZoneOffset is the default local timezone offset, as a number
+	// of seconds east of UTC, to be used for parsing date-time attributes
+	// lacking any timezone info.
+	// Defaults to 0, i.e the UTC timezone.
 	localTimeZoneOffset int
 }
 
