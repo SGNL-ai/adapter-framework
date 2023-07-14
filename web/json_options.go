@@ -20,7 +20,7 @@ import "time"
 // JSONOption values passed to ConvertJSONObjectList.
 type jsonOptions struct {
 	complexAttributeNameDelimiter string
-	dateTimeFormats               []DateTimeFormatWithTz
+	dateTimeFormats               []DateTimeFormatWithTimeZone
 
 	// localTimeZoneOffset is the default local timezone offset that should
 	// be used for parsing date-time attributes lacking any time zone info.
@@ -29,9 +29,9 @@ type jsonOptions struct {
 	localTimeZoneOffset int
 }
 
-// DateTimeFormatWithTz represents a valid date time format to try parsing
+// DateTimeFormatWithTimeZone represents a valid date time format to try parsing
 // date-time attribute values from strings.
-type DateTimeFormatWithTz struct {
+type DateTimeFormatWithTimeZone struct {
 	// Format must be a valid time format accepted by time.Parse.
 	Format string
 
@@ -46,7 +46,7 @@ type DateTimeFormatWithTz struct {
 func defaultJSONOptions() *jsonOptions {
 	return &jsonOptions{
 		complexAttributeNameDelimiter: "", // Disabled.
-		dateTimeFormats: []DateTimeFormatWithTz{
+		dateTimeFormats: []DateTimeFormatWithTimeZone{
 			{time.RFC3339, true},
 			{time.RFC3339Nano, true},
 			{time.RFC1123Z, true},
@@ -114,10 +114,21 @@ func WithComplexAttributeNameDelimiter(delimiter string) JSONOption {
 // attribute values from strings.
 // The formats must be ordered by decreasing likelihood of matching.
 // Each format must be a valid time format accepted by time.Parse.
-func WithDateTimeFormats(formats ...DateTimeFormatWithTz) JSONOption {
+func WithDateTimeFormats(formats ...DateTimeFormatWithTimeZone) JSONOption {
 	return &funcJSONOption{
 		f: func(jo *jsonOptions) {
 			jo.dateTimeFormats = formats
+		},
+	}
+}
+
+// WithLocalTimeZoneOffset sets the local time zone offset to use as a default
+// when parsing date-time attribute values from strings for formats lacking
+// support for specifying a time zone.
+func WithLocalTimeZoneOffset(offset int) JSONOption {
+	return &funcJSONOption{
+		f: func(jo *jsonOptions) {
+			jo.localTimeZoneOffset = offset
 		},
 	}
 }

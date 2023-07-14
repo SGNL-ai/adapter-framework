@@ -32,7 +32,7 @@ func TestWithComplexAttributeNameDelimiter(t *testing.T) {
 func TestWithDateTimeFormats(t *testing.T) {
 	var opts jsonOptions
 
-	dateTimeFormats := []DateTimeFormatWithTz{
+	dateTimeFormats := []DateTimeFormatWithTimeZone{
 		{time.RFC3339, true},
 		{time.RFC3339Nano, true},
 	}
@@ -42,4 +42,16 @@ func TestWithDateTimeFormats(t *testing.T) {
 	opt.apply(&opts)
 
 	AssertDeepEqual(t, dateTimeFormats, opts.dateTimeFormats)
+}
+
+func TestWithLocalTimeZoneOffset(t *testing.T) {
+	var opts jsonOptions
+
+	offset := -7 * 60 * 60
+
+	opt := WithLocalTimeZoneOffset(offset)
+
+	opt.apply(&opts)
+
+	AssertDeepEqual(t, offset, opts.localTimeZoneOffset)
 }

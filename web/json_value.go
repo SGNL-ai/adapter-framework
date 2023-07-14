@@ -171,7 +171,7 @@ func convertJSONAttributeListValue[Element any](attribute *framework.AttributeCo
 }
 
 // ParseDateTime parses a timestamp against a set of predefined formats.
-func ParseDateTime(dateTimeFormats []DateTimeFormatWithTz, localTimeZoneOffset int, dateTimeStr string) (dateTime time.Time, err error) {
+func ParseDateTime(dateTimeFormats []DateTimeFormatWithTimeZone, localTimeZoneOffset int, dateTimeStr string) (dateTime time.Time, err error) {
 	for _, format := range dateTimeFormats {
 		dateTime, err = time.Parse(format.Format, dateTimeStr)
 		if err == nil {

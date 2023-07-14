@@ -94,7 +94,7 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 			},
 			valueJSON: `"2023-06-23T12:34:56-07:00"`,
 
-			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTz{{time.RFC3339, true}, {"2006-01-02", false}}},
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{time.RFC3339, true}, {"2006-01-02", false}}},
 			wantValue: MustParseTime(t, "2023-06-23T12:34:56-07:00"),
 		},
 		"datetime_list": {
@@ -104,7 +104,7 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 				List:       true,
 			},
 			valueJSON: `["2023-06-23T12:34:56-07:00", "2023-06-23T12:34:58+05:00"]`,
-			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTz{{time.RFC3339, true}, {"2006-01-02", false}}},
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{time.RFC3339, true}, {"2006-01-02", false}}},
 			wantValue: []time.Time{MustParseTime(t, "2023-06-23T12:34:56-07:00"), MustParseTime(t, "2023-06-23T12:34:58+05:00")},
 		},
 		"datetime_missing_tz": {
@@ -113,7 +113,7 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 				Type:       framework.AttributeTypeDateTime,
 			},
 			valueJSON: `"2023-06-23 12:34:56"`,
-			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTz{{"2006-01-02 15:04:05", false}}},
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{"2006-01-02 15:04:05", false}}},
 			wantValue: MustParseTime(t, "2023-06-23T12:34:56Z"),
 		},
 		"date": {
@@ -122,7 +122,7 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 				Type:       framework.AttributeTypeDateTime,
 			},
 			valueJSON: `"2023-06-23"`,
-			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTz{{time.RFC3339, true}, {"2006-01-02", false}}},
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{time.RFC3339, true}, {"2006-01-02", false}}},
 			wantValue: MustParseTime(t, "2023-06-23T00:00:00Z"),
 		},
 		"date_list": {
@@ -132,7 +132,7 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 				List:       true,
 			},
 			valueJSON: `["2023-06-23", "2023-06-23"]`,
-			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTz{{time.RFC3339, true}, {"2006-01-02", false}}},
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{time.RFC3339, true}, {"2006-01-02", false}}},
 			wantValue: []time.Time{MustParseTime(t, "2023-06-23T00:00:00Z"), MustParseTime(t, "2023-06-23T00:00:00Z")},
 		},
 		"date_with_neg_tz_offset": {
@@ -141,7 +141,7 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 				Type:       framework.AttributeTypeDateTime,
 			},
 			valueJSON: `"2023-06-23"`,
-			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTz{{time.RFC3339, true}, {"2006-01-02", false}}, localTimeZoneOffset: -10 * 60 * 60},
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{time.RFC3339, true}, {"2006-01-02", false}}, localTimeZoneOffset: -10 * 60 * 60},
 			wantValue: MustParseTime(t, "2023-06-23T00:00:00-10:00"),
 		},
 		"date_with_pos_tz_offset": {
@@ -150,7 +150,7 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 				Type:       framework.AttributeTypeDateTime,
 			},
 			valueJSON: `"2023-06-23"`,
-			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTz{{time.RFC3339, true}, {"2006-01-02", false}}, localTimeZoneOffset: 4 * 60 * 60},
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{time.RFC3339, true}, {"2006-01-02", false}}, localTimeZoneOffset: 4 * 60 * 60},
 			wantValue: MustParseTime(t, "2023-06-23T00:00:00+04:00"),
 		},
 		"double": {
