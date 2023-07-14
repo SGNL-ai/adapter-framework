@@ -21,7 +21,12 @@ import "time"
 type jsonOptions struct {
 	complexAttributeNameDelimiter string
 	dateTimeFormats               []DateTimeFormatWithTz
-	localTimeZoneOffset           int
+
+	// localTimeZoneOffset is the default local timezone offset that should
+	// be used for parsing date-time attributes lacking any time zone info.
+	// This should be set to the number of hours east of UTC. If this is
+	// set to 0, this will default to UTC.
+	localTimeZoneOffset int
 }
 
 // DateTimeFormatWithTz represents a valid date time format to try parsing
