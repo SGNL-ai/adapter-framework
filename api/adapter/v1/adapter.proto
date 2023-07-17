@@ -219,9 +219,6 @@ message DateTime {
     // The local timezone as its number of seconds east of UTC.
     // UTC if zero (default).
     int32 timezone_offset = 2;
-    
-    // Indicates whether only the date part of the timestamp is relevant.
-    bool is_date = 3;
 }
 
 // Error codes indicating why the page request failed.
