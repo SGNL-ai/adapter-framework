@@ -57,7 +57,7 @@ func defaultJSONOptions() *jsonOptions {
 			{time.RubyDate, true},
 			{"2006-01-02T15:04:05.000Z0700", true},
 			{"2006-01-02 15:04:05", false},
-			{"01/02/2006 3:04:05 PM", false},
+			{"1/2/2006 3:04:05 PM", false},
 			{time.ANSIC, false},
 			{"2006-01-02", false},
 			{"2006/01/02", false},
