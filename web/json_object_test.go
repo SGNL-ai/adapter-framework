@@ -455,6 +455,10 @@ func TestConvertJSONObject_Flattening(t *testing.T) {
 						Type:       framework.AttributeTypeString,
 					},
 					{
+						ExternalId: "a__a__b",
+						Type:       framework.AttributeTypeString,
+					},
+					{
 						ExternalId: "a__c__b",
 						Type:       framework.AttributeTypeString,
 					},
@@ -472,7 +476,8 @@ func TestConvertJSONObject_Flattening(t *testing.T) {
 				"a": {
 					"a": {
 						"a": "a__a__a value",
-						"b": "a__a__b value"
+						"b": "a__a__b value",
+						"c": "a__a__c value"
 					},
 					"b": "a__b value",
 					"c": {
@@ -492,11 +497,42 @@ func TestConvertJSONObject_Flattening(t *testing.T) {
 			opts: testJSONOptions,
 			wantObject: framework.Object{
 				"a__a__a": "a__a__a value",
+				"a__a__b": "a__a__b value",
 				"a__c__b": "a__c__b value",
 				"a__b":    "a__b value",
 				"c__a__a": "c__a__a value",
 			},
 			wantError: nil,
+		},
+		"null_complex_attribute": {
+			entity: &framework.EntityConfig{
+				ExternalId: "test",
+				Attributes: []*framework.AttributeConfig{
+					{
+						ExternalId: "a__b__c",
+						Type:       framework.AttributeTypeString,
+					},
+					{
+						ExternalId: "d__e",
+						Type:       framework.AttributeTypeString,
+					},
+					{
+						ExternalId: "d__e__f",
+						Type:       framework.AttributeTypeString,
+					},
+				},
+			},
+			// Suppose a__b is regularly a complex attribute, but in this case it is null. Same with d.
+			// We should ignore these attributes.
+			objectJSON: `{
+				"a": {
+					"b": null
+				},
+				"d": null
+			}`,
+			opts:       testJSONOptions,
+			wantObject: framework.Object{},
+			wantError:  nil,
 		},
 		"child_entities_in_complex_attributes": {
 			entity: &framework.EntityConfig{
