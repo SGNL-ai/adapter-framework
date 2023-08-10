@@ -37,6 +37,9 @@ func validateAttributeValue(attribute *api_adapter_v1.AttributeConfig, value any
 
 	valid := false
 	switch value.(type) {
+	case []any:
+		value, _ := value.([]any)
+		valid = len(value) == 0 && attribute.List
 	case []bool:
 		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_BOOL && attribute.List
 	case []*bool:

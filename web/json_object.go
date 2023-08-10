@@ -62,7 +62,7 @@ func convertJSONObjectList(entity *framework.EntityConfig, objects []map[string]
 }
 
 // convertJSONObject parses and converts a JSON object received from the given
-//requested entity.
+// requested entity.
 func convertJSONObject(entity *framework.EntityConfig, object map[string]any, opts *jsonOptions) (framework.Object, error) {
 	parsedObject := make(framework.Object)
 
@@ -71,7 +71,7 @@ func convertJSONObject(entity *framework.EntityConfig, object map[string]any, op
 	// attributes and child objects, recursively.
 	var complexAttributes map[string]framework.Object
 	if opts.complexAttributeNameDelimiter != "" {
-		// Map of each single-valued complex attribute exernal ID to a
+		// Map of each single-valued complex attribute external ID to a
 		// pseudo entity config that can be used to parse that attribute.
 		complexAttributeFakeEntities := make(map[string]*framework.EntityConfig)
 
@@ -90,8 +90,8 @@ func convertJSONObject(entity *framework.EntityConfig, object map[string]any, op
 			localExternalId := externalIdComponents[0]
 			subExternalId := externalIdComponents[1]
 
-			_, found := object[localExternalId]
-			if !found {
+			rawValue, found := object[localExternalId]
+			if !found || rawValue == nil {
 				continue
 			}
 
