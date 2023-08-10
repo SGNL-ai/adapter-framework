@@ -330,11 +330,16 @@ func TestGetAttributeValues(t *testing.T) {
 		},
 		"empty_any_list": {
 			value:                       []any{},
-			wantAttributeValuesListJSON: nil,
+			wantAttributeValuesListJSON: Ptr(`[]`),
 		},
 		"non_empty_any_list": {
 			value:                       []any{1234, "abcd"},
 			wantAttributeValuesListJSON: nil,
+			wantError: &api_adapter_v1.Error{
+				// The type is int because that's the first value in the list.
+				Message: "Adapter returned an attribute value with invalid type: int. This is always indicative of a bug within the Adapter implementation.",
+				Code:    api_adapter_v1.ErrorCode_ERROR_CODE_INTERNAL,
+			},
 		},
 		"bool": {
 			value:                       true,

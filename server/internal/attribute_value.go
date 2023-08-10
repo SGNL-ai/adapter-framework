@@ -108,8 +108,9 @@ func getAttributeValues(value any) (list []*api_adapter_v1.AttributeValue, adapt
 	switch v := value.(type) {
 	case []any:
 		// validateAttributeValue only allows empty []any lists.
-		// So if the value has already been validated, we know it must be empty and we can return nil.
-		return nil, nil
+		// So if the value has already been validated, we know it must be empty and we return an empty list.
+		// If v is not empty, getAttributeListValues will call getAttributeValue which will return an error.
+		return getAttributeListValues(v)
 	case []bool:
 		return getAttributeListValues(v)
 	case []*bool:
