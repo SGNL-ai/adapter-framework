@@ -106,6 +106,10 @@ func validateAttributeValue(attribute *api_adapter_v1.AttributeConfig, value any
 // Returns an error if the value's type is invalid.
 func getAttributeValues(value any) (list []*api_adapter_v1.AttributeValue, adapterErr *api_adapter_v1.Error) {
 	switch v := value.(type) {
+	case []any:
+		// validateAttributeValue only allows empty []any lists.
+		// So if the value has already been validated, we know it must be empty and we can return nil.
+		return nil, nil
 	case []bool:
 		return getAttributeListValues(v)
 	case []*bool:

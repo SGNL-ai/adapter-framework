@@ -328,6 +328,14 @@ func TestGetAttributeValues(t *testing.T) {
 			value:                       []bool{},
 			wantAttributeValuesListJSON: Ptr(`[]`),
 		},
+		"empty_any_list": {
+			value:                       []any{},
+			wantAttributeValuesListJSON: nil,
+		},
+		"non_empty_any_list": {
+			value:                       []any{1234, "abcd"},
+			wantAttributeValuesListJSON: nil,
+		},
 		"bool": {
 			value:                       true,
 			wantAttributeValuesListJSON: Ptr(`[{"boolValue":true}]`),
