@@ -39,6 +39,29 @@ func TestValidateAttributeValue(t *testing.T) {
 			},
 			value: nil,
 		},
+		// Only an empty []interface{} list is allowed to be valid.
+		"empty_any_list": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+				List:       true,
+			},
+			value: []any{},
+		},
+		"non_empty_any_list": {
+			attribute: &api_adapter_v1.AttributeConfig{
+				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+				ExternalId: "something",
+				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+				List:       true,
+			},
+			value: []any{"1", 10},
+			wantAdapterErr: &api_adapter_v1.Error{
+				Message: "Adapter returned a value with invalid type []interface {} for attribute 12268f03-f99d-476f-91cc-5fe3404e1654 (something) with type ATTRIBUTE_TYPE_STRING (list=true). This is always indicative of a bug within the Adapter implementation.",
+				Code:    api_adapter_v1.ErrorCode_ERROR_CODE_INTERNAL,
+			},
+		},
 		"bool": {
 			attribute: &api_adapter_v1.AttributeConfig{
 				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
