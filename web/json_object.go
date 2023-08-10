@@ -90,8 +90,8 @@ func convertJSONObject(entity *framework.EntityConfig, object map[string]any, op
 			localExternalId := externalIdComponents[0]
 			subExternalId := externalIdComponents[1]
 
-			_, found := object[localExternalId]
-			if !found {
+			rawValue, found := object[localExternalId]
+			if !found || rawValue == nil {
 				continue
 			}
 
@@ -144,13 +144,7 @@ func convertJSONObject(entity *framework.EntityConfig, object map[string]any, op
 		complexAttributes = make(map[string]framework.Object, len(complexAttributeFakeEntities))
 
 		for localExternalId, fakeEntity := range complexAttributeFakeEntities {
-			// Do not parse null attribute values.
-			value, found := object[localExternalId]
-			if found && value == nil {
-				continue
-			}
-
-			complexValue, ok := value.(map[string]any)
+			complexValue, ok := object[localExternalId].(map[string]any)
 			if !ok {
 				return nil, fmt.Errorf("attribute %s is not a single-valued complex attribute", localExternalId)
 			}
