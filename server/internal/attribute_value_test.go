@@ -39,7 +39,7 @@ func TestValidateAttributeValue(t *testing.T) {
 			},
 			value: nil,
 		},
-		// Only an empty []interface{} list is allowed to be valid.
+		// Only an empty []interface{} list is allowed.
 		"empty_any_list": {
 			attribute: &api_adapter_v1.AttributeConfig{
 				Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
