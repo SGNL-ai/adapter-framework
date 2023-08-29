@@ -15,9 +15,12 @@
 package web
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
+	"github.com/PaesslerAG/gval"
+	"github.com/PaesslerAG/jsonpath"
 	framework "github.com/sgnl-ai/adapter-framework"
 )
 
@@ -38,6 +41,16 @@ func convertJSONObjectList(entity *framework.EntityConfig, objects []map[string]
 		return nil, nil
 	}
 
+	// Parse and validate all JSONPaths.
+	// Create a map indexed by the paths themselves.
+	var jsonPaths map[string]gval.Evaluable
+	if opts.enableJSONPath {
+		jsonPaths = make(map[string]gval.Evaluable)
+		if err := parseJSONPaths(entity, jsonPaths); err != nil {
+			return nil, err
+		}
+	}
+
 	parsedObjects := make([]framework.Object, 0, len(objects))
 
 	for _, object := range objects {
@@ -45,7 +58,7 @@ func convertJSONObjectList(entity *framework.EntityConfig, objects []map[string]
 			continue
 		}
 
-		parsedObject, err := convertJSONObject(entity, object, opts)
+		parsedObject, err := convertJSONObject(entity, object, opts, jsonPaths)
 
 		if err != nil {
 			return nil, err
@@ -61,9 +74,53 @@ func convertJSONObjectList(entity *framework.EntityConfig, objects []map[string]
 	return parsedObjects, nil
 }
 
+// parseJSONPaths parses all JSONPaths from attribute external IDs starting
+// with '$' into the given map.
+func parseJSONPaths(entity *framework.EntityConfig, out map[string]gval.Evaluable) error {
+	for _, attribute := range entity.Attributes {
+		externalId := attribute.ExternalId
+		if externalId[0] == '$' {
+			if _, found := out[externalId]; found { // Already parsed.
+				continue
+			}
+
+			jsonPath, err := jsonpath.New(externalId)
+			if err != nil {
+				return fmt.Errorf("failed to parse attribute external ID %q as JSONPath: %w", externalId, err)
+			}
+
+			out[externalId] = jsonPath
+		}
+	}
+
+	// Recursively parse JSONPaths in child entities' attributes.
+	for _, childEntity := range entity.ChildEntities {
+		externalId := childEntity.ExternalId
+
+		if externalId[0] == '$' {
+			if _, found := out[externalId]; found { // Already parsed.
+				continue
+			}
+
+			jsonPath, err := jsonpath.New(externalId)
+			if err != nil {
+				return fmt.Errorf("failed to parse child entity external ID %q as JSONPath: %w", externalId, err)
+			}
+
+			out[externalId] = jsonPath
+		}
+
+		if err := parseJSONPaths(childEntity, out); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // convertJSONObject parses and converts a JSON object received from the given
 // requested entity.
-func convertJSONObject(entity *framework.EntityConfig, object map[string]any, opts *jsonOptions) (framework.Object, error) {
+func convertJSONObject(entity *framework.EntityConfig, object map[string]any, opts *jsonOptions, jsonPaths map[string]gval.Evaluable) (framework.Object, error) {
 	parsedObject := make(framework.Object)
 
 	// If the flattening of single-valued complex attributes is enabled,
@@ -75,9 +132,16 @@ func convertJSONObject(entity *framework.EntityConfig, object map[string]any, op
 		// pseudo entity config that can be used to parse that attribute.
 		complexAttributeFakeEntities := make(map[string]*framework.EntityConfig)
 
-		// Identify single-valued complex attributes needed to map attributes.
+		// Identify single-valued complex attributes needed to map attributes
+		// with delimiters in their external IDs.
 		for _, attribute := range entity.Attributes {
 			externalId := attribute.ExternalId
+
+			if _, found := jsonPaths[externalId]; found {
+				// The attribute external ID is a JSONPath.
+				// Ignore it here.
+				continue
+			}
 
 			externalIdComponents := strings.SplitN(externalId, opts.complexAttributeNameDelimiter, 2)
 
@@ -108,9 +172,15 @@ func convertJSONObject(entity *framework.EntityConfig, object map[string]any, op
 			complexAttributeFakeEntities[localExternalId] = fakeEntity
 		}
 
-		// Identify single-valued complex attributes needed to child entities.
+		// Identify single-valued complex attributes needed to map child entities.
 		for _, childEntity := range entity.ChildEntities {
 			externalId := childEntity.ExternalId
+
+			if _, found := jsonPaths[externalId]; found {
+				// The child entity external ID is a JSONPath.
+				// Ignore it here.
+				continue
+			}
 
 			externalIdComponents := strings.SplitN(externalId, opts.complexAttributeNameDelimiter, 2)
 
@@ -149,7 +219,7 @@ func convertJSONObject(entity *framework.EntityConfig, object map[string]any, op
 				return nil, fmt.Errorf("attribute %s is not a single-valued complex attribute", localExternalId)
 			}
 
-			parsedComplexValue, err := convertJSONObject(fakeEntity, complexValue, opts)
+			parsedComplexValue, err := convertJSONObject(fakeEntity, complexValue, opts, jsonPaths)
 			if err != nil {
 				return nil, fmt.Errorf("failed to parse single-valued complex attribute %s: %w", localExternalId, err)
 			}
@@ -164,7 +234,36 @@ func convertJSONObject(entity *framework.EntityConfig, object map[string]any, op
 
 		var parsedValue any
 
-		if opts.complexAttributeNameDelimiter != "" {
+		if jsonPath, found := jsonPaths[externalId]; found { // The attribute external ID is a JSONPath.
+			value, err := jsonPath(context.Background(), object)
+			if err != nil { // The JSONPath didn't match. Evaluate to null.
+				continue
+			}
+
+			// A JSONPath that matches multi-valued complex attributes, such as
+			// $.emails[?(@.primary==true)].value, always returns a list, even
+			// when that list contains only one value.
+			// In the case the attribute is configured with a non-list type and
+			// the JSONPath evaluation returned a list, convert just that one
+			// value.
+			if !attribute.List {
+				if rawList, isList := value.([]any); isList {
+					switch len(rawList) {
+					case 0: // Nothing matched? Ignore.
+						continue
+					case 1:
+						value = rawList[0]
+					default:
+						return nil, fmt.Errorf("non-list attribute %s matched multiple values", externalId)
+					}
+				}
+			}
+
+			parsedValue, err = convertJSONAttributeValue(attribute, value, opts)
+			if err != nil {
+				return nil, err
+			}
+		} else if opts.complexAttributeNameDelimiter != "" {
 			// The flattening of single-valued complex attributes is enabled,
 			// so the attribute's parent complex attribute, if it exists, has
 			// been parsed in the loop above. Look up the attribute directly in
@@ -185,9 +284,7 @@ func convertJSONObject(entity *framework.EntityConfig, object map[string]any, op
 					continue
 				}
 			}
-		}
-
-		if parsedValue == nil {
+		} else {
 			value, found := object[externalId]
 			if !found {
 				continue
@@ -214,7 +311,35 @@ func convertJSONObject(entity *framework.EntityConfig, object map[string]any, op
 
 		var parsedChildObjects []framework.Object
 
-		if opts.complexAttributeNameDelimiter != "" {
+		if jsonPath, found := jsonPaths[externalId]; found { // The entity external ID is a JSONPath.
+			childObjectsRaw, err := jsonPath(context.Background(), object)
+			if err != nil { // The JSONPath didn't match. Evaluate to null.
+				continue
+			}
+
+			childObjectsRawList, ok := childObjectsRaw.([]any)
+			if !ok {
+				return nil, fmt.Errorf("child entity %s is not associated with a list", externalId)
+			}
+
+			if len(childObjectsRawList) == 0 {
+				continue
+			}
+
+			childObjects := make([]map[string]any, 0, len(childObjectsRawList))
+			for _, childObjectRaw := range childObjectsRawList {
+				childObject, ok := childObjectRaw.(map[string]any)
+				if !ok {
+					return nil, fmt.Errorf("child entity %s is not associated with a list of JSON objects", externalId)
+				}
+				childObjects = append(childObjects, childObject)
+			}
+
+			parsedChildObjects, err = convertJSONObjectList(childEntity, childObjects, opts)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse objects for child entity %s: %w", externalId, err)
+			}
+		} else if opts.complexAttributeNameDelimiter != "" {
 			// The flattening of single-valued complex attributes is enabled,
 			// so the attribute's parent complex attribute, if it exists, has
 			// been parsed in the loop above. Look up the attribute directly in
@@ -241,9 +366,9 @@ func convertJSONObject(entity *framework.EntityConfig, object map[string]any, op
 					panic(fmt.Sprintf("list of objects for child entity %s is not of type []framework.Object", externalId))
 				}
 			}
-		}
+		} else {
+			var childObjectsRaw any
 
-		if parsedChildObjects == nil {
 			childObjectsRaw, found := object[externalId]
 			if !found {
 				continue
@@ -258,7 +383,7 @@ func convertJSONObject(entity *framework.EntityConfig, object map[string]any, op
 				continue
 			}
 
-			childObjects := make([]map[string]any, len(childObjectsRawList))
+			childObjects := make([]map[string]any, 0, len(childObjectsRawList))
 			for _, childObjectRaw := range childObjectsRawList {
 				childObject, ok := childObjectRaw.(map[string]any)
 				if !ok {
