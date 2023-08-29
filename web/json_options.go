@@ -115,6 +115,8 @@ func (o *funcJSONOption) apply(opts *jsonOptions) {
 // "attr1.attr2.attr3" is "the value".
 //
 // If empty (default), single-valued complex object parsing is disabled.
+//
+// Deprecated: This option is replaced with WithJSONPathAttributeNames.
 func WithComplexAttributeNameDelimiter(delimiter string) JSONOption {
 	return &funcJSONOption{
 		f: func(jo *jsonOptions) {
