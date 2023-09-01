@@ -71,6 +71,11 @@ message DatasourceConfig {
     // The credentials to use to authenticate with the datasource.
     // Optional.
     DatasourceAuthCredentials auth = 4;
+
+    // The type of the datasource. This can be used to route requests
+    // on adapter deployments supporting multiple datasources.
+    // If the adapter does not support this type, return an error.
+    string type = 5;
 }
 
 // Credentials to use to authenticate with a datasource.
