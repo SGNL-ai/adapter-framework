@@ -136,6 +136,8 @@ const (
 	ErrorCode_ERROR_CODE_INTERNAL ErrorCode = 11
 	// Datasource received too many requests.
 	ErrorCode_ERROR_CODE_DATASOURCE_TOO_MANY_REQUESTS ErrorCode = 12
+	// Forbidden. Invalid adapter auth token provided.
+	ErrorCode_ERROR_CODE_FORBIDDEN ErrorCode = 13
 )
 
 // Enum value maps for ErrorCode.
@@ -154,6 +156,7 @@ var (
 		10: "ERROR_CODE_DATASOURCE_FAILED",
 		11: "ERROR_CODE_INTERNAL",
 		12: "ERROR_CODE_DATASOURCE_TOO_MANY_REQUESTS",
+		13: "ERROR_CODE_FORBIDDEN",
 	}
 	ErrorCode_value = map[string]int32{
 		"ERROR_CODE_UNSPECIFIED":                        0,
@@ -169,6 +172,7 @@ var (
 		"ERROR_CODE_DATASOURCE_FAILED":                  10,
 		"ERROR_CODE_INTERNAL":                           11,
 		"ERROR_CODE_DATASOURCE_TOO_MANY_REQUESTS":       12,
+		"ERROR_CODE_FORBIDDEN": 						 13,
 	}
 )
 

@@ -66,6 +66,11 @@ type Request[Config any] struct {
 	// the last call to GetPage for the entity.
 	// Optional. If not set, return the first page for this entity.
 	Cursor string `json:"cursor,omitempty"`
+
+	// Type is the type the datasource.
+	// This can be used to route requests on adapter deployments supporting
+	// multiple datasources.
+	Type string `json:"type,omitempty"`
 }
 
 // DatasourceAuthCredentials contains the credentials to authenticate with a

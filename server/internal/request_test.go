@@ -15,15 +15,18 @@
 package internal
 
 import (
+	"context"
 	"testing"
 
 	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
+	grpcMetadata "google.golang.org/grpc/metadata"
 )
 
 func TestGetAdapterRequest(t *testing.T) {
 	tests := map[string]struct {
 		req                *api_adapter_v1.GetPageRequest
+		token              string
 		wantAdapterRequest *framework.Request[TestConfig]
 		wantReverseMapping *entityReverseIdMapping
 		wantAdapterErr     *api_adapter_v1.Error
@@ -296,11 +299,117 @@ func TestGetAdapterRequest(t *testing.T) {
 				},
 			},
 		},
+		"forbidden": {
+			req: &api_adapter_v1.GetPageRequest{
+				Datasource: &api_adapter_v1.DatasourceConfig{
+					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
+					Config:  []byte(`{"a":"a value","b":"b value"}`),
+					Address: "http://example.com/",
+					Auth: &api_adapter_v1.DatasourceAuthCredentials{
+						AuthMechanism: &api_adapter_v1.DatasourceAuthCredentials_HttpAuthorization{
+							HttpAuthorization: "Bearer mysecret",
+						},
+					},
+					Type: "Example-1.0.0",
+				},
+				Entity: &api_adapter_v1.EntityConfig{
+					Id:         "00d58abb-0b80-4745-927a-af9b2fb612dd",
+					ExternalId: "users",
+					Attributes: []*api_adapter_v1.AttributeConfig{
+						{
+							Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+							ExternalId: "name",
+							Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+						},
+					},
+					Ordered: true,
+				},
+				PageSize: 100,
+				Cursor:   "the cursor",
+			},
+			wantAdapterErr: &api_adapter_v1.Error{
+				Message: "Forbidden.",
+				Code:    13, // FORBIDDEN
+			},
+		},
+		"valid_auth": {
+			token: "TODO GET FROM FILE",
+			req: &api_adapter_v1.GetPageRequest{
+				Datasource: &api_adapter_v1.DatasourceConfig{
+					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
+					Config:  []byte(`{"a":"a value","b":"b value"}`),
+					Address: "http://example.com/",
+					Auth: &api_adapter_v1.DatasourceAuthCredentials{
+						AuthMechanism: &api_adapter_v1.DatasourceAuthCredentials_HttpAuthorization{
+							HttpAuthorization: "Bearer mysecret",
+						},
+					},
+					Type: "Example-1.0.0",
+				},
+				Entity: &api_adapter_v1.EntityConfig{
+					Id:         "00d58abb-0b80-4745-927a-af9b2fb612dd",
+					ExternalId: "users",
+					Attributes: []*api_adapter_v1.AttributeConfig{
+						{
+							Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+							ExternalId: "name",
+							Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+						},
+					},
+					Ordered: true,
+				},
+				PageSize: 100,
+				Cursor:   "the cursor",
+			},
+			wantAdapterRequest: &framework.Request[TestConfig]{
+				Config: &TestConfig{
+					A: "a value",
+					B: "b value",
+				},
+				Address: "http://example.com/",
+				Auth: &framework.DatasourceAuthCredentials{
+					HTTPAuthorization: "Bearer mysecret",
+				},
+				Entity: framework.EntityConfig{
+					ExternalId: "users",
+					Attributes: []*framework.AttributeConfig{
+						{
+							ExternalId: "name",
+							Type:       framework.AttributeTypeString,
+						},
+					},
+				},
+				Ordered:  true,
+				PageSize: 100,
+				Cursor:   "the cursor",
+				Type:     "Example-1.0.0",
+			},
+			wantReverseMapping: &entityReverseIdMapping{
+				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
+				Attributes: map[string]*api_adapter_v1.AttributeConfig{
+					"name": {
+						Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+						ExternalId: "name",
+						Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+					},
+				},
+			},
+		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			gotAdapterRequest, gotReverseMapping, gotAdapterErr := getAdapterRequest[TestConfig](tc.req)
+			var ctx context.Context
+
+			if tc.token != "" {
+				ctx = grpcMetadata.NewIncomingContext(context.Background(), grpcMetadata.MD{
+					"token": []string{tc.token},
+				})
+			} else {
+				ctx = grpcMetadata.NewIncomingContext(context.Background(), grpcMetadata.MD{})
+			}
+
+			gotAdapterRequest, gotReverseMapping, gotAdapterErr := getAdapterRequest[TestConfig](ctx, tc.req)
 			AssertDeepEqual(t, tc.wantAdapterRequest, gotAdapterRequest)
 			AssertDeepEqual(t, tc.wantReverseMapping, gotReverseMapping)
 			AssertDeepEqual(t, tc.wantAdapterErr, gotAdapterErr)

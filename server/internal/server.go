@@ -35,7 +35,7 @@ type Server[Config any] struct {
 }
 
 func (s *Server[Config]) GetPage(ctx context.Context, req *api_adapter_v1.GetPageRequest) (*api_adapter_v1.GetPageResponse, error) {
-	adapterRequest, reverseMapping, adapterErr := getAdapterRequest[Config](req)
+	adapterRequest, reverseMapping, adapterErr := getAdapterRequest[Config](ctx, req)
 
 	if adapterErr != nil {
 		return api_adapter_v1.NewGetPageResponseError(adapterErr), nil
