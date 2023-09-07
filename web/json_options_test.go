@@ -44,6 +44,16 @@ func TestWithDateTimeFormats(t *testing.T) {
 	AssertDeepEqual(t, dateTimeFormats, opts.dateTimeFormats)
 }
 
+func TestWithJSONPathAttributeNames(t *testing.T) {
+	var opts jsonOptions
+
+	opt := WithJSONPathAttributeNames()
+
+	opt.apply(&opts)
+
+	AssertDeepEqual(t, true, opts.enableJSONPath)
+}
+
 func TestWithLocalTimeZoneOffset(t *testing.T) {
 	var opts jsonOptions
 

@@ -19,8 +19,19 @@ import "time"
 // jsonOptions configures JSON object parsing. The fields are set by the
 // JSONOption values passed to ConvertJSONObjectList.
 type jsonOptions struct {
+	// complexAttributeNameDelimiter is the delimiter to use to separate
+	// hierarchical attribute names in attribute external IDs.
+	// That feature is disabled if "".
 	complexAttributeNameDelimiter string
-	dateTimeFormats               []DateTimeFormatWithTimeZone
+
+	// dateTimeFormats is the set of datetime formats that are supported for
+	// parsing the values of attributes of type datetime.
+	dateTimeFormats []DateTimeFormatWithTimeZone
+
+	// enableJSONPath indicates whether JSONPath is supported as a syntax for
+	// attribute external IDs. If true, any external ID starting with '$' is
+	// considered to be a JSONPath.
+	enableJSONPath bool
 
 	// localTimeZoneOffset is the default local timezone offset, as a number
 	// of seconds east of UTC, to be used for parsing date-time attributes
@@ -65,6 +76,7 @@ func defaultJSONOptions() *jsonOptions {
 			{"01/02/2006", false},
 			{"01/02/06", false},
 		},
+		enableJSONPath:      false, // Disabled.
 		localTimeZoneOffset: 0,
 	}
 }
@@ -103,6 +115,8 @@ func (o *funcJSONOption) apply(opts *jsonOptions) {
 // "attr1.attr2.attr3" is "the value".
 //
 // If empty (default), single-valued complex object parsing is disabled.
+//
+// Deprecated: This option is replaced with WithJSONPathAttributeNames.
 func WithComplexAttributeNameDelimiter(delimiter string) JSONOption {
 	return &funcJSONOption{
 		f: func(jo *jsonOptions) {
@@ -119,6 +133,29 @@ func WithDateTimeFormats(formats ...DateTimeFormatWithTimeZone) JSONOption {
 	return &funcJSONOption{
 		f: func(jo *jsonOptions) {
 			jo.dateTimeFormats = formats
+		},
+	}
+}
+
+// WithJSONPathAttributeNames enables attribute external IDs specified as
+// JSONPath to match attributes in nested objects.
+//
+// If enabled, and an attribute's external ID starts with '$', it is used as a
+// JSONPath to match an attribute of a single- or multi-valued complex object.
+//
+// If the attribute is configured with a list type:
+// if one or more values matched, then the resulting value is the list of
+// matched values,
+// otherwise (no value matched), then the resulting value is null.
+//
+// If the attribute is configured with a non-list type:
+// if exactly one value matched, then the resulting value is that value,
+// otherwise, if no value matched then the resulting value is null,
+// otherwise (the JSONPath matched more than one value), an error is returned.
+func WithJSONPathAttributeNames() JSONOption {
+	return &funcJSONOption{
+		f: func(jo *jsonOptions) {
+			jo.enableJSONPath = true
 		},
 	}
 }
