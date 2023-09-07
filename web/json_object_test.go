@@ -1243,8 +1243,7 @@ func TestConvertJSONObject_JSONPath(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			var object map[string]any
-			err := json.Unmarshal([]byte(tc.objectJSON), &object)
-			if err != nil {
+			if err := json.Unmarshal([]byte(tc.objectJSON), &object); err != nil {
 				t.Fatalf("Failed to unmarshal test input JSON object: %v", err)
 			}
 
