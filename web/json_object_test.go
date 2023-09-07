@@ -1104,13 +1104,13 @@ func TestConvertJSONObject_JSONPath(t *testing.T) {
 								"b": [
 									{
 										"a": {
-											"a": "b__a child1 a__b child1 a value",
-											"b": "b__a child1 a__b child1 b value"
+											"a": "b__a child1 a__b child1 a__a value",
+											"b": "b__a child1 a__b child1 a__b value"
 										}
 									},
 									{
 										"a": {
-											"a": "b__a child1 a__b child2 a value"
+											"a": "b__a child1 a__b child2 a__a value"
 										}
 									}
 								]
@@ -1141,7 +1141,7 @@ func TestConvertJSONObject_JSONPath(t *testing.T) {
 						"$.a.a": "b__a child1 a__a value",
 						"$.a.b": []framework.Object{
 							{
-								"$.a.b": "b__a child1 a__b child1 b value",
+								"$.a.b": "b__a child1 a__b child1 a__b value",
 							},
 						},
 					},
