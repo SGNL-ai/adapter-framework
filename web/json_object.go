@@ -263,37 +263,41 @@ func convertJSONObject(entity *framework.EntityConfig, object map[string]any, op
 			if err != nil {
 				return nil, err
 			}
-		} else if opts.complexAttributeNameDelimiter != "" {
-			// The flattening of single-valued complex attributes is enabled,
-			// so the attribute's parent complex attribute, if it exists, has
-			// been parsed in the loop above. Look up the attribute directly in
-			// the parsed object for that complex attribute.
-
-			externalIdComponents := strings.SplitN(externalId, opts.complexAttributeNameDelimiter, 2)
-			if len(externalIdComponents) == 2 {
-				localExternalId := externalIdComponents[0]
-				subExternalId := externalIdComponents[1]
-
-				complexAttribute, found := complexAttributes[localExternalId]
-				if !found {
-					continue
-				}
-
-				parsedValue, found = complexAttribute[subExternalId]
-				if !found {
-					continue
-				}
-			}
 		} else {
-			value, found := object[externalId]
-			if !found {
-				continue
+			if opts.complexAttributeNameDelimiter != "" {
+				// The flattening of single-valued complex attributes is enabled,
+				// so the attribute's parent complex attribute, if it exists, has
+				// been parsed in the loop above. Look up the attribute directly in
+				// the parsed object for that complex attribute.
+
+				externalIdComponents := strings.SplitN(externalId, opts.complexAttributeNameDelimiter, 2)
+				if len(externalIdComponents) == 2 {
+					localExternalId := externalIdComponents[0]
+					subExternalId := externalIdComponents[1]
+
+					complexAttribute, found := complexAttributes[localExternalId]
+					if !found {
+						continue
+					}
+
+					parsedValue, found = complexAttribute[subExternalId]
+					if !found {
+						continue
+					}
+				}
 			}
 
-			var err error
-			parsedValue, err = convertJSONAttributeValue(attribute, value, opts)
-			if err != nil {
-				return nil, err
+			if parsedValue == nil { // Not a flattened attribute.
+				value, found := object[externalId]
+				if !found {
+					continue
+				}
+
+				var err error
+				parsedValue, err = convertJSONAttributeValue(attribute, value, opts)
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 
@@ -339,63 +343,67 @@ func convertJSONObject(entity *framework.EntityConfig, object map[string]any, op
 			if err != nil {
 				return nil, fmt.Errorf("failed to parse objects for child entity %s: %w", externalId, err)
 			}
-		} else if opts.complexAttributeNameDelimiter != "" {
-			// The flattening of single-valued complex attributes is enabled,
-			// so the attribute's parent complex attribute, if it exists, has
-			// been parsed in the loop above. Look up the attribute directly in
-			// the parsed object for that complex attribute.
-
-			externalIdComponents := strings.SplitN(externalId, opts.complexAttributeNameDelimiter, 2)
-			if len(externalIdComponents) == 2 {
-				localExternalId := externalIdComponents[0]
-				subExternalId := externalIdComponents[1]
-
-				complexAttribute, found := complexAttributes[localExternalId]
-				if !found {
-					continue
-				}
-
-				parsedChildObjectsAny, found := complexAttribute[subExternalId]
-				if !found {
-					continue
-				}
-
-				var ok bool
-				parsedChildObjects, ok = parsedChildObjectsAny.([]framework.Object)
-				if !ok {
-					panic(fmt.Sprintf("list of objects for child entity %s is not of type []framework.Object", externalId))
-				}
-			}
 		} else {
-			var childObjectsRaw any
+			if opts.complexAttributeNameDelimiter != "" {
+				// The flattening of single-valued complex attributes is enabled,
+				// so the attribute's parent complex attribute, if it exists, has
+				// been parsed in the loop above. Look up the attribute directly in
+				// the parsed object for that complex attribute.
 
-			childObjectsRaw, found := object[externalId]
-			if !found {
-				continue
-			}
+				externalIdComponents := strings.SplitN(externalId, opts.complexAttributeNameDelimiter, 2)
+				if len(externalIdComponents) == 2 {
+					localExternalId := externalIdComponents[0]
+					subExternalId := externalIdComponents[1]
 
-			childObjectsRawList, ok := childObjectsRaw.([]any)
-			if !ok {
-				return nil, fmt.Errorf("child entity %s is not associated with a list", externalId)
-			}
+					complexAttribute, found := complexAttributes[localExternalId]
+					if !found {
+						continue
+					}
 
-			if len(childObjectsRawList) == 0 {
-				continue
-			}
+					parsedChildObjectsAny, found := complexAttribute[subExternalId]
+					if !found {
+						continue
+					}
 
-			childObjects := make([]map[string]any, 0, len(childObjectsRawList))
-			for _, childObjectRaw := range childObjectsRawList {
-				childObject, ok := childObjectRaw.(map[string]any)
-				if !ok {
-					return nil, fmt.Errorf("child entity %s is not associated with a list of JSON objects", externalId)
+					var ok bool
+					parsedChildObjects, ok = parsedChildObjectsAny.([]framework.Object)
+					if !ok {
+						panic(fmt.Sprintf("list of objects for child entity %s is not of type []framework.Object", externalId))
+					}
 				}
-				childObjects = append(childObjects, childObject)
 			}
 
-			var err error
-			parsedChildObjects, err = convertJSONObjectList(childEntity, childObjects, opts)
-			if err != nil {
-				return nil, fmt.Errorf("failed to parse objects for child entity %s: %w", externalId, err)
+			if parsedChildObjects == nil { // Not a flattened attribute.
+				var childObjectsRaw any
+
+				childObjectsRaw, found := object[externalId]
+				if !found {
+					continue
+				}
+
+				childObjectsRawList, ok := childObjectsRaw.([]any)
+				if !ok {
+					return nil, fmt.Errorf("child entity %s is not associated with a list", externalId)
+				}
+
+				if len(childObjectsRawList) == 0 {
+					continue
+				}
+
+				childObjects := make([]map[string]any, 0, len(childObjectsRawList))
+				for _, childObjectRaw := range childObjectsRawList {
+					childObject, ok := childObjectRaw.(map[string]any)
+					if !ok {
+						return nil, fmt.Errorf("child entity %s is not associated with a list of JSON objects", externalId)
+					}
+					childObjects = append(childObjects, childObject)
+				}
+
+				var err error
+				parsedChildObjects, err = convertJSONObjectList(childEntity, childObjects, opts)
+				if err != nil {
+					return nil, fmt.Errorf("failed to parse objects for child entity %s: %w", externalId, err)
+				}
 			}
 		}
 
