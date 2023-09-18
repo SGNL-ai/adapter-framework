@@ -42,6 +42,15 @@ func getAdapterRequest[Config any](
 	ctx context.Context,
 	req *api_adapter_v1.GetPageRequest,
 ) (adapterRequest *framework.Request[Config], reverseMapping *entityReverseIdMapping, adapterErr *api_adapter_v1.Error) {
+	if !canAccessAdapter(ctx) {
+		adapterErr = &api_adapter_v1.Error{
+			Message: "Forbidden.",
+			Code:    api_adapter_v1.ErrorCode_ERROR_CODE_FORBIDDEN,
+		}
+
+		return nil, nil, adapterErr
+	}
+
 	var errMsg string
 
 	switch {
@@ -59,19 +68,6 @@ func getAdapterRequest[Config any](
 		adapterErr = &api_adapter_v1.Error{
 			Message: errMsg,
 			Code:    api_adapter_v1.ErrorCode_ERROR_CODE_INVALID_PAGE_REQUEST_CONFIG,
-		}
-
-		return nil, nil, adapterErr
-	}
-
-	// TODO [sc-11900]: Move this check to the start of the function and remove the check for
-	// `Type != ""` in the if statement below once this should be enforced on all adapters.
-	// Currently, this will only be enforced on adapters that have been upgraded to use discrete
-	// adapters (e.g. they have `Type` set).
-	if req.Datasource.Type != "" && !canAccessAdapter(ctx) {
-		adapterErr = &api_adapter_v1.Error{
-			Message: "Forbidden.",
-			Code:    api_adapter_v1.ErrorCode_ERROR_CODE_FORBIDDEN,
 		}
 
 		return nil, nil, adapterErr
