@@ -139,7 +139,6 @@ func canAccessAdapter(ctx context.Context) bool {
 		return false
 	}
 
-	// AUTH_TOKENS_PATH is set directly on the k8 container on deployment
 	path, exists := os.LookupEnv("AUTH_TOKENS_PATH")
 	if !exists {
 		return false
@@ -156,7 +155,7 @@ func canAccessAdapter(ctx context.Context) bool {
 		return false
 	}
 
-	// TODO: Once upgrading go to 1.21+, replace with the `Contains` method
+	// TODO: After upgrading go to 1.21+, replace with the `Contains` method
 	for _, y := range *validTokens {
 		if y == requestTokens[0] {
 			return true
