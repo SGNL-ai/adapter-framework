@@ -22,8 +22,8 @@ import (
 
 // New returns an AdapterServer that wraps the given high-level
 // Adapter implementation.
-func New[Config any](adapter framework.Adapter[Config]) api_adapter_v1.AdapterServer {
+func New[Config any](adapters map[string]framework.Adapter[Config]) api_adapter_v1.AdapterServer {
 	return &internal.Server[Config]{
-		Adapter: adapter,
+		Adapters: adapters,
 	}
 }

@@ -45,6 +45,10 @@ message GetPageRequest {
     // returned by the last call to GetPage for the entity.
     // If not set, return the first page for this entity.
     string cursor = 4;
+
+    // The datasource type requested. This is used for routing requests in adapter deployments
+    // supporting multiple datasources.
+    string type = 5;
 }
 
 // A response containing a page of data.
@@ -266,6 +270,12 @@ enum ErrorCode {
 
     // Datasource received too many requests.
     ERROR_CODE_DATASOURCE_TOO_MANY_REQUESTS = 12;
+
+    // Client is not authorized to access the adapter.
+    ERROR_CODE_FORBIDDEN = 13;
+
+    // Unsupported datasource type provided in request.
+    ERROR_CODE_UNSUPPORTED_TYPE = 14;
 }
 
 // An error retrieving a page.
