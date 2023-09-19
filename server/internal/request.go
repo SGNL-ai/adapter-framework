@@ -126,7 +126,7 @@ func getAdapterRequest[Config any](
 
 // canAccessAdapter verifies the request has the correct token to access the
 // adapter. Will return true if the provided token matches any of the tokens
-// specified in the auth tokens k8 secret mounted on this container.
+// specified in the file located at AUTH_TOKENS_PATH.
 // Otherwise, will return false.
 func canAccessAdapter(ctx context.Context) bool {
 	metadata, ok := grpcMetadata.FromIncomingContext(ctx)
