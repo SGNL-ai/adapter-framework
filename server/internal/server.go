@@ -34,6 +34,8 @@ type Server[Config any] struct {
 
 	// Adapters contains a map of high-level implementations of the service
 	// as well as their associated types.
+	// The key in this map should match the Supported Datasource Type
+	// specified on the Adapter object created in SGNL.
 	Adapters map[string]framework.Adapter[Config]
 }
 
