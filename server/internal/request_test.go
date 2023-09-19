@@ -319,7 +319,41 @@ func TestGetAdapterRequest(t *testing.T) {
 				},
 			},
 		},
-		"forbidden": {
+		"forbidden_token_missing": {
+			req: &api_adapter_v1.GetPageRequest{
+				Datasource: &api_adapter_v1.DatasourceConfig{
+					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
+					Config:  []byte(`{"a":"a value","b":"b value"}`),
+					Address: "http://example.com/",
+					Auth: &api_adapter_v1.DatasourceAuthCredentials{
+						AuthMechanism: &api_adapter_v1.DatasourceAuthCredentials_HttpAuthorization{
+							HttpAuthorization: "Bearer mysecret",
+						},
+					},
+					Type: "Example-1.0.0",
+				},
+				Entity: &api_adapter_v1.EntityConfig{
+					Id:         "00d58abb-0b80-4745-927a-af9b2fb612dd",
+					ExternalId: "users",
+					Attributes: []*api_adapter_v1.AttributeConfig{
+						{
+							Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+							ExternalId: "name",
+							Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+						},
+					},
+					Ordered: true,
+				},
+				PageSize: 100,
+				Cursor:   "the cursor",
+			},
+			wantAdapterErr: &api_adapter_v1.Error{
+				Message: "Forbidden.",
+				Code:    13, // FORBIDDEN
+			},
+		},
+		"forbidden_invalid_token": {
+			token: "invalid",
 			req: &api_adapter_v1.GetPageRequest{
 				Datasource: &api_adapter_v1.DatasourceConfig{
 					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
