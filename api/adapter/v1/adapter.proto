@@ -45,10 +45,6 @@ message GetPageRequest {
     // returned by the last call to GetPage for the entity.
     // If not set, return the first page for this entity.
     string cursor = 4;
-
-    // The datasource type requested. This is used for routing requests in adapter deployments
-    // supporting multiple datasources.
-    string type = 5;
 }
 
 // A response containing a page of data.

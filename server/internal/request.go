@@ -16,7 +16,9 @@ package internal
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"os"
 
 	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
@@ -118,31 +120,45 @@ func getAdapterRequest[Config any](
 	adapterRequest.Ordered = req.Entity.Ordered
 	adapterRequest.PageSize = req.PageSize
 	adapterRequest.Cursor = req.Cursor
-	adapterRequest.Type = req.Datasource.Type
 
 	return
 }
 
 // canAccessAdapter verifies the request has the correct token to access the
 // adapter. Will return true if the provided token matches any of the tokens
-// specified in TODO. Otherwise, will return false.
+// specified in the auth tokens k8 secret mounted on this container.
+// Otherwise, will return false.
 func canAccessAdapter(ctx context.Context) bool {
 	metadata, ok := grpcMetadata.FromIncomingContext(ctx)
 	if !ok {
 		return false
 	}
 
-	tokens := metadata.Get("token")
-	if len(tokens) != 1 {
+	requestTokens := metadata.Get("token")
+	if len(requestTokens) != 1 {
 		return false
 	}
 
-	// TODO: Get from file
-	x := []string{"TODO GET FROM FILE"}
+	// AUTH_TOKENS_PATH is set directly on the k8 container on deployment
+	path, exists := os.LookupEnv("AUTH_TOKENS_PATH")
+	if !exists {
+		return false
+	}
+
+	jsonValidTokens, err := os.ReadFile(path)
+	if err != nil {
+		return false
+	}
+
+	validTokens := new([]string)
+
+	if err := json.Unmarshal(jsonValidTokens, validTokens); err != nil || validTokens == nil {
+		return false
+	}
 
 	// TODO: Once upgrading go to 1.21+, replace with the `Contains` method
-	for _, y := range x {
-		if y == tokens[0] {
+	for _, y := range *validTokens {
+		if y == requestTokens[0] {
 			return true
 		}
 	}

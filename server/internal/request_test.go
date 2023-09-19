@@ -16,6 +16,7 @@ package internal
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	framework "github.com/sgnl-ai/adapter-framework"
@@ -24,6 +25,16 @@ import (
 )
 
 func TestGetAdapterRequest(t *testing.T) {
+	path := "./TOKENS"
+	if err := os.Setenv("AUTH_TOKENS_PATH", path); err != nil {
+		t.Fatal(err)
+	}
+
+	token := []byte(`["dGhpc2lzYXRlc3R0b2tlbg==","dGhpc2lzYWxzb2F0ZXN0dG9rZW4="]`)
+	if err := os.WriteFile(path, token, 0666); err != nil {
+		t.Fatal(err)
+	}
+
 	tests := map[string]struct {
 		req                *api_adapter_v1.GetPageRequest
 		token              string
@@ -32,12 +43,14 @@ func TestGetAdapterRequest(t *testing.T) {
 		wantAdapterErr     *api_adapter_v1.Error
 	}{
 		"invalid_nil": {
+			token: "dGhpc2lzYXRlc3R0b2tlbg==",
 			wantAdapterErr: &api_adapter_v1.Error{
 				Message: "Request is nil.",
 				Code:    1, // INVALID_PAGE_REQUEST_CONFIG
 			},
 		},
 		"invalid_no_datasource_config": {
+			token: "dGhpc2lzYXRlc3R0b2tlbg==",
 			req: &api_adapter_v1.GetPageRequest{
 				Entity: &api_adapter_v1.EntityConfig{
 					Id:         "00d58abb-0b80-4745-927a-af9b2fb612dd",
@@ -59,6 +72,7 @@ func TestGetAdapterRequest(t *testing.T) {
 			},
 		},
 		"invalid_no_entity_config": {
+			token: "dGhpc2lzYXRlc3R0b2tlbg==",
 			req: &api_adapter_v1.GetPageRequest{
 				Datasource: &api_adapter_v1.DatasourceConfig{
 					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
@@ -78,6 +92,7 @@ func TestGetAdapterRequest(t *testing.T) {
 			},
 		},
 		"invalid_non_positive_page_size": {
+			token: "dGhpc2lzYXRlc3R0b2tlbg==",
 			req: &api_adapter_v1.GetPageRequest{
 				Datasource: &api_adapter_v1.DatasourceConfig{
 					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
@@ -109,6 +124,7 @@ func TestGetAdapterRequest(t *testing.T) {
 			},
 		},
 		"invalid_datasource_config_no_id": {
+			token: "dGhpc2lzYXRlc3R0b2tlbg==",
 			req: &api_adapter_v1.GetPageRequest{
 				Datasource: &api_adapter_v1.DatasourceConfig{
 					Config:  []byte(`{"a":"a value","b":"b value"}`),
@@ -139,6 +155,7 @@ func TestGetAdapterRequest(t *testing.T) {
 			},
 		},
 		"invalid_entity_config_config_not_json": {
+			token: "dGhpc2lzYXRlc3R0b2tlbg==",
 			req: &api_adapter_v1.GetPageRequest{
 				Datasource: &api_adapter_v1.DatasourceConfig{
 					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
@@ -169,6 +186,7 @@ func TestGetAdapterRequest(t *testing.T) {
 			},
 		},
 		"invalid_entity_config_no_id": {
+			token: "dGhpc2lzYXRlc3R0b2tlbg==",
 			req: &api_adapter_v1.GetPageRequest{
 				Datasource: &api_adapter_v1.DatasourceConfig{
 					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
@@ -199,6 +217,7 @@ func TestGetAdapterRequest(t *testing.T) {
 			},
 		},
 		"all_fields_set": {
+			token: "dGhpc2lzYXRlc3R0b2tlbg==",
 			req: &api_adapter_v1.GetPageRequest{
 				Datasource: &api_adapter_v1.DatasourceConfig{
 					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
@@ -259,6 +278,7 @@ func TestGetAdapterRequest(t *testing.T) {
 			},
 		},
 		"all_optional_fields_unset": {
+			token: "dGhpc2lzYXRlc3R0b2tlbg==",
 			req: &api_adapter_v1.GetPageRequest{
 				Datasource: &api_adapter_v1.DatasourceConfig{
 					Id: "1f530a64-0565-49e6-8647-b88e908b7229",
@@ -333,7 +353,7 @@ func TestGetAdapterRequest(t *testing.T) {
 			},
 		},
 		"valid_auth": {
-			token: "TODO GET FROM FILE",
+			token: "dGhpc2lzYXRlc3R0b2tlbg==",
 			req: &api_adapter_v1.GetPageRequest{
 				Datasource: &api_adapter_v1.DatasourceConfig{
 					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
@@ -382,7 +402,6 @@ func TestGetAdapterRequest(t *testing.T) {
 				Ordered:  true,
 				PageSize: 100,
 				Cursor:   "the cursor",
-				Type:     "Example-1.0.0",
 			},
 			wantReverseMapping: &entityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",

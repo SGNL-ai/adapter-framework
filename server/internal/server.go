@@ -44,7 +44,7 @@ func (s *Server[Config]) GetPage(ctx context.Context, req *api_adapter_v1.GetPag
 		return api_adapter_v1.NewGetPageResponseError(adapterErr), nil
 	}
 
-	if adapter, ok := s.Adapters[req.Type]; ok {
+	if adapter, ok := s.Adapters[req.Datasource.Type]; ok {
 		adapterResponse := adapter.GetPage(ctx, adapterRequest)
 
 		return getResponse(reverseMapping, &adapterResponse), nil
@@ -52,7 +52,7 @@ func (s *Server[Config]) GetPage(ctx context.Context, req *api_adapter_v1.GetPag
 
 	adapterErr = &api_adapter_v1.Error{
 		Message: fmt.Sprintf("Unsupported datasource type provided: %s.", req.Type),
-		Code:    api_adapter_v1.ERROR_CODE_UNSUPPORTED_TYPE,
+		Code:    api_adapter_v1.ErrorCode_ERROR_CODE_UNSUPPORTED_TYPE,
 	}
 
 	return api_adapter_v1.NewGetPageResponseError(adapterErr), nil

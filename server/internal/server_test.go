@@ -16,11 +16,13 @@ package internal
 
 import (
 	"context"
+	"os"
 	"testing"
 	"time"
 
 	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
+	grpcMetadata "google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
@@ -33,6 +35,16 @@ func (a *mockAdapter[Config]) GetPage(ctx context.Context, request *framework.Re
 }
 
 func TestServer_GetPage(t *testing.T) {
+	path := "./TOKENS"
+	if err := os.Setenv("AUTH_TOKENS_PATH", path); err != nil {
+		t.Fatal(err)
+	}
+
+	token := []byte(`["dGhpc2lzYXRlc3R0b2tlbg==","dGhpc2lzYWxzb2F0ZXN0dG9rZW4="]`)
+	if err := os.WriteFile(path, token, 0666); err != nil {
+		t.Fatal(err)
+	}
+
 	tests := map[string]struct {
 		req             *api_adapter_v1.GetPageRequest
 		adapterResponse framework.Response
@@ -192,11 +204,17 @@ func TestServer_GetPage(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := grpcMetadata.NewIncomingContext(context.Background(), grpcMetadata.MD{
+				"token": []string{"dGhpc2lzYXRlc3R0b2tlbg=="},
+			})
+
 			server := Server[TestConfig]{
-				Adapter: &mockAdapter[TestConfig]{Response: tc.adapterResponse},
+				Adapters: map[string]framework.Adapter[TestConfig]{
+					"": &mockAdapter[TestConfig]{Response: tc.adapterResponse},
+				},
 			}
 
-			gotResp, _ := server.GetPage(context.TODO(), tc.req)
+			gotResp, _ := server.GetPage(ctx, tc.req)
 			AssertDeepEqual(t, tc.wantResp, gotResp)
 		})
 	}
