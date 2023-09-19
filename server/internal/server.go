@@ -51,7 +51,7 @@ func (s *Server[Config]) GetPage(ctx context.Context, req *api_adapter_v1.GetPag
 	}
 
 	adapterErr = &api_adapter_v1.Error{
-		Message: fmt.Sprintf("Unsupported datasource type provided: %s.", req.Type),
+		Message: fmt.Sprintf("Unsupported datasource type provided: %s.", req.Datasource.Type),
 		Code:    api_adapter_v1.ErrorCode_ERROR_CODE_UNSUPPORTED_TYPE,
 	}
 
