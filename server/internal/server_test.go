@@ -120,6 +120,77 @@ func TestServer_GetPage(t *testing.T) {
 				},
 			},
 		},
+		"success_explicit_type": {
+			req: &api_adapter_v1.GetPageRequest{
+				Datasource: &api_adapter_v1.DatasourceConfig{
+					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
+					Config:  []byte(`{"a":"a value","b":"b value"}`),
+					Address: "http://example.com/",
+					Auth: &api_adapter_v1.DatasourceAuthCredentials{
+						AuthMechanism: &api_adapter_v1.DatasourceAuthCredentials_HttpAuthorization{
+							HttpAuthorization: "Bearer mysecret",
+						},
+					},
+					Type: "Mock-1.0.1",
+				},
+				Entity: &api_adapter_v1.EntityConfig{
+					Id:         "00d58abb-0b80-4745-927a-af9b2fb612dd",
+					ExternalId: "users",
+					Attributes: []*api_adapter_v1.AttributeConfig{
+						{
+							Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+							ExternalId: "name",
+							Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+						},
+					},
+					Ordered: true,
+				},
+				PageSize: 100,
+				Cursor:   "the cursor",
+			},
+			adapterResponse: framework.Response{
+				Success: &framework.Page{
+					Objects: []framework.Object{
+						{
+							"name": "Alice",
+						},
+						{
+							"name": "Bob",
+						},
+					},
+					NextCursor: "next cursor",
+				},
+			},
+			wantResp: &api_adapter_v1.GetPageResponse{
+				Response: &api_adapter_v1.GetPageResponse_Success{
+					Success: &api_adapter_v1.Page{
+						Objects: []*api_adapter_v1.Object{
+							{
+								Attributes: []*api_adapter_v1.Attribute{
+									{
+										Id: "12268f03-f99d-476f-91cc-5fe3404e1654",
+										Values: []*api_adapter_v1.AttributeValue{
+											{Value: &api_adapter_v1.AttributeValue_StringValue{StringValue: "Alice"}},
+										},
+									},
+								},
+							},
+							{
+								Attributes: []*api_adapter_v1.Attribute{
+									{
+										Id: "12268f03-f99d-476f-91cc-5fe3404e1654",
+										Values: []*api_adapter_v1.AttributeValue{
+											{Value: &api_adapter_v1.AttributeValue_StringValue{StringValue: "Bob"}},
+										},
+									},
+								},
+							},
+						},
+						NextCursor: "next cursor",
+					},
+				},
+			},
+		},
 		"error": {
 			req: &api_adapter_v1.GetPageRequest{
 				Datasource: &api_adapter_v1.DatasourceConfig{
@@ -200,6 +271,46 @@ func TestServer_GetPage(t *testing.T) {
 				},
 			},
 		},
+		"unsupported_type": {
+			req: &api_adapter_v1.GetPageRequest{
+				Datasource: &api_adapter_v1.DatasourceConfig{
+					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
+					Config:  []byte(`{"a":"a value","b":"b value"}`),
+					Address: "http://example.com/",
+					Auth: &api_adapter_v1.DatasourceAuthCredentials{
+						AuthMechanism: &api_adapter_v1.DatasourceAuthCredentials_HttpAuthorization{
+							HttpAuthorization: "Bearer mysecret",
+						},
+					},
+					Type: "Invalid-1.0.0",
+				},
+				Entity: &api_adapter_v1.EntityConfig{
+					Id:         "00d58abb-0b80-4745-927a-af9b2fb612dd",
+					ExternalId: "users",
+					Attributes: []*api_adapter_v1.AttributeConfig{
+						{
+							Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+							ExternalId: "name",
+							Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+						},
+					},
+					Ordered: true,
+				},
+				PageSize: 100,
+				Cursor:   "the cursor",
+			},
+			adapterResponse: framework.Response{
+				Success: &framework.Page{},
+			},
+			wantResp: &api_adapter_v1.GetPageResponse{
+				Response: &api_adapter_v1.GetPageResponse_Error{
+					Error: &api_adapter_v1.Error{
+						Message: "Unsupported datasource type provided: Invalid-1.0.0.",
+						Code:    14, // UNSUPPORTED_TYPE
+					},
+				},
+			},
+		},
 	}
 
 	for name, tc := range tests {
@@ -210,7 +321,8 @@ func TestServer_GetPage(t *testing.T) {
 
 			server := Server[TestConfig]{
 				Adapters: map[string]framework.Adapter[TestConfig]{
-					"": &mockAdapter[TestConfig]{Response: tc.adapterResponse},
+					"":           &mockAdapter[TestConfig]{Response: tc.adapterResponse},
+					"Mock-1.0.1": &mockAdapter[TestConfig]{Response: tc.adapterResponse},
 				},
 			}
 
