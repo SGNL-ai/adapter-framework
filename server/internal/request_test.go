@@ -24,20 +24,17 @@ import (
 func TestGetAdapterRequest(t *testing.T) {
 	tests := map[string]struct {
 		req                *api_adapter_v1.GetPageRequest
-		token              string
 		wantAdapterRequest *framework.Request[TestConfig]
 		wantReverseMapping *entityReverseIdMapping
 		wantAdapterErr     *api_adapter_v1.Error
 	}{
 		"invalid_nil": {
-			token: "dGhpc2lzYXRlc3R0b2tlbg==",
 			wantAdapterErr: &api_adapter_v1.Error{
 				Message: "Request is nil.",
 				Code:    1, // INVALID_PAGE_REQUEST_CONFIG
 			},
 		},
 		"invalid_no_datasource_config": {
-			token: "dGhpc2lzYXRlc3R0b2tlbg==",
 			req: &api_adapter_v1.GetPageRequest{
 				Entity: &api_adapter_v1.EntityConfig{
 					Id:         "00d58abb-0b80-4745-927a-af9b2fb612dd",
@@ -59,7 +56,6 @@ func TestGetAdapterRequest(t *testing.T) {
 			},
 		},
 		"invalid_no_entity_config": {
-			token: "dGhpc2lzYXRlc3R0b2tlbg==",
 			req: &api_adapter_v1.GetPageRequest{
 				Datasource: &api_adapter_v1.DatasourceConfig{
 					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
@@ -79,7 +75,6 @@ func TestGetAdapterRequest(t *testing.T) {
 			},
 		},
 		"invalid_non_positive_page_size": {
-			token: "dGhpc2lzYXRlc3R0b2tlbg==",
 			req: &api_adapter_v1.GetPageRequest{
 				Datasource: &api_adapter_v1.DatasourceConfig{
 					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
@@ -111,7 +106,6 @@ func TestGetAdapterRequest(t *testing.T) {
 			},
 		},
 		"invalid_datasource_config_no_id": {
-			token: "dGhpc2lzYXRlc3R0b2tlbg==",
 			req: &api_adapter_v1.GetPageRequest{
 				Datasource: &api_adapter_v1.DatasourceConfig{
 					Config:  []byte(`{"a":"a value","b":"b value"}`),
@@ -142,7 +136,6 @@ func TestGetAdapterRequest(t *testing.T) {
 			},
 		},
 		"invalid_entity_config_config_not_json": {
-			token: "dGhpc2lzYXRlc3R0b2tlbg==",
 			req: &api_adapter_v1.GetPageRequest{
 				Datasource: &api_adapter_v1.DatasourceConfig{
 					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
@@ -173,7 +166,6 @@ func TestGetAdapterRequest(t *testing.T) {
 			},
 		},
 		"invalid_entity_config_no_id": {
-			token: "dGhpc2lzYXRlc3R0b2tlbg==",
 			req: &api_adapter_v1.GetPageRequest{
 				Datasource: &api_adapter_v1.DatasourceConfig{
 					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
@@ -204,7 +196,6 @@ func TestGetAdapterRequest(t *testing.T) {
 			},
 		},
 		"all_fields_set": {
-			token: "dGhpc2lzYXRlc3R0b2tlbg==",
 			req: &api_adapter_v1.GetPageRequest{
 				Datasource: &api_adapter_v1.DatasourceConfig{
 					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
@@ -265,7 +256,6 @@ func TestGetAdapterRequest(t *testing.T) {
 			},
 		},
 		"all_optional_fields_unset": {
-			token: "dGhpc2lzYXRlc3R0b2tlbg==",
 			req: &api_adapter_v1.GetPageRequest{
 				Datasource: &api_adapter_v1.DatasourceConfig{
 					Id: "1f530a64-0565-49e6-8647-b88e908b7229",
@@ -294,135 +284,6 @@ func TestGetAdapterRequest(t *testing.T) {
 					},
 				},
 				PageSize: 100,
-			},
-			wantReverseMapping: &entityReverseIdMapping{
-				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
-				Attributes: map[string]*api_adapter_v1.AttributeConfig{
-					"name": {
-						Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
-						ExternalId: "name",
-						Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
-					},
-				},
-			},
-		},
-		"forbidden_token_missing": {
-			req: &api_adapter_v1.GetPageRequest{
-				Datasource: &api_adapter_v1.DatasourceConfig{
-					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
-					Config:  []byte(`{"a":"a value","b":"b value"}`),
-					Address: "http://example.com/",
-					Auth: &api_adapter_v1.DatasourceAuthCredentials{
-						AuthMechanism: &api_adapter_v1.DatasourceAuthCredentials_HttpAuthorization{
-							HttpAuthorization: "Bearer mysecret",
-						},
-					},
-					Type: "Example-1.0.0",
-				},
-				Entity: &api_adapter_v1.EntityConfig{
-					Id:         "00d58abb-0b80-4745-927a-af9b2fb612dd",
-					ExternalId: "users",
-					Attributes: []*api_adapter_v1.AttributeConfig{
-						{
-							Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
-							ExternalId: "name",
-							Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
-						},
-					},
-					Ordered: true,
-				},
-				PageSize: 100,
-				Cursor:   "the cursor",
-			},
-			wantAdapterErr: &api_adapter_v1.Error{
-				Message: "Forbidden.",
-				Code:    13, // FORBIDDEN
-			},
-		},
-		"forbidden_invalid_token": {
-			token: "invalid",
-			req: &api_adapter_v1.GetPageRequest{
-				Datasource: &api_adapter_v1.DatasourceConfig{
-					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
-					Config:  []byte(`{"a":"a value","b":"b value"}`),
-					Address: "http://example.com/",
-					Auth: &api_adapter_v1.DatasourceAuthCredentials{
-						AuthMechanism: &api_adapter_v1.DatasourceAuthCredentials_HttpAuthorization{
-							HttpAuthorization: "Bearer mysecret",
-						},
-					},
-					Type: "Example-1.0.0",
-				},
-				Entity: &api_adapter_v1.EntityConfig{
-					Id:         "00d58abb-0b80-4745-927a-af9b2fb612dd",
-					ExternalId: "users",
-					Attributes: []*api_adapter_v1.AttributeConfig{
-						{
-							Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
-							ExternalId: "name",
-							Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
-						},
-					},
-					Ordered: true,
-				},
-				PageSize: 100,
-				Cursor:   "the cursor",
-			},
-			wantAdapterErr: &api_adapter_v1.Error{
-				Message: "Forbidden.",
-				Code:    13, // FORBIDDEN
-			},
-		},
-		"valid_auth": {
-			token: "dGhpc2lzYXRlc3R0b2tlbg==",
-			req: &api_adapter_v1.GetPageRequest{
-				Datasource: &api_adapter_v1.DatasourceConfig{
-					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
-					Config:  []byte(`{"a":"a value","b":"b value"}`),
-					Address: "http://example.com/",
-					Auth: &api_adapter_v1.DatasourceAuthCredentials{
-						AuthMechanism: &api_adapter_v1.DatasourceAuthCredentials_HttpAuthorization{
-							HttpAuthorization: "Bearer mysecret",
-						},
-					},
-					Type: "Example-1.0.0",
-				},
-				Entity: &api_adapter_v1.EntityConfig{
-					Id:         "00d58abb-0b80-4745-927a-af9b2fb612dd",
-					ExternalId: "users",
-					Attributes: []*api_adapter_v1.AttributeConfig{
-						{
-							Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
-							ExternalId: "name",
-							Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
-						},
-					},
-					Ordered: true,
-				},
-				PageSize: 100,
-				Cursor:   "the cursor",
-			},
-			wantAdapterRequest: &framework.Request[TestConfig]{
-				Config: &TestConfig{
-					A: "a value",
-					B: "b value",
-				},
-				Address: "http://example.com/",
-				Auth: &framework.DatasourceAuthCredentials{
-					HTTPAuthorization: "Bearer mysecret",
-				},
-				Entity: framework.EntityConfig{
-					ExternalId: "users",
-					Attributes: []*framework.AttributeConfig{
-						{
-							ExternalId: "name",
-							Type:       framework.AttributeTypeString,
-						},
-					},
-				},
-				Ordered:  true,
-				PageSize: 100,
-				Cursor:   "the cursor",
 			},
 			wantReverseMapping: &entityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",

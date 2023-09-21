@@ -47,10 +47,12 @@ func TestServer_GetPage(t *testing.T) {
 
 	tests := map[string]struct {
 		req             *api_adapter_v1.GetPageRequest
+		tokens          []string
 		adapterResponse framework.Response
 		wantResp        *api_adapter_v1.GetPageResponse
 	}{
 		"success": {
+			tokens: []string{"dGhpc2lzYXRlc3R0b2tlbg=="},
 			req: &api_adapter_v1.GetPageRequest{
 				Datasource: &api_adapter_v1.DatasourceConfig{
 					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
@@ -121,6 +123,7 @@ func TestServer_GetPage(t *testing.T) {
 			},
 		},
 		"success_explicit_type": {
+			tokens: []string{"dGhpc2lzYXRlc3R0b2tlbg=="},
 			req: &api_adapter_v1.GetPageRequest{
 				Datasource: &api_adapter_v1.DatasourceConfig{
 					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
@@ -192,6 +195,7 @@ func TestServer_GetPage(t *testing.T) {
 			},
 		},
 		"error": {
+			tokens: []string{"dGhpc2lzYXRlc3R0b2tlbg=="},
 			req: &api_adapter_v1.GetPageRequest{
 				Datasource: &api_adapter_v1.DatasourceConfig{
 					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
@@ -236,6 +240,7 @@ func TestServer_GetPage(t *testing.T) {
 			},
 		},
 		"invalid_request": {
+			tokens: []string{"dGhpc2lzYXRlc3R0b2tlbg=="},
 			req: &api_adapter_v1.GetPageRequest{
 				Datasource: &api_adapter_v1.DatasourceConfig{
 					Config:  []byte(`{"a":"a value","b":"b value"}`),
@@ -271,7 +276,8 @@ func TestServer_GetPage(t *testing.T) {
 				},
 			},
 		},
-		"unsupported_type": {
+		"invalid_type": {
+			tokens: []string{"dGhpc2lzYXRlc3R0b2tlbg=="},
 			req: &api_adapter_v1.GetPageRequest{
 				Datasource: &api_adapter_v1.DatasourceConfig{
 					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
@@ -306,7 +312,88 @@ func TestServer_GetPage(t *testing.T) {
 				Response: &api_adapter_v1.GetPageResponse_Error{
 					Error: &api_adapter_v1.Error{
 						Message: "Unsupported datasource type provided: Invalid-1.0.0.",
-						Code:    14, // UNSUPPORTED_TYPE
+						Code:    2, // INVALID_DATASOURCE_CONFIG
+					},
+				},
+			},
+		},
+		"missing_auth_token": {
+			req: &api_adapter_v1.GetPageRequest{
+				Datasource: &api_adapter_v1.DatasourceConfig{
+					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
+					Config:  []byte(`{"a":"a value","b":"b value"}`),
+					Address: "http://example.com/",
+					Auth: &api_adapter_v1.DatasourceAuthCredentials{
+						AuthMechanism: &api_adapter_v1.DatasourceAuthCredentials_HttpAuthorization{
+							HttpAuthorization: "Bearer mysecret",
+						},
+					},
+					Type: "Invalid-1.0.0",
+				},
+				Entity: &api_adapter_v1.EntityConfig{
+					Id:         "00d58abb-0b80-4745-927a-af9b2fb612dd",
+					ExternalId: "users",
+					Attributes: []*api_adapter_v1.AttributeConfig{
+						{
+							Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+							ExternalId: "name",
+							Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+						},
+					},
+					Ordered: true,
+				},
+				PageSize: 100,
+				Cursor:   "the cursor",
+			},
+			adapterResponse: framework.Response{
+				Success: &framework.Page{},
+			},
+			wantResp: &api_adapter_v1.GetPageResponse{
+				Response: &api_adapter_v1.GetPageResponse_Error{
+					Error: &api_adapter_v1.Error{
+						Message: "Invalid or missing token.",
+						Code:    16, // UNAUTHENTICATED
+					},
+				},
+			},
+		},
+		"invalid_auth_token": {
+			tokens: []string{"invalid"},
+			req: &api_adapter_v1.GetPageRequest{
+				Datasource: &api_adapter_v1.DatasourceConfig{
+					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
+					Config:  []byte(`{"a":"a value","b":"b value"}`),
+					Address: "http://example.com/",
+					Auth: &api_adapter_v1.DatasourceAuthCredentials{
+						AuthMechanism: &api_adapter_v1.DatasourceAuthCredentials_HttpAuthorization{
+							HttpAuthorization: "Bearer mysecret",
+						},
+					},
+					Type: "Invalid-1.0.0",
+				},
+				Entity: &api_adapter_v1.EntityConfig{
+					Id:         "00d58abb-0b80-4745-927a-af9b2fb612dd",
+					ExternalId: "users",
+					Attributes: []*api_adapter_v1.AttributeConfig{
+						{
+							Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+							ExternalId: "name",
+							Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+						},
+					},
+					Ordered: true,
+				},
+				PageSize: 100,
+				Cursor:   "the cursor",
+			},
+			adapterResponse: framework.Response{
+				Success: &framework.Page{},
+			},
+			wantResp: &api_adapter_v1.GetPageResponse{
+				Response: &api_adapter_v1.GetPageResponse_Error{
+					Error: &api_adapter_v1.Error{
+						Message: "Invalid or missing token.",
+						Code:    16, // UNAUTHENTICATED
 					},
 				},
 			},
@@ -316,7 +403,7 @@ func TestServer_GetPage(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := grpc_metadata.NewIncomingContext(context.Background(), grpc_metadata.MD{
-				"token": []string{"dGhpc2lzYXRlc3R0b2tlbg=="},
+				"token": tc.tokens,
 			})
 
 			server := Server[TestConfig]{
