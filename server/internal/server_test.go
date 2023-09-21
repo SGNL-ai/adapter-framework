@@ -40,8 +40,8 @@ func TestServer_GetPage(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	token := []byte(`["dGhpc2lzYXRlc3R0b2tlbg==","dGhpc2lzYWxzb2F0ZXN0dG9rZW4="]`)
-	if err := os.WriteFile(path, token, 0666); err != nil {
+	tokens := []byte(`["dGhpc2lzYXRlc3R0b2tlbg==","dGhpc2lzYWxzb2F0ZXN0dG9rZW4="]`)
+	if err := os.WriteFile(path, tokens, 0666); err != nil {
 		t.Fatal(err)
 	}
 
