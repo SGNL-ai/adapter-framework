@@ -15,26 +15,13 @@
 package internal
 
 import (
-	"context"
-	"os"
 	"testing"
 
 	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
-	grpcMetadata "google.golang.org/grpc/metadata"
 )
 
 func TestGetAdapterRequest(t *testing.T) {
-	path := "./TOKENS"
-	if err := os.Setenv("AUTH_TOKENS_PATH", path); err != nil {
-		t.Fatal(err)
-	}
-
-	token := []byte(`["dGhpc2lzYXRlc3R0b2tlbg==","dGhpc2lzYWxzb2F0ZXN0dG9rZW4="]`)
-	if err := os.WriteFile(path, token, 0666); err != nil {
-		t.Fatal(err)
-	}
-
 	tests := map[string]struct {
 		req                *api_adapter_v1.GetPageRequest
 		token              string
@@ -452,17 +439,7 @@ func TestGetAdapterRequest(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			var ctx context.Context
-
-			if tc.token != "" {
-				ctx = grpcMetadata.NewIncomingContext(context.Background(), grpcMetadata.MD{
-					"token": []string{tc.token},
-				})
-			} else {
-				ctx = grpcMetadata.NewIncomingContext(context.Background(), grpcMetadata.MD{})
-			}
-
-			gotAdapterRequest, gotReverseMapping, gotAdapterErr := getAdapterRequest[TestConfig](ctx, tc.req)
+			gotAdapterRequest, gotReverseMapping, gotAdapterErr := getAdapterRequest[TestConfig](tc.req)
 			AssertDeepEqual(t, tc.wantAdapterRequest, gotAdapterRequest)
 			AssertDeepEqual(t, tc.wantReverseMapping, gotReverseMapping)
 			AssertDeepEqual(t, tc.wantAdapterErr, gotAdapterErr)

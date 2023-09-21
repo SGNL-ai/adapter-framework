@@ -266,12 +266,6 @@ enum ErrorCode {
 
     // Datasource received too many requests.
     ERROR_CODE_DATASOURCE_TOO_MANY_REQUESTS = 12;
-
-    // Client is not authorized to access the adapter.
-    ERROR_CODE_FORBIDDEN = 13;
-
-    // Unsupported datasource type provided in request.
-    ERROR_CODE_UNSUPPORTED_TYPE = 14;
 }
 
 // An error retrieving a page.

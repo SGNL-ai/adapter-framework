@@ -22,7 +22,7 @@ import (
 
 	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
-	grpcMetadata "google.golang.org/grpc/metadata"
+	grpc_metadata "google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
@@ -315,7 +315,7 @@ func TestServer_GetPage(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := grpcMetadata.NewIncomingContext(context.Background(), grpcMetadata.MD{
+			ctx := grpc_metadata.NewIncomingContext(context.Background(), grpc_metadata.MD{
 				"token": []string{"dGhpc2lzYXRlc3R0b2tlbg=="},
 			})
 

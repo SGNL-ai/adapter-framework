@@ -16,10 +16,14 @@ package internal
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"os"
 
 	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
+	"google.golang.org/grpc/codes"
+	grpc_metadata "google.golang.org/grpc/metadata"
 )
 
 // Server is an implementation of the AdapterServer gRPC service which
@@ -40,7 +44,11 @@ type Server[Config any] struct {
 }
 
 func (s *Server[Config]) GetPage(ctx context.Context, req *api_adapter_v1.GetPageRequest) (*api_adapter_v1.GetPageResponse, error) {
-	adapterRequest, reverseMapping, adapterErr := getAdapterRequest[Config](ctx, req)
+	if err := validateAuthenticationToken(ctx); err != nil {
+		return api_adapter_v1.NewGetPageResponseError(err), nil
+	}
+
+	adapterRequest, reverseMapping, adapterErr := getAdapterRequest[Config](req)
 
 	if adapterErr != nil {
 		return api_adapter_v1.NewGetPageResponseError(adapterErr), nil
@@ -54,8 +62,67 @@ func (s *Server[Config]) GetPage(ctx context.Context, req *api_adapter_v1.GetPag
 
 	adapterErr = &api_adapter_v1.Error{
 		Message: fmt.Sprintf("Unsupported datasource type provided: %s.", req.Datasource.Type),
-		Code:    api_adapter_v1.ErrorCode_ERROR_CODE_UNSUPPORTED_TYPE,
+		Code:    api_adapter_v1.ErrorCode_ERROR_CODE_INVALID_DATASOURCE_CONFIG,
 	}
 
 	return api_adapter_v1.NewGetPageResponseError(adapterErr), nil
+}
+
+// validateAuthenticationToken verifies the request has the correct token to access the
+// adapter. Will return nil if the provided token matches any of the tokens
+// specified in the file located at AUTH_TOKENS_PATH.
+// Otherwise, will return an error.
+func validateAuthenticationToken(ctx context.Context) *api_adapter_v1.Error {
+	metadata, ok := grpc_metadata.FromIncomingContext(ctx)
+	if !ok {
+		return &api_adapter_v1.Error{
+			Message: "Invalid or missing token.",
+			Code:    api_adapter_v1.ErrorCode(codes.Unauthenticated),
+		}
+	}
+
+	requestTokens := metadata.Get("token")
+	if len(requestTokens) != 1 {
+		return &api_adapter_v1.Error{
+			Message: "Invalid or missing token.",
+			Code:    api_adapter_v1.ErrorCode(codes.Unauthenticated),
+		}
+	}
+
+	path, exists := os.LookupEnv("AUTH_TOKENS_PATH")
+	if !exists {
+		return &api_adapter_v1.Error{
+			Message: "Invalid or missing token.",
+			Code:    api_adapter_v1.ErrorCode(codes.Unauthenticated),
+		}
+	}
+
+	jsonValidTokens, err := os.ReadFile(path)
+	if err != nil {
+		return &api_adapter_v1.Error{
+			Message: "Invalid or missing token.",
+			Code:    api_adapter_v1.ErrorCode(codes.Unauthenticated),
+		}
+	}
+
+	validTokens := new([]string)
+
+	if err := json.Unmarshal(jsonValidTokens, validTokens); err != nil || validTokens == nil {
+		return &api_adapter_v1.Error{
+			Message: "Invalid or missing token.",
+			Code:    api_adapter_v1.ErrorCode(codes.Unauthenticated),
+		}
+	}
+
+	// TODO: After upgrading go to 1.21+, replace with the `Contains` method
+	for _, y := range *validTokens {
+		if y == requestTokens[0] {
+			return nil
+		}
+	}
+
+	return &api_adapter_v1.Error{
+		Message: "Invalid or missing token.",
+		Code:    api_adapter_v1.ErrorCode(codes.Unauthenticated),
+	}
 }

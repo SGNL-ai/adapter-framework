@@ -15,14 +15,10 @@
 package internal
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
-	"os"
 
 	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
-	grpcMetadata "google.golang.org/grpc/metadata"
 )
 
 // entityReverseMapping maps external IDs to IDs.
@@ -41,18 +37,8 @@ type entityReverseIdMapping struct {
 
 // getAdapterRequest converts a GetPageRequest into an adapter Request.
 func getAdapterRequest[Config any](
-	ctx context.Context,
 	req *api_adapter_v1.GetPageRequest,
 ) (adapterRequest *framework.Request[Config], reverseMapping *entityReverseIdMapping, adapterErr *api_adapter_v1.Error) {
-	if !canAccessAdapter(ctx) {
-		adapterErr = &api_adapter_v1.Error{
-			Message: "Forbidden.",
-			Code:    api_adapter_v1.ErrorCode_ERROR_CODE_FORBIDDEN,
-		}
-
-		return nil, nil, adapterErr
-	}
-
 	var errMsg string
 
 	switch {
@@ -122,47 +108,6 @@ func getAdapterRequest[Config any](
 	adapterRequest.Cursor = req.Cursor
 
 	return
-}
-
-// canAccessAdapter verifies the request has the correct token to access the
-// adapter. Will return true if the provided token matches any of the tokens
-// specified in the file located at AUTH_TOKENS_PATH.
-// Otherwise, will return false.
-func canAccessAdapter(ctx context.Context) bool {
-	metadata, ok := grpcMetadata.FromIncomingContext(ctx)
-	if !ok {
-		return false
-	}
-
-	requestTokens := metadata.Get("token")
-	if len(requestTokens) != 1 {
-		return false
-	}
-
-	path, exists := os.LookupEnv("AUTH_TOKENS_PATH")
-	if !exists {
-		return false
-	}
-
-	jsonValidTokens, err := os.ReadFile(path)
-	if err != nil {
-		return false
-	}
-
-	validTokens := new([]string)
-
-	if err := json.Unmarshal(jsonValidTokens, validTokens); err != nil || validTokens == nil {
-		return false
-	}
-
-	// TODO: After upgrading go to 1.21+, replace with the `Contains` method
-	for _, y := range *validTokens {
-		if y == requestTokens[0] {
-			return true
-		}
-	}
-
-	return false
 }
 
 // getAdapterAuth converts a request DatasourceAuthCredentials into an adapter
