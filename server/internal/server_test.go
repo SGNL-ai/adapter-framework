@@ -21,7 +21,9 @@ import (
 
 	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
+	"google.golang.org/grpc/codes"
 	grpc_metadata "google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
@@ -41,6 +43,7 @@ func TestServer_GetPage(t *testing.T) {
 		tokens          []string
 		adapterResponse framework.Response
 		wantResp        *api_adapter_v1.GetPageResponse
+		wantError       error
 	}{
 		"success": {
 			tokens: []string{"dGhpc2lzYXRlc3R0b2tlbg=="},
@@ -339,14 +342,7 @@ func TestServer_GetPage(t *testing.T) {
 			adapterResponse: framework.Response{
 				Success: &framework.Page{},
 			},
-			wantResp: &api_adapter_v1.GetPageResponse{
-				Response: &api_adapter_v1.GetPageResponse_Error{
-					Error: &api_adapter_v1.Error{
-						Message: "Invalid or missing token.",
-						Code:    16, // UNAUTHENTICATED
-					},
-				},
-			},
+			wantError: status.Errorf(codes.Unauthenticated, "invalid or missing token"),
 		},
 		"invalid_auth_token": {
 			tokens: []string{"invalid"},
@@ -380,14 +376,7 @@ func TestServer_GetPage(t *testing.T) {
 			adapterResponse: framework.Response{
 				Success: &framework.Page{},
 			},
-			wantResp: &api_adapter_v1.GetPageResponse{
-				Response: &api_adapter_v1.GetPageResponse_Error{
-					Error: &api_adapter_v1.Error{
-						Message: "Invalid or missing token.",
-						Code:    16, // UNAUTHENTICATED
-					},
-				},
-			},
+			wantError: status.Errorf(codes.Unauthenticated, "invalid or missing token"),
 		},
 	}
 
@@ -405,8 +394,10 @@ func TestServer_GetPage(t *testing.T) {
 				Tokens: validTokens,
 			}
 
-			gotResp, _ := server.GetPage(ctx, tc.req)
+			gotResp, gotError := server.GetPage(ctx, tc.req)
+
 			AssertDeepEqual(t, tc.wantResp, gotResp)
+			AssertDeepEqual(t, tc.wantError, gotError)
 		})
 	}
 }
