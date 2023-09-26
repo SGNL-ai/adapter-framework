@@ -42,7 +42,6 @@ func New[Config any](adapters map[string]framework.Adapter[Config]) api_adapter_
 	if err != nil {
 		panic(fmt.Sprintf("failed to create file watcher: %s", err.Error()))
 	}
-	defer watcher.Close()
 
 	go func(s *internal.Server[Config]) {
 		for {
@@ -62,6 +61,7 @@ func New[Config any](adapters map[string]framework.Adapter[Config]) api_adapter_
 
 				// An error will be thrown in the event there are too many events, too small of a buffer,
 				// etc. This indicates the watcher may no longer be functioning correctly, so we'll panic.
+				watcher.Close()
 				panic(fmt.Sprintf("file watcher error: %s", err.Error()))
 			}
 		}
@@ -70,8 +70,6 @@ func New[Config any](adapters map[string]framework.Adapter[Config]) api_adapter_
 	if err = watcher.Add(path); err != nil {
 		panic(fmt.Sprintf("failed to add path to file watcher: %s", err.Error()))
 	}
-
-	<-make(chan struct{})
 
 	return server
 }
