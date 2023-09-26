@@ -22,6 +22,7 @@ import (
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
 	"google.golang.org/grpc/codes"
 	grpc_metadata "google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
 
 // Server is an implementation of the AdapterServer gRPC service which
@@ -49,7 +50,7 @@ type Server[Config any] struct {
 
 func (s *Server[Config]) GetPage(ctx context.Context, req *api_adapter_v1.GetPageRequest) (*api_adapter_v1.GetPageResponse, error) {
 	if err := s.validateAuthenticationToken(ctx); err != nil {
-		return api_adapter_v1.NewGetPageResponseError(err), nil
+		return nil, err
 	}
 
 	adapterRequest, reverseMapping, adapterErr := getAdapterRequest[Config](req)
@@ -76,21 +77,15 @@ func (s *Server[Config]) GetPage(ctx context.Context, req *api_adapter_v1.GetPag
 // adapter. Will return nil if the provided token matches any of the tokens
 // specified in the file located at AUTH_TOKENS_PATH.
 // Otherwise, will return an error.
-func (s *Server[Config]) validateAuthenticationToken(ctx context.Context) *api_adapter_v1.Error {
+func (s *Server[Config]) validateAuthenticationToken(ctx context.Context) error {
 	metadata, ok := grpc_metadata.FromIncomingContext(ctx)
 	if !ok {
-		return &api_adapter_v1.Error{
-			Message: "Invalid or missing token.",
-			Code:    api_adapter_v1.ErrorCode(codes.Unauthenticated),
-		}
+		return status.Errorf(codes.Unauthenticated, "invalid or missing token")
 	}
 
 	requestTokens := metadata.Get("token")
 	if len(requestTokens) != 1 {
-		return &api_adapter_v1.Error{
-			Message: "Invalid or missing token.",
-			Code:    api_adapter_v1.ErrorCode(codes.Unauthenticated),
-		}
+		return status.Errorf(codes.Unauthenticated, "invalid or missing token")
 	}
 
 	// TODO: After upgrading go to 1.21+, replace with the `Contains` method
@@ -100,8 +95,5 @@ func (s *Server[Config]) validateAuthenticationToken(ctx context.Context) *api_a
 		}
 	}
 
-	return &api_adapter_v1.Error{
-		Message: "Invalid or missing token.",
-		Code:    api_adapter_v1.ErrorCode(codes.Unauthenticated),
-	}
+	return status.Errorf(codes.Unauthenticated, "invalid or missing token")
 }
