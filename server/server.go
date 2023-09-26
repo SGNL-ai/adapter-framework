@@ -15,15 +15,80 @@
 package server
 
 import (
+	"encoding/json"
+	"fmt"
+	"os"
+
+	"github.com/fsnotify/fsnotify"
 	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
 	"github.com/sgnl-ai/adapter-framework/server/internal"
 )
 
 // New returns an AdapterServer that wraps the given high-level
-// Adapter implementation.
+// Adapter implementation with the Tokens field populated.
 func New[Config any](adapters map[string]framework.Adapter[Config]) api_adapter_v1.AdapterServer {
-	return &internal.Server[Config]{
-		Adapters: adapters,
+	path, exists := os.LookupEnv("AUTH_TOKENS_PATH")
+	if !exists {
+		panic("AUTH_TOKENS_PATH environment variable not set")
 	}
+
+	server := &internal.Server[Config]{
+		Adapters: adapters,
+		Tokens:   getTokensFromPath(path),
+	}
+
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		panic(fmt.Sprintf("failed to create file watcher: %s", err.Error()))
+	}
+	defer watcher.Close()
+
+	go func(s *internal.Server[Config]) {
+		for {
+			select {
+			case _, ok := <-watcher.Events:
+				if !ok {
+					// Channel was closed
+					panic("file watcher channel closed")
+				}
+
+				s.Tokens = getTokensFromPath(path)
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					// Channel was closed
+					panic("file watcher channel closed")
+				}
+
+				// An error will be thrown in the event there are too many events, too small of a buffer,
+				// etc. This indicates the watcher may no longer be functioning correctly, so we'll panic.
+				panic(fmt.Sprintf("file watcher error: %s", err.Error()))
+			}
+		}
+	}(server)
+
+	if err = watcher.Add(path); err != nil {
+		panic(fmt.Sprintf("failed to add path to file watcher: %s", err.Error()))
+	}
+
+	<-make(chan struct{})
+
+	return server
+}
+
+// getTokensFromPath reads and parses the JSON encoded data located in the file at the given path.
+// If the file does not exist or the file does not contain valid JSON, an empty slice is returned.
+func getTokensFromPath(path string) []string {
+	jsonValidTokens, err := os.ReadFile(path)
+	if err != nil {
+		return []string{}
+	}
+
+	validTokens := new([]string)
+
+	if err := json.Unmarshal(jsonValidTokens, validTokens); err != nil || validTokens == nil {
+		return []string{}
+	}
+
+	return *validTokens
 }

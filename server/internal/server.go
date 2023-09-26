@@ -16,9 +16,7 @@ package internal
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"os"
 
 	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
@@ -41,10 +39,16 @@ type Server[Config any] struct {
 	// The key in this map should match the Supported Datasource Type
 	// specified on the Adapter object created in SGNL.
 	Adapters map[string]framework.Adapter[Config]
+
+	// Tokens contains a lists of valid auth tokens for this server. This list of Tokens
+	// is populated when the server is created based on the JSON-encoded value in the file
+	// located under the path contained in the `AUTH_TOKENS_PATH` environment variable and is
+	// updated any time this file is modified.
+	Tokens []string
 }
 
 func (s *Server[Config]) GetPage(ctx context.Context, req *api_adapter_v1.GetPageRequest) (*api_adapter_v1.GetPageResponse, error) {
-	if err := validateAuthenticationToken(ctx); err != nil {
+	if err := s.validateAuthenticationToken(ctx); err != nil {
 		return api_adapter_v1.NewGetPageResponseError(err), nil
 	}
 
@@ -72,7 +76,7 @@ func (s *Server[Config]) GetPage(ctx context.Context, req *api_adapter_v1.GetPag
 // adapter. Will return nil if the provided token matches any of the tokens
 // specified in the file located at AUTH_TOKENS_PATH.
 // Otherwise, will return an error.
-func validateAuthenticationToken(ctx context.Context) *api_adapter_v1.Error {
+func (s *Server[Config]) validateAuthenticationToken(ctx context.Context) *api_adapter_v1.Error {
 	metadata, ok := grpc_metadata.FromIncomingContext(ctx)
 	if !ok {
 		return &api_adapter_v1.Error{
@@ -89,33 +93,8 @@ func validateAuthenticationToken(ctx context.Context) *api_adapter_v1.Error {
 		}
 	}
 
-	path, exists := os.LookupEnv("AUTH_TOKENS_PATH")
-	if !exists {
-		return &api_adapter_v1.Error{
-			Message: "Invalid or missing token.",
-			Code:    api_adapter_v1.ErrorCode(codes.Unauthenticated),
-		}
-	}
-
-	jsonValidTokens, err := os.ReadFile(path)
-	if err != nil {
-		return &api_adapter_v1.Error{
-			Message: "Invalid or missing token.",
-			Code:    api_adapter_v1.ErrorCode(codes.Unauthenticated),
-		}
-	}
-
-	validTokens := new([]string)
-
-	if err := json.Unmarshal(jsonValidTokens, validTokens); err != nil || validTokens == nil {
-		return &api_adapter_v1.Error{
-			Message: "Invalid or missing token.",
-			Code:    api_adapter_v1.ErrorCode(codes.Unauthenticated),
-		}
-	}
-
 	// TODO: After upgrading go to 1.21+, replace with the `Contains` method
-	for _, y := range *validTokens {
+	for _, y := range s.Tokens {
 		if y == requestTokens[0] {
 			return nil
 		}

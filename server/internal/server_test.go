@@ -16,7 +16,6 @@ package internal
 
 import (
 	"context"
-	"os"
 	"testing"
 	"time"
 
@@ -35,15 +34,7 @@ func (a *mockAdapter[Config]) GetPage(ctx context.Context, request *framework.Re
 }
 
 func TestServer_GetPage(t *testing.T) {
-	path := "./TOKENS"
-	if err := os.Setenv("AUTH_TOKENS_PATH", path); err != nil {
-		t.Fatal(err)
-	}
-
-	tokens := []byte(`["dGhpc2lzYXRlc3R0b2tlbg==","dGhpc2lzYWxzb2F0ZXN0dG9rZW4="]`)
-	if err := os.WriteFile(path, tokens, 0666); err != nil {
-		t.Fatal(err)
-	}
+	validTokens := []string{"dGhpc2lzYXRlc3R0b2tlbg==", "dGhpc2lzYWxzb2F0ZXN0dG9rZW4="}
 
 	tests := map[string]struct {
 		req             *api_adapter_v1.GetPageRequest
@@ -411,6 +402,7 @@ func TestServer_GetPage(t *testing.T) {
 					"":           &mockAdapter[TestConfig]{Response: tc.adapterResponse},
 					"Mock-1.0.1": &mockAdapter[TestConfig]{Response: tc.adapterResponse},
 				},
+				Tokens: validTokens,
 			}
 
 			gotResp, _ := server.GetPage(ctx, tc.req)
