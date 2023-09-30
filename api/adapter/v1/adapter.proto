@@ -210,10 +210,25 @@ message AttributeValue {
         bool bool_value = 2;
         DateTime datetime_value = 3;
         double double_value = 4;
-        google.protobuf.Duration duration_value = 5;
+        Duration duration_value = 5;
         int64 int64_value = 6;
         string string_value = 7;
     }
+}
+
+// A duration.
+message Duration {
+    // Same tag as seconds in google.protobuf.Duration for backwards compatibility.
+    int64 seconds = 1;
+    
+    // Same tag as nanos in google.protobuf.Duration for backwards compatibility.
+    int32 nanos = 2;
+    
+    // months adds feature parity with neo4j.dbtype.Duration struct
+    int64 months = 3;
+    
+    // days adds feature parity with neo4j.dbtype.Duration struct
+    int64 days = 4;
 }
 
 // A date or timestamp.
