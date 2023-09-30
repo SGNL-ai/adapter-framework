@@ -26,13 +26,20 @@ import (
 // and AddChildObjects to ensure that the correct types are used for values.
 type Object map[string]any
 
+type Duration struct {
+	Seconds int64 `json:"seconds,omitempty"`
+	Nanos   int32 `json:"nanos,omitempty"`
+	Months  int64 `json:"months,omitempty"`
+	Days    int64 `json:"days,omitempty"`
+}
+
 // AttributeValue is the set of types allowed for values of non-list attributes
 // in an Object.
 type AttributeValue interface {
 	// Types of non-list attribute values.
-	bool | time.Time | time.Duration | float64 | int64 | string |
+	bool | time.Time | Duration | float64 | int64 | string |
 		// Types of list attribute values.
-		[]bool | []time.Time | []time.Duration | []float64 | []int64 | []string
+		[]bool | []time.Time | []Duration | []float64 | []int64 | []string
 }
 
 // AddAttribute adds a attribute into the given object.

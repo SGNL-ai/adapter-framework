@@ -19,6 +19,7 @@ import (
 	"testing"
 	"time"
 
+	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -136,7 +137,7 @@ func TestValidateAttributeValue(t *testing.T) {
 				ExternalId: "something",
 				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DURATION,
 			},
-			value: 12345 * time.Millisecond,
+			value: framework.Duration{Nanos: 10, Seconds: 20, Days: 30, Months: 4},
 		},
 		"duration_pointer": {
 			attribute: &api_adapter_v1.AttributeConfig{
@@ -144,7 +145,7 @@ func TestValidateAttributeValue(t *testing.T) {
 				ExternalId: "something",
 				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DURATION,
 			},
-			value: Ptr(12345 * time.Millisecond),
+			value: &framework.Duration{Nanos: 10, Seconds: 20, Days: 30, Months: 4},
 		},
 		"duration_list": {
 			attribute: &api_adapter_v1.AttributeConfig{
@@ -153,7 +154,10 @@ func TestValidateAttributeValue(t *testing.T) {
 				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DURATION,
 				List:       true,
 			},
-			value: []time.Duration{12345 * time.Millisecond, 13579 * time.Millisecond},
+			value: []framework.Duration{
+				{Nanos: 10, Seconds: 20, Days: 30, Months: 4},
+				{Nanos: 11, Seconds: 22, Days: 33, Months: 4},
+			},
 		},
 		"duration_pointer_list": {
 			attribute: &api_adapter_v1.AttributeConfig{
@@ -162,7 +166,10 @@ func TestValidateAttributeValue(t *testing.T) {
 				Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DURATION,
 				List:       true,
 			},
-			value: []*time.Duration{Ptr(12345 * time.Millisecond), (*time.Duration)(nil)},
+			value: []*framework.Duration{
+				{Nanos: 10, Seconds: 20, Days: 30, Months: 4},
+				{Nanos: 11, Seconds: 22, Days: 33, Months: 4},
+			},
 		},
 		"double": {
 			attribute: &api_adapter_v1.AttributeConfig{
@@ -374,20 +381,34 @@ func TestGetAttributeValues(t *testing.T) {
 			wantAttributeValuesListJSON: Ptr(`[{"datetimeValue":{"timestamp":"2023-06-23T19:34:56Z", "timezoneOffset":-25200}},{"nullValue":{}}]`),
 		},
 		"duration": {
-			value:                       12345 * time.Millisecond,
-			wantAttributeValuesListJSON: Ptr(`[{"durationValue":"12.345s"}]`),
+			value:                       framework.Duration{Nanos: 10, Seconds: 20, Days: 30, Months: 4},
+			wantAttributeValuesListJSON: Ptr(`[{"durationValue":{"days":"30", "months":"4", "nanos":10, "seconds":"20"}}]`),
 		},
 		"duration_pointer": {
-			value:                       Ptr(12345 * time.Millisecond),
-			wantAttributeValuesListJSON: Ptr(`[{"durationValue":"12.345s"}]`),
+			value:                       Ptr(framework.Duration{Nanos: 10, Seconds: 20, Days: 30, Months: 4}),
+			wantAttributeValuesListJSON: Ptr(`[{"durationValue":{"days":"30", "months":"4", "nanos":10, "seconds":"20"}}]`),
 		},
 		"duration_list": {
-			value:                       []time.Duration{12345 * time.Millisecond, 13579 * time.Millisecond},
-			wantAttributeValuesListJSON: Ptr(`[{"durationValue":"12.345s"},{"durationValue":"13.579s"}]`),
+			value: []framework.Duration{
+				{Nanos: 10, Seconds: 20, Days: 30, Months: 4},
+				{Nanos: 11, Seconds: 22, Days: 33, Months: 5},
+			},
+			wantAttributeValuesListJSON: Ptr(
+				`[` +
+					`{"durationValue":{"days":"30", "months":"4", "nanos":10, "seconds":"20"}},` +
+					`{"durationValue":{"days":"33", "months":"5", "nanos":11, "seconds":"22"}}` +
+					`]`),
 		},
 		"duration_pointer_list": {
-			value:                       []*time.Duration{Ptr(12345 * time.Millisecond), (*time.Duration)(nil)},
-			wantAttributeValuesListJSON: Ptr(`[{"durationValue":"12.345s"},{"nullValue":{}}]`),
+			value: []*framework.Duration{
+				Ptr(framework.Duration{Nanos: 10, Seconds: 20, Days: 30, Months: 4}),
+				(*framework.Duration)(nil),
+			},
+			wantAttributeValuesListJSON: Ptr(
+				`[` +
+					`{"durationValue":{"days":"30", "months":"4", "nanos":10, "seconds":"20"}},` +
+					`{"nullValue":{}}` +
+					`]`),
 		},
 		"double": {
 			value:                       float64(123.45),
@@ -600,15 +621,15 @@ func TestGetAttributeValue(t *testing.T) {
 			wantAttributeValueJSON: Ptr(`{"nullValue":{}}`),
 		},
 		"duration": {
-			value:                  12345 * time.Millisecond,
-			wantAttributeValueJSON: Ptr(`{"durationValue":"12.345s"}`),
+			value:                  framework.Duration{Nanos: 10, Seconds: 20, Days: 30, Months: 4},
+			wantAttributeValueJSON: Ptr(`{"durationValue":{"days":"30", "months":"4", "nanos":10, "seconds":"20"}}`),
 		},
 		"duration_pointer": {
-			value:                  Ptr(12345 * time.Millisecond),
-			wantAttributeValueJSON: Ptr(`{"durationValue":"12.345s"}`),
+			value:                  Ptr(framework.Duration{Nanos: 10, Seconds: 20, Days: 30, Months: 4}),
+			wantAttributeValueJSON: Ptr(`{"durationValue":{"days":"30", "months":"4", "nanos":10, "seconds":"20"}}`),
 		},
 		"duration_pointer_null": {
-			value:                  (*time.Duration)(nil),
+			value:                  (*framework.Duration)(nil),
 			wantAttributeValueJSON: Ptr(`{"nullValue":{}}`),
 		},
 		"double": {

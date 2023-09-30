@@ -25,13 +25,13 @@ func TestAddAttribute_ValidTypes(t *testing.T) {
 	var boolValue bool = true
 	var timeValue time.Time
 	timeValue, _ = time.Parse(time.RFC3339, "2023-06-23T12:34:56Z")
-	var durationValue time.Duration = 12 * time.Second
+	var durationValue Duration = Duration{Seconds: 123, Nanos: 456, Months: 7, Days: 10}
 	var doubleValue float64 = 123.45
 	var int64Value int64 = 123
 	var stringValue string = "abcd"
 	var boolListValue []bool = []bool{true, true, false, true}
 	var timeListValue []time.Time = []time.Time{timeValue, timeValue.Add(10 * time.Second), timeValue.Add(20 * time.Second)}
-	var durationListValue []time.Duration = []time.Duration{2 * time.Second, 4 * time.Second, 5 * time.Second}
+	var durationListValue []Duration = []Duration{durationValue}
 	var doubleListValue []float64 = []float64{1.2, 3.4, 5.6}
 	var int64ListValue []int64 = []int64{1, 2, 3, 5, 8}
 	var stringListValue []string = []string{"a", "b", "c"}
