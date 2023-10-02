@@ -82,7 +82,7 @@ func ParseISO8601Duration(durationStr string) (*Duration, error) {
 	return &Duration{Seconds: int64(d.Seconds), Days: int64(d.Days), Months: int64(d.Months)}, nil
 }
 
-// hasFractionalComponent returns true if the given number has a fractional component.
+// hasFractionalComponent returns an error if the given duration has a fractional component.
 func hasFractionalComponent(d *duration.Duration) error {
 	fractionalComponents := make([]string, 0, 6)
 
