@@ -171,17 +171,69 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 			valueJSON: `[12, 34, 56]`,
 			wantValue: []float64{12, 34, 56},
 		},
-		"duration_iso8601_supported": {
+		"duration_iso8601_valid": {
 			attribute: &framework.AttributeConfig{
 				ExternalId: "a",
 				Type:       framework.AttributeTypeDuration,
 			},
-			valueJSON: `"P6M4DT1H5M5S"`,
+			valueJSON: `"P6M5DT4S"`,
 			wantValue: &framework.Duration{
 				Nanos:   0,
-				Seconds: 3905, // 1 hours + 5 minutes + 5 seconds = 3600 + 300 + 5 = 3905
-				Days:    4,
+				Seconds: 4,
+				Days:    5,
 				Months:  6,
+			},
+		},
+		"duration_iso8601_express_weeks_as_days": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDuration,
+			},
+			valueJSON: `"P2W"`,
+			wantValue: &framework.Duration{
+				Nanos:   0,
+				Seconds: 0,
+				Days:    14, // 2 weeks = 14 days
+				Months:  0,
+			},
+		},
+		"duration_iso8601_express_hours_as_seconds": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDuration,
+			},
+			valueJSON: `"PT2H"`,
+			wantValue: &framework.Duration{
+				Nanos:   0,
+				Seconds: 7200, // 2 hours = 7200
+				Days:    0,
+				Months:  0,
+			},
+		},
+		"duration_iso8601_express_minutes_as_seconds": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDuration,
+			},
+			valueJSON: `"PT2M"`,
+			wantValue: &framework.Duration{
+				Nanos:   0,
+				Seconds: 120, // 2 minutes = 120
+				Days:    0,
+				Months:  0,
+			},
+		},
+		"duration_iso8601_express_hours_and_minutes_as_seconds": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDuration,
+			},
+			valueJSON: `"PT2H10M"`,
+			wantValue: &framework.Duration{
+				Nanos:   0,
+				Seconds: 7800, // 2 hours + 10 minutes = 7200 + 600 = 7800
+				Days:    0,
+				Months:  0,
 			},
 		},
 		"duration_iso8601_supported_zero_components": {
@@ -257,6 +309,7 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 				AssertDeepEqual(t, tc.wantError.Error(), gotError.Error())
 			} else {
 				AssertDeepEqual(t, tc.wantValue, gotValue)
+				AssertDeepEqual(t, nil, gotError)
 			}
 		})
 	}
