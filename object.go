@@ -15,8 +15,20 @@
 package framework
 
 import (
+	"errors"
 	"fmt"
+	"strings"
 	"time"
+
+	"github.com/sosodev/duration"
+)
+
+const (
+	Second = int64(1)
+	Minute = 60 * Second
+	Hour   = 60 * Minute
+	Day    = 24 * Hour
+	Week   = 7 * Day
 )
 
 // Object is an object returned for the top entity or a child entity.
@@ -26,11 +38,74 @@ import (
 // and AddChildObjects to ensure that the correct types are used for values.
 type Object map[string]any
 
+// Duration is the value of an attribute of type duration.
+// It is the sum of all the fields' durations.
 type Duration struct {
+	// Nanos is a duration as a number of nanoseconds.
+	Nanos int32 `json:"nanos,omitempty"`
+
+	// Seconds is a duration as a number of seconds.
 	Seconds int64 `json:"seconds,omitempty"`
-	Nanos   int32 `json:"nanos,omitempty"`
-	Months  int64 `json:"months,omitempty"`
-	Days    int64 `json:"days,omitempty"`
+
+	// Days is a duration as a number of days.
+	Days int64 `json:"days,omitempty"`
+
+	// Months is a duration as a number of months.
+	Months int64 `json:"months,omitempty"`
+}
+
+// ParseDuration parses a valid ISO8601 duration string into a Duration.
+// Years as duration is not supported.
+// Fractional components of durations are not supported.
+func ParseISO8601Duration(durationStr string) (*Duration, error) {
+	d, err := duration.Parse(durationStr)
+	if err != nil {
+		return nil, errors.New("failed to parse the duration string: " + durationStr)
+	}
+
+	if d.Years != 0 {
+		return nil, errors.New("years as duration is not supported")
+	}
+
+	if err := hasFractionalComponent(d); err != nil {
+		return nil, err
+	}
+
+	// Express minutes and hours as seconds.
+	d.Seconds += d.Minutes * float64(Minute)
+	d.Seconds += d.Hours * float64(Hour)
+
+	// Express weeks as days.
+	d.Days += d.Weeks * float64(Week)
+
+	return &Duration{Seconds: int64(d.Seconds), Days: int64(d.Days), Months: int64(d.Months)}, nil
+}
+
+// hasFractionalComponent returns true if the given number has a fractional component.
+func hasFractionalComponent(d *duration.Duration) error {
+	fractionalComponents := make([]string, 0, 6)
+
+	durationComponentMap := map[string]any{
+		"seconds": d.Seconds,
+		"minutes": d.Minutes,
+		"hours":   d.Hours,
+		"days":    d.Days,
+		"weeks":   d.Weeks,
+		"months":  d.Months,
+	}
+
+	for component, value := range durationComponentMap {
+		if value.(float64) != float64(int64(value.(float64))) {
+			fractionalComponents = append(fractionalComponents, component)
+		}
+	}
+
+	if len(fractionalComponents) > 0 {
+		return fmt.Errorf("duration has fractional component(s): %s", strings.Join(fractionalComponents, ","))
+	}
+
+	return nil
+
 }
 
 // AttributeValue is the set of types allowed for values of non-list attributes

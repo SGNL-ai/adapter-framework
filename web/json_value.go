@@ -38,7 +38,7 @@ func convertJSONAttributeValue(attribute *framework.AttributeConfig, value any, 
 		case framework.AttributeTypeDouble:
 			return convertJSONAttributeListValue[float64](attribute, value, opts)
 		case framework.AttributeTypeDuration:
-			return convertJSONAttributeListValue[time.Duration](attribute, value, opts)
+			return convertJSONAttributeListValue[framework.Duration](attribute, value, opts)
 		case framework.AttributeTypeInt64:
 			return convertJSONAttributeListValue[int64](attribute, value, opts)
 		case framework.AttributeTypeString:
@@ -103,16 +103,13 @@ func convertJSONAttributeValue(attribute *framework.AttributeConfig, value any, 
 
 	case framework.AttributeTypeDuration:
 		switch v := value.(type) {
-		case float64:
-			// Duration is assumed to be a number of seconds, as a float64,
-			// possibly with a fractional part, e.g.: 3.5.
-			return time.Duration(v * float64(time.Second)), nil
 		case string:
-			d, err := time.ParseDuration(v)
+			// Parse iso8601 duration string to days, months, seconds, nanos.
+			duration, err := framework.ParseISO8601Duration(v)
 			if err != nil {
 				return nil, fmt.Errorf("attribute %s cannot be parsed into a duration value: %w", attribute.ExternalId, err)
 			}
-			return d, nil
+			return duration, nil
 		default:
 			return nil, fmt.Errorf("attribute %s cannot be parsed into a duration value", attribute.ExternalId)
 		}
