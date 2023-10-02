@@ -206,6 +206,19 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 				},
 			},
 		},
+		"duration_iso8601_express_years_as_months": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDuration,
+			},
+			valueJSON: `"P2Y"`,
+			wantValue: &framework.Duration{
+				Nanos:   0,
+				Seconds: 0,
+				Days:    0,
+				Months:  24, // 2 years = 24 months
+			},
+		},
 		"duration_iso8601_express_weeks_as_days": {
 			attribute: &framework.AttributeConfig{
 				ExternalId: "a",
@@ -258,6 +271,45 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 				Months:  0,
 			},
 		},
+		"duration_iso8601_fractional_months": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDuration,
+			},
+			valueJSON: `"P1.5M"`,
+			wantValue: &framework.Duration{
+				Nanos:   0,
+				Seconds: 0,
+				Days:    15,
+				Months:  1,
+			},
+		},
+		"duration_iso8601_fractional_days": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDuration,
+			},
+			valueJSON: `"P1.5D"`,
+			wantValue: &framework.Duration{
+				Nanos:   0,
+				Seconds: 43200, // 0.5 days = 12 hours = 43200 seconds
+				Days:    1,     // 1 day
+				Months:  0,
+			},
+		},
+		"duration_iso8601_fractional_seconds": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDuration,
+			},
+			valueJSON: `"PT1.5S"`,
+			wantValue: &framework.Duration{
+				Nanos:   500_000_000,
+				Seconds: 1,
+				Days:    0,
+				Months:  0,
+			},
+		},
 		"duration_iso8601_supported_zero_components": {
 			attribute: &framework.AttributeConfig{
 				ExternalId: "a",
@@ -265,14 +317,6 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 			},
 			valueJSON: `"P0M4DT0H0M5S"`,
 			wantValue: &framework.Duration{Nanos: 0, Seconds: 5, Days: 4, Months: 0},
-		},
-		"duration_iso8601_years_not_supported": {
-			attribute: &framework.AttributeConfig{
-				ExternalId: "a",
-				Type:       framework.AttributeTypeDuration,
-			},
-			valueJSON: `"P3Y6M4DT12H30M5S"`,
-			wantError: errors.New("attribute a cannot be parsed into a duration value: years as duration is not supported"),
 		},
 		"duration_iso8601_invalid": {
 			attribute: &framework.AttributeConfig{

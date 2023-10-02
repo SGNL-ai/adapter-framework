@@ -17,19 +17,10 @@ package framework
 import (
 	"errors"
 	"fmt"
-	"strings"
+	"math"
 	"time"
 
 	"github.com/sosodev/duration"
-)
-
-const (
-	Second = int64(1)
-	Minute = 60 * Second
-	Hour   = 60 * Minute
-
-	Day  = 1
-	Week = 7 * Day
 )
 
 // Object is an object returned for the top entity or a child entity.
@@ -64,49 +55,28 @@ func ParseISO8601Duration(durationStr string) (*Duration, error) {
 		return nil, errors.New("failed to parse the duration string: " + durationStr)
 	}
 
-	if d.Years != 0 {
-		return nil, errors.New("years as duration is not supported")
-	}
+	// Convert years into months, weeks into days, and minutes and hours into seconds.
+	d.Months += d.Years * 12.0
+	d.Days += d.Weeks * 7.0
+	d.Seconds += d.Hours * 3_600.0
+	d.Seconds += d.Minutes * 60.0
 
-	if err := hasFractionalComponent(d); err != nil {
-		return nil, err
-	}
+	// Round the numbers of months, days, seconds, and nanoseconds.
+	months, monthsFraction := math.Modf(d.Months)
+	d.Days += monthsFraction * 30.0
 
-	// Express minutes and hours as seconds.
-	d.Seconds += d.Minutes * float64(Minute)
-	d.Seconds += d.Hours * float64(Hour)
+	days, daysFraction := math.Modf(d.Days)
+	d.Seconds += daysFraction * 24.0 * 3_600.0
 
-	// Express weeks as days.
-	d.Days += d.Weeks * float64(Week)
+	seconds, secondsFraction := math.Modf(d.Seconds)
+	nanos := secondsFraction * 1_000_000_000.0
 
-	return &Duration{Seconds: int64(d.Seconds), Days: int64(d.Days), Months: int64(d.Months)}, nil
-}
-
-// hasFractionalComponent returns an error if the given duration has a fractional component.
-func hasFractionalComponent(d *duration.Duration) error {
-	fractionalComponents := make([]string, 0, 6)
-
-	durationComponentMap := map[string]any{
-		"seconds": d.Seconds,
-		"minutes": d.Minutes,
-		"hours":   d.Hours,
-		"days":    d.Days,
-		"weeks":   d.Weeks,
-		"months":  d.Months,
-	}
-
-	for component, value := range durationComponentMap {
-		if value.(float64) != float64(int64(value.(float64))) {
-			fractionalComponents = append(fractionalComponents, component)
-		}
-	}
-
-	if len(fractionalComponents) > 0 {
-		return fmt.Errorf("duration has fractional component(s): %s", strings.Join(fractionalComponents, ","))
-	}
-
-	return nil
-
+	return &Duration{
+		Months:  int64(months),
+		Days:    int64(days),
+		Seconds: int64(seconds),
+		Nanos:   int32(nanos),
+	}, nil
 }
 
 // AttributeValue is the set of types allowed for values of non-list attributes
