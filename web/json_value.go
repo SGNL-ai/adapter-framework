@@ -38,7 +38,7 @@ func convertJSONAttributeValue(attribute *framework.AttributeConfig, value any, 
 		case framework.AttributeTypeDouble:
 			return convertJSONAttributeListValue[float64](attribute, value, opts)
 		case framework.AttributeTypeDuration:
-			return convertJSONAttributeListValue[framework.Duration](attribute, value, opts)
+			return convertJSONAttributeListValue[*framework.Duration](attribute, value, opts)
 		case framework.AttributeTypeInt64:
 			return convertJSONAttributeListValue[int64](attribute, value, opts)
 		case framework.AttributeTypeString:

@@ -184,6 +184,28 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 				Months:  6,
 			},
 		},
+		"duration_iso8601_list_valid": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDuration,
+				List:       true,
+			},
+			valueJSON: `["P6M5DT4S","P1M15DT54S"]`,
+			wantValue: []*framework.Duration{
+				{
+					Nanos:   0,
+					Seconds: 4,
+					Days:    5,
+					Months:  6,
+				},
+				{
+					Nanos:   0,
+					Seconds: 54,
+					Days:    15,
+					Months:  1,
+				},
+			},
+		},
 		"duration_iso8601_express_weeks_as_days": {
 			attribute: &framework.AttributeConfig{
 				ExternalId: "a",
