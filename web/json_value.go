@@ -104,7 +104,6 @@ func convertJSONAttributeValue(attribute *framework.AttributeConfig, value any, 
 	case framework.AttributeTypeDuration:
 		switch v := value.(type) {
 		case string:
-			// Parse iso8601 duration string to days, months, seconds, nanos.
 			duration, err := framework.ParseISO8601Duration(v)
 			if err != nil {
 				return nil, fmt.Errorf("attribute %s cannot be parsed into a duration value: %w", attribute.ExternalId, err)
