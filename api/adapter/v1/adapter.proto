@@ -216,18 +216,22 @@ message AttributeValue {
     }
 }
 
-// A duration.
+// A duration, as the sum of all the fields' durations.
+// Each field may be positive, zero, or negative.
+// The seconds and nanos fields have the same tags as in google.protobuf.Duration for backward compatibility:
+// when only seconds and/or nanos are set in the message, it is marshaled identically to google.protobuf.Duration.
+// The months and days fields are additions supported in Neo4j durations.
 message Duration {
-    // Same tag as seconds in google.protobuf.Duration for backwards compatibility.
+    // A duration as a number of seconds.
     int64 seconds = 1;
     
-    // Same tag as nanos in google.protobuf.Duration for backwards compatibility.
+    // A duration as a number of nanoseconds.
     int32 nanos = 2;
     
-    // months adds feature parity with neo4j.dbtype.Duration struct
+    // A duration as a number of months.
     int64 months = 3;
     
-    // days adds feature parity with neo4j.dbtype.Duration struct
+    // A duration as a number of days.
     int64 days = 4;
 }
 

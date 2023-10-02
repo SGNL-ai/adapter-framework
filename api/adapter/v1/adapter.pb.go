@@ -1096,19 +1096,23 @@ func (*AttributeValue_Int64Value) isAttributeValue_Value() {}
 
 func (*AttributeValue_StringValue) isAttributeValue_Value() {}
 
-// A duration.
+// A duration, as the sum of all the fields' durations.
+// Each field may be positive, zero, or negative.
+// The seconds and nanos fields have the same tags as in google.protobuf.Duration for backward compatibility:
+// when only seconds and/or nanos are set in the message, it is marshaled identically to google.protobuf.Duration.
+// The months and days fields are additions supported in Neo4j durations.
 type Duration struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// Same tag as seconds in google.protobuf.Duration for backwards compatibility.
+	// A duration as a number of seconds.
 	Seconds int64 `protobuf:"varint,1,opt,name=seconds,proto3" json:"seconds,omitempty"`
-	// Same tag as nanos in google.protobuf.Duration for backwards compatibility.
+	// A duration as a number of nanoseconds.
 	Nanos int32 `protobuf:"varint,2,opt,name=nanos,proto3" json:"nanos,omitempty"`
-	// months adds feature parity with neo4j.dbtype.Duration struct
+	// A duration as a number of months.
 	Months int64 `protobuf:"varint,3,opt,name=months,proto3" json:"months,omitempty"`
-	// days adds feature parity with neo4j.dbtype.Duration struct
+	// A duration as a number of days.
 	Days int64 `protobuf:"varint,4,opt,name=days,proto3" json:"days,omitempty"`
 }
 
