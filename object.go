@@ -27,8 +27,9 @@ const (
 	Second = int64(1)
 	Minute = 60 * Second
 	Hour   = 60 * Minute
-	Day    = 24 * Hour
-	Week   = 7 * Day
+
+	Day  = 1
+	Week = 7 * Day
 )
 
 // Object is an object returned for the top entity or a child entity.
