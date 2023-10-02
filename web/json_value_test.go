@@ -16,6 +16,7 @@ package web
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 	"time"
 
@@ -170,30 +171,42 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 			valueJSON: `[12, 34, 56]`,
 			wantValue: []float64{12, 34, 56},
 		},
-		"duration_from_string": {
+		"duration_iso8601_supported": {
 			attribute: &framework.AttributeConfig{
 				ExternalId: "a",
 				Type:       framework.AttributeTypeDuration,
 			},
-			valueJSON: `"123s"`,
-			wantValue: 123 * time.Second,
+			valueJSON: `"P6M4DT1H5M5S"`,
+			wantValue: &framework.Duration{
+				Nanos:   0,
+				Seconds: 3905, // 1 hours + 5 minutes + 5 seconds = 3600 + 300 + 5 = 3905
+				Days:    4,
+				Months:  6,
+			},
 		},
-		"duration_from_number_of_seconds": {
+		"duration_iso8601_supported_zero_components": {
 			attribute: &framework.AttributeConfig{
 				ExternalId: "a",
 				Type:       framework.AttributeTypeDuration,
 			},
-			valueJSON: `123`,
-			wantValue: 123 * time.Second,
+			valueJSON: `"P0M4DT0H0M5S"`,
+			wantValue: &framework.Duration{Nanos: 0, Seconds: 5, Days: 4, Months: 0},
 		},
-		"duration_list": {
+		"duration_iso8601_years_not_supported": {
 			attribute: &framework.AttributeConfig{
 				ExternalId: "a",
 				Type:       framework.AttributeTypeDuration,
-				List:       true,
 			},
-			valueJSON: `[12, "34s", 56]`,
-			wantValue: []time.Duration{12 * time.Second, 34 * time.Second, 56 * time.Second},
+			valueJSON: `"P3Y6M4DT12H30M5S"`,
+			wantError: errors.New("attribute a cannot be parsed into a duration value: years as duration is not supported"),
+		},
+		"duration_iso8601_invalid": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDuration,
+			},
+			valueJSON: `"10s"`,
+			wantError: errors.New("attribute a cannot be parsed into a duration value: failed to parse the duration string: 10s"),
 		},
 		"int64": {
 			attribute: &framework.AttributeConfig{
@@ -240,8 +253,11 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 			}
 
 			gotValue, gotError := convertJSONAttributeValue(tc.attribute, value, tc.opts)
-			AssertDeepEqual(t, tc.wantValue, gotValue)
-			AssertDeepEqual(t, tc.wantError, gotError)
+			if tc.wantError != nil {
+				AssertDeepEqual(t, tc.wantError.Error(), gotError.Error())
+			} else {
+				AssertDeepEqual(t, tc.wantValue, gotValue)
+			}
 		})
 	}
 }
