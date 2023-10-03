@@ -121,6 +121,8 @@ func TestNewWithAuthTokensPathFileWatcher(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	time.Sleep(100 * time.Millisecond)
+
 	// Assert the tokens have not been updated (e.g. that the file watcher was closed correctly)
 	AssertDeepEqual(t, gotAdapterServer.(*internal.Server[TestConfig]).Tokens, []string{
 		"dGhpc2lzYXRlc3R0b2tlbg==", "dGhpc2lzYWxzb2F0ZXN0dG9rZW4=", "TfGX4vJkrqfRyvUviDpj3Q==",
