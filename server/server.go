@@ -33,14 +33,18 @@ func New[Config any](adapters map[string]framework.Adapter[Config]) api_adapter_
 		panic("AUTH_TOKENS_PATH environment variable not set")
 	}
 
-	server := &internal.Server[Config]{
-		Adapters: adapters,
-		Tokens:   getTokensFromPath(path),
-	}
-
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		panic(fmt.Sprintf("failed to create file watcher: %s", err.Error()))
+	}
+
+	if err = watcher.Add(path); err != nil {
+		panic(fmt.Sprintf("failed to add path to file watcher: %v", err))
+	}
+
+	server := &internal.Server[Config]{
+		Adapters: adapters,
+		Tokens:   getTokensFromPath(path),
 	}
 
 	go func(s *internal.Server[Config]) {
@@ -68,10 +72,6 @@ func New[Config any](adapters map[string]framework.Adapter[Config]) api_adapter_
 			}
 		}
 	}(server)
-
-	if err = watcher.Add(path); err != nil {
-		panic(fmt.Sprintf("failed to add path to file watcher: %v", err))
-	}
 
 	return server
 }
