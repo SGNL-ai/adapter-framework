@@ -85,12 +85,12 @@ func (s *Server[Config]) GetPage(ctx context.Context, req *api_adapter_v1.GetPag
 func (s *Server[Config]) validateAuthenticationToken(ctx context.Context) error {
 	metadata, ok := grpc_metadata.FromIncomingContext(ctx)
 	if !ok {
-		return status.Errorf(codes.Unauthenticated, "invalid or missing token")
+		return status.Error(codes.Unauthenticated, "invalid or missing token")
 	}
 
 	requestTokens := metadata.Get("token")
 	if len(requestTokens) != 1 {
-		return status.Errorf(codes.Unauthenticated, "invalid or missing token")
+		return status.Error(codes.Unauthenticated, "invalid or missing token")
 	}
 
 	s.TokensMutex.RLock()
@@ -103,5 +103,5 @@ func (s *Server[Config]) validateAuthenticationToken(ctx context.Context) error 
 		}
 	}
 
-	return status.Errorf(codes.Unauthenticated, "invalid or missing token")
+	return status.Error(codes.Unauthenticated, "invalid or missing token")
 }

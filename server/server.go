@@ -50,7 +50,7 @@ func newWithAuthTokensPath[Config any](
 ) api_adapter_v1.AdapterServer {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		panic(fmt.Sprintf("failed to create file watcher: %s", err.Error()))
+		panic(fmt.Sprintf("failed to create file watcher: %v", err))
 	}
 
 	if err = watcher.Add(authTokensPath); err != nil {
