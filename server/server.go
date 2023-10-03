@@ -52,7 +52,9 @@ func New[Config any](adapters map[string]framework.Adapter[Config]) api_adapter_
 					panic("file watcher channel closed")
 				}
 
+				s.TokensMutex.Lock()
 				s.Tokens = getTokensFromPath(path)
+				s.TokensMutex.Unlock()
 			case err, ok := <-watcher.Errors:
 				if !ok {
 					// Channel was closed

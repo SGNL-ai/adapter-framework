@@ -17,6 +17,7 @@ package internal
 import (
 	"context"
 	"fmt"
+	"sync"
 
 	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
@@ -45,7 +46,11 @@ type Server[Config any] struct {
 	// is populated when the server is created based on the JSON-encoded value in the file
 	// located under the path contained in the `AUTH_TOKENS_PATH` environment variable and is
 	// updated any time this file is modified.
+	// This field must only be accessed for reading or writing while locking TokensMutex.
 	Tokens []string
+
+	// TokensMutex is the mutex that must be locked for every access to Tokens.
+	TokensMutex sync.RWMutex
 }
 
 func (s *Server[Config]) GetPage(ctx context.Context, req *api_adapter_v1.GetPageRequest) (*api_adapter_v1.GetPageResponse, error) {
@@ -87,6 +92,9 @@ func (s *Server[Config]) validateAuthenticationToken(ctx context.Context) error 
 	if len(requestTokens) != 1 {
 		return status.Errorf(codes.Unauthenticated, "invalid or missing token")
 	}
+
+	s.TokensMutex.RLock()
+	defer s.TokensMutex.RUnlock()
 
 	// TODO: After upgrading go to 1.21+, replace with the `Contains` method
 	for _, y := range s.Tokens {
