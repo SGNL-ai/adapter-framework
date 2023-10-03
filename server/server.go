@@ -64,13 +64,13 @@ func New[Config any](adapters map[string]framework.Adapter[Config]) api_adapter_
 				// An error will be thrown in the event there are too many events, too small of a buffer,
 				// etc. This indicates the watcher may no longer be functioning correctly, so we'll panic.
 				watcher.Close()
-				panic(fmt.Sprintf("file watcher error: %s", err.Error()))
+				panic(fmt.Sprintf("file watcher error: %v", err))
 			}
 		}
 	}(server)
 
 	if err = watcher.Add(path); err != nil {
-		panic(fmt.Sprintf("failed to add path to file watcher: %s", err.Error()))
+		panic(fmt.Sprintf("failed to add path to file watcher: %v", err))
 	}
 
 	return server
@@ -81,13 +81,13 @@ func New[Config any](adapters map[string]framework.Adapter[Config]) api_adapter_
 func getTokensFromPath(path string) []string {
 	jsonValidTokens, err := os.ReadFile(path)
 	if err != nil {
-		return []string{}
+		return nil
 	}
 
 	validTokens := new([]string)
 
 	if err := json.Unmarshal(jsonValidTokens, validTokens); err != nil || validTokens == nil {
-		return []string{}
+		return nil
 	}
 
 	return *validTokens
