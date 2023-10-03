@@ -28,26 +28,26 @@ import (
 // New returns an AdapterServer that wraps the given high-level
 // Adapter implementation with the Tokens field populated from the file
 // which name is configured in the AUTH_TOKENS_PATH environment variable.
-// The stop channel returned is used to signal when the file watcher should
+// The stop channel is used to signal when the file watcher should
 // be closed and stop watching for file changes.
 func New[Config any](
 	adapters map[string]framework.Adapter[Config],
-) (api_adapter_v1.AdapterServer, chan struct{}) {
+	stop <-chan struct{},
+) api_adapter_v1.AdapterServer {
 	authTokensPath, exists := os.LookupEnv("AUTH_TOKENS_PATH")
 	if !exists {
 		panic("AUTH_TOKENS_PATH environment variable not set")
 	}
 
-	return newWithAuthTokensPath(authTokensPath, adapters)
+	return newWithAuthTokensPath(authTokensPath, adapters, stop)
 
 }
 
 func newWithAuthTokensPath[Config any](
 	authTokensPath string,
 	adapters map[string]framework.Adapter[Config],
-) (api_adapter_v1.AdapterServer, chan struct{}) {
-	stop := make(chan struct{})
-
+	stop <-chan struct{},
+) api_adapter_v1.AdapterServer {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		panic(fmt.Sprintf("failed to create file watcher: %s", err.Error()))
@@ -92,7 +92,7 @@ func newWithAuthTokensPath[Config any](
 		}
 	}(server)
 
-	return server, stop
+	return server
 }
 
 // getTokensFromPath reads and parses the JSON encoded data located in the file at the given path.
