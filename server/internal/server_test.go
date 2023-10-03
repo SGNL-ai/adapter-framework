@@ -21,6 +21,9 @@ import (
 
 	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
+	"google.golang.org/grpc/codes"
+	grpc_metadata "google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
@@ -33,12 +36,17 @@ func (a *mockAdapter[Config]) GetPage(ctx context.Context, request *framework.Re
 }
 
 func TestServer_GetPage(t *testing.T) {
+	validTokens := []string{"dGhpc2lzYXRlc3R0b2tlbg==", "dGhpc2lzYWxzb2F0ZXN0dG9rZW4="}
+
 	tests := map[string]struct {
 		req             *api_adapter_v1.GetPageRequest
+		tokens          []string
 		adapterResponse framework.Response
 		wantResp        *api_adapter_v1.GetPageResponse
+		wantError       error
 	}{
 		"success": {
+			tokens: []string{"dGhpc2lzYXRlc3R0b2tlbg=="},
 			req: &api_adapter_v1.GetPageRequest{
 				Datasource: &api_adapter_v1.DatasourceConfig{
 					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
@@ -108,7 +116,80 @@ func TestServer_GetPage(t *testing.T) {
 				},
 			},
 		},
+		"success_explicit_type": {
+			tokens: []string{"dGhpc2lzYXRlc3R0b2tlbg=="},
+			req: &api_adapter_v1.GetPageRequest{
+				Datasource: &api_adapter_v1.DatasourceConfig{
+					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
+					Config:  []byte(`{"a":"a value","b":"b value"}`),
+					Address: "http://example.com/",
+					Auth: &api_adapter_v1.DatasourceAuthCredentials{
+						AuthMechanism: &api_adapter_v1.DatasourceAuthCredentials_HttpAuthorization{
+							HttpAuthorization: "Bearer mysecret",
+						},
+					},
+					Type: "Mock-1.0.1",
+				},
+				Entity: &api_adapter_v1.EntityConfig{
+					Id:         "00d58abb-0b80-4745-927a-af9b2fb612dd",
+					ExternalId: "users",
+					Attributes: []*api_adapter_v1.AttributeConfig{
+						{
+							Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+							ExternalId: "name",
+							Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+						},
+					},
+					Ordered: true,
+				},
+				PageSize: 100,
+				Cursor:   "the cursor",
+			},
+			adapterResponse: framework.Response{
+				Success: &framework.Page{
+					Objects: []framework.Object{
+						{
+							"name": "Alice",
+						},
+						{
+							"name": "Bob",
+						},
+					},
+					NextCursor: "next cursor",
+				},
+			},
+			wantResp: &api_adapter_v1.GetPageResponse{
+				Response: &api_adapter_v1.GetPageResponse_Success{
+					Success: &api_adapter_v1.Page{
+						Objects: []*api_adapter_v1.Object{
+							{
+								Attributes: []*api_adapter_v1.Attribute{
+									{
+										Id: "12268f03-f99d-476f-91cc-5fe3404e1654",
+										Values: []*api_adapter_v1.AttributeValue{
+											{Value: &api_adapter_v1.AttributeValue_StringValue{StringValue: "Alice"}},
+										},
+									},
+								},
+							},
+							{
+								Attributes: []*api_adapter_v1.Attribute{
+									{
+										Id: "12268f03-f99d-476f-91cc-5fe3404e1654",
+										Values: []*api_adapter_v1.AttributeValue{
+											{Value: &api_adapter_v1.AttributeValue_StringValue{StringValue: "Bob"}},
+										},
+									},
+								},
+							},
+						},
+						NextCursor: "next cursor",
+					},
+				},
+			},
+		},
 		"error": {
+			tokens: []string{"dGhpc2lzYXRlc3R0b2tlbg=="},
 			req: &api_adapter_v1.GetPageRequest{
 				Datasource: &api_adapter_v1.DatasourceConfig{
 					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
@@ -153,6 +234,7 @@ func TestServer_GetPage(t *testing.T) {
 			},
 		},
 		"invalid_request": {
+			tokens: []string{"dGhpc2lzYXRlc3R0b2tlbg=="},
 			req: &api_adapter_v1.GetPageRequest{
 				Datasource: &api_adapter_v1.DatasourceConfig{
 					Config:  []byte(`{"a":"a value","b":"b value"}`),
@@ -188,16 +270,134 @@ func TestServer_GetPage(t *testing.T) {
 				},
 			},
 		},
+		"invalid_type": {
+			tokens: []string{"dGhpc2lzYXRlc3R0b2tlbg=="},
+			req: &api_adapter_v1.GetPageRequest{
+				Datasource: &api_adapter_v1.DatasourceConfig{
+					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
+					Config:  []byte(`{"a":"a value","b":"b value"}`),
+					Address: "http://example.com/",
+					Auth: &api_adapter_v1.DatasourceAuthCredentials{
+						AuthMechanism: &api_adapter_v1.DatasourceAuthCredentials_HttpAuthorization{
+							HttpAuthorization: "Bearer mysecret",
+						},
+					},
+					Type: "Invalid-1.0.0",
+				},
+				Entity: &api_adapter_v1.EntityConfig{
+					Id:         "00d58abb-0b80-4745-927a-af9b2fb612dd",
+					ExternalId: "users",
+					Attributes: []*api_adapter_v1.AttributeConfig{
+						{
+							Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+							ExternalId: "name",
+							Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+						},
+					},
+					Ordered: true,
+				},
+				PageSize: 100,
+				Cursor:   "the cursor",
+			},
+			adapterResponse: framework.Response{
+				Success: &framework.Page{},
+			},
+			wantResp: &api_adapter_v1.GetPageResponse{
+				Response: &api_adapter_v1.GetPageResponse_Error{
+					Error: &api_adapter_v1.Error{
+						Message: "Unsupported datasource type provided: Invalid-1.0.0.",
+						Code:    2, // INVALID_DATASOURCE_CONFIG
+					},
+				},
+			},
+		},
+		"missing_auth_token": {
+			req: &api_adapter_v1.GetPageRequest{
+				Datasource: &api_adapter_v1.DatasourceConfig{
+					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
+					Config:  []byte(`{"a":"a value","b":"b value"}`),
+					Address: "http://example.com/",
+					Auth: &api_adapter_v1.DatasourceAuthCredentials{
+						AuthMechanism: &api_adapter_v1.DatasourceAuthCredentials_HttpAuthorization{
+							HttpAuthorization: "Bearer mysecret",
+						},
+					},
+					Type: "Invalid-1.0.0",
+				},
+				Entity: &api_adapter_v1.EntityConfig{
+					Id:         "00d58abb-0b80-4745-927a-af9b2fb612dd",
+					ExternalId: "users",
+					Attributes: []*api_adapter_v1.AttributeConfig{
+						{
+							Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+							ExternalId: "name",
+							Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+						},
+					},
+					Ordered: true,
+				},
+				PageSize: 100,
+				Cursor:   "the cursor",
+			},
+			adapterResponse: framework.Response{
+				Success: &framework.Page{},
+			},
+			wantError: status.Errorf(codes.Unauthenticated, "invalid or missing token"),
+		},
+		"invalid_auth_token": {
+			tokens: []string{"invalid"},
+			req: &api_adapter_v1.GetPageRequest{
+				Datasource: &api_adapter_v1.DatasourceConfig{
+					Id:      "1f530a64-0565-49e6-8647-b88e908b7229",
+					Config:  []byte(`{"a":"a value","b":"b value"}`),
+					Address: "http://example.com/",
+					Auth: &api_adapter_v1.DatasourceAuthCredentials{
+						AuthMechanism: &api_adapter_v1.DatasourceAuthCredentials_HttpAuthorization{
+							HttpAuthorization: "Bearer mysecret",
+						},
+					},
+					Type: "Invalid-1.0.0",
+				},
+				Entity: &api_adapter_v1.EntityConfig{
+					Id:         "00d58abb-0b80-4745-927a-af9b2fb612dd",
+					ExternalId: "users",
+					Attributes: []*api_adapter_v1.AttributeConfig{
+						{
+							Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
+							ExternalId: "name",
+							Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+						},
+					},
+					Ordered: true,
+				},
+				PageSize: 100,
+				Cursor:   "the cursor",
+			},
+			adapterResponse: framework.Response{
+				Success: &framework.Page{},
+			},
+			wantError: status.Errorf(codes.Unauthenticated, "invalid or missing token"),
+		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			ctx := grpc_metadata.NewIncomingContext(context.Background(), grpc_metadata.MD{
+				"token": tc.tokens,
+			})
+
 			server := Server[TestConfig]{
-				Adapter: &mockAdapter[TestConfig]{Response: tc.adapterResponse},
+				Adapters: map[string]framework.Adapter[TestConfig]{
+					"":           &mockAdapter[TestConfig]{Response: tc.adapterResponse},
+					"Mock-1.0.1": &mockAdapter[TestConfig]{Response: tc.adapterResponse},
+				},
+				Tokens: validTokens,
 			}
 
-			gotResp, _ := server.GetPage(context.TODO(), tc.req)
+			gotResp, gotError := server.GetPage(ctx, tc.req)
+
 			AssertDeepEqual(t, tc.wantResp, gotResp)
+			AssertDeepEqual(t, tc.wantError, gotError)
 		})
 	}
 }
