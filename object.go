@@ -15,8 +15,12 @@
 package framework
 
 import (
+	"errors"
 	"fmt"
+	"math"
 	"time"
+
+	"github.com/sosodev/duration"
 )
 
 // Object is an object returned for the top entity or a child entity.
@@ -26,13 +30,62 @@ import (
 // and AddChildObjects to ensure that the correct types are used for values.
 type Object map[string]any
 
+// Duration is the value of an attribute of type duration.
+// It is the sum of all the fields' durations.
+type Duration struct {
+	// Nanos is a duration as a number of nanoseconds.
+	Nanos int32 `json:"nanos,omitempty"`
+
+	// Seconds is a duration as a number of seconds.
+	Seconds int64 `json:"seconds,omitempty"`
+
+	// Days is a duration as a number of days.
+	Days int64 `json:"days,omitempty"`
+
+	// Months is a duration as a number of months.
+	Months int64 `json:"months,omitempty"`
+}
+
+// ParseDuration parses a valid ISO8601 duration string into a Duration.
+// Years as duration is not supported.
+// Fractional components of durations are not supported.
+func ParseISO8601Duration(durationStr string) (*Duration, error) {
+	d, err := duration.Parse(durationStr)
+	if err != nil {
+		return nil, errors.New("failed to parse the duration string: " + durationStr)
+	}
+
+	// Convert years into months, weeks into days, and minutes and hours into seconds.
+	d.Months += d.Years * 12.0
+	d.Days += d.Weeks * 7.0
+	d.Seconds += d.Hours * 3_600.0
+	d.Seconds += d.Minutes * 60.0
+
+	// Round the numbers of months, days, seconds, and nanoseconds.
+	months, monthsFraction := math.Modf(d.Months)
+	d.Days += monthsFraction * 30.0
+
+	days, daysFraction := math.Modf(d.Days)
+	d.Seconds += daysFraction * 24.0 * 3_600.0
+
+	seconds, secondsFraction := math.Modf(d.Seconds)
+	nanos := secondsFraction * 1_000_000_000.0
+
+	return &Duration{
+		Months:  int64(months),
+		Days:    int64(days),
+		Seconds: int64(seconds),
+		Nanos:   int32(nanos),
+	}, nil
+}
+
 // AttributeValue is the set of types allowed for values of non-list attributes
 // in an Object.
 type AttributeValue interface {
 	// Types of non-list attribute values.
-	bool | time.Time | time.Duration | float64 | int64 | string |
+	bool | time.Time | Duration | float64 | int64 | string |
 		// Types of list attribute values.
-		[]bool | []time.Time | []time.Duration | []float64 | []int64 | []string
+		[]bool | []time.Time | []Duration | []float64 | []int64 | []string
 }
 
 // AddAttribute adds a attribute into the given object.

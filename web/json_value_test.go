@@ -16,6 +16,7 @@ package web
 
 import (
 	"encoding/json"
+	"errors"
 	"testing"
 	"time"
 
@@ -170,30 +171,160 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 			valueJSON: `[12, 34, 56]`,
 			wantValue: []float64{12, 34, 56},
 		},
-		"duration_from_string": {
+		"duration_iso8601_valid": {
 			attribute: &framework.AttributeConfig{
 				ExternalId: "a",
 				Type:       framework.AttributeTypeDuration,
 			},
-			valueJSON: `"123s"`,
-			wantValue: 123 * time.Second,
-		},
-		"duration_from_number_of_seconds": {
-			attribute: &framework.AttributeConfig{
-				ExternalId: "a",
-				Type:       framework.AttributeTypeDuration,
+			valueJSON: `"P6M5DT4S"`,
+			wantValue: &framework.Duration{
+				Nanos:   0,
+				Seconds: 4,
+				Days:    5,
+				Months:  6,
 			},
-			valueJSON: `123`,
-			wantValue: 123 * time.Second,
 		},
-		"duration_list": {
+		"duration_iso8601_list_valid": {
 			attribute: &framework.AttributeConfig{
 				ExternalId: "a",
 				Type:       framework.AttributeTypeDuration,
 				List:       true,
 			},
-			valueJSON: `[12, "34s", 56]`,
-			wantValue: []time.Duration{12 * time.Second, 34 * time.Second, 56 * time.Second},
+			valueJSON: `["P6M5DT4S","P1M15DT54S"]`,
+			wantValue: []*framework.Duration{
+				{
+					Nanos:   0,
+					Seconds: 4,
+					Days:    5,
+					Months:  6,
+				},
+				{
+					Nanos:   0,
+					Seconds: 54,
+					Days:    15,
+					Months:  1,
+				},
+			},
+		},
+		"duration_iso8601_express_years_as_months": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDuration,
+			},
+			valueJSON: `"P2Y"`,
+			wantValue: &framework.Duration{
+				Nanos:   0,
+				Seconds: 0,
+				Days:    0,
+				Months:  24, // 2 years = 24 months
+			},
+		},
+		"duration_iso8601_express_weeks_as_days": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDuration,
+			},
+			valueJSON: `"P2W"`,
+			wantValue: &framework.Duration{
+				Nanos:   0,
+				Seconds: 0,
+				Days:    14, // 2 weeks = 14 days
+				Months:  0,
+			},
+		},
+		"duration_iso8601_express_hours_as_seconds": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDuration,
+			},
+			valueJSON: `"PT2H"`,
+			wantValue: &framework.Duration{
+				Nanos:   0,
+				Seconds: 7200, // 2 hours = 7200
+				Days:    0,
+				Months:  0,
+			},
+		},
+		"duration_iso8601_express_minutes_as_seconds": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDuration,
+			},
+			valueJSON: `"PT2M"`,
+			wantValue: &framework.Duration{
+				Nanos:   0,
+				Seconds: 120, // 2 minutes = 120
+				Days:    0,
+				Months:  0,
+			},
+		},
+		"duration_iso8601_express_hours_and_minutes_as_seconds": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDuration,
+			},
+			valueJSON: `"PT2H10M"`,
+			wantValue: &framework.Duration{
+				Nanos:   0,
+				Seconds: 7800, // 2 hours + 10 minutes = 7200 + 600 = 7800
+				Days:    0,
+				Months:  0,
+			},
+		},
+		"duration_iso8601_fractional_months": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDuration,
+			},
+			valueJSON: `"P1.5M"`,
+			wantValue: &framework.Duration{
+				Nanos:   0,
+				Seconds: 0,
+				Days:    15,
+				Months:  1,
+			},
+		},
+		"duration_iso8601_fractional_days": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDuration,
+			},
+			valueJSON: `"P1.5D"`,
+			wantValue: &framework.Duration{
+				Nanos:   0,
+				Seconds: 43200, // 0.5 days = 12 hours = 43200 seconds
+				Days:    1,     // 1 day
+				Months:  0,
+			},
+		},
+		"duration_iso8601_fractional_seconds": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDuration,
+			},
+			valueJSON: `"PT1.5S"`,
+			wantValue: &framework.Duration{
+				Nanos:   500_000_000,
+				Seconds: 1,
+				Days:    0,
+				Months:  0,
+			},
+		},
+		"duration_iso8601_supported_zero_components": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDuration,
+			},
+			valueJSON: `"P0M4DT0H0M5S"`,
+			wantValue: &framework.Duration{Nanos: 0, Seconds: 5, Days: 4, Months: 0},
+		},
+		"duration_iso8601_invalid": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDuration,
+			},
+			valueJSON: `"10s"`,
+			wantError: errors.New("attribute a cannot be parsed into a duration value: failed to parse the duration string: 10s"),
 		},
 		"int64": {
 			attribute: &framework.AttributeConfig{
@@ -240,8 +371,12 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 			}
 
 			gotValue, gotError := convertJSONAttributeValue(tc.attribute, value, tc.opts)
-			AssertDeepEqual(t, tc.wantValue, gotValue)
-			AssertDeepEqual(t, tc.wantError, gotError)
+			if tc.wantError != nil {
+				AssertDeepEqual(t, tc.wantError.Error(), gotError.Error())
+			} else {
+				AssertDeepEqual(t, tc.wantValue, gotValue)
+				AssertDeepEqual(t, nil, gotError)
+			}
 		})
 	}
 }
