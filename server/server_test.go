@@ -48,7 +48,6 @@ func TestNewWithAuthTokensPath(t *testing.T) {
 		"simple": {
 			inputAuthTokensPath: validTokensPath,
 			inputAdapters:       map[string]framework.Adapter[TestConfig]{"test": nil},
-			inputStopChan:       nil,
 			wantAdapterServer: &internal.Server[TestConfig]{
 				Adapters: map[string]framework.Adapter[TestConfig]{"test": nil},
 				Tokens:   []string{"dGhpc2lzYXRlc3R0b2tlbg==", "dGhpc2lzYWxzb2F0ZXN0dG9rZW4="},
@@ -57,7 +56,6 @@ func TestNewWithAuthTokensPath(t *testing.T) {
 		"no_tokens_at_path": {
 			inputAuthTokensPath: "/",
 			inputAdapters:       map[string]framework.Adapter[TestConfig]{"test": nil},
-			inputStopChan:       nil,
 			wantAdapterServer: &internal.Server[TestConfig]{
 				Adapters: map[string]framework.Adapter[TestConfig]{"test": nil},
 				Tokens:   nil,
@@ -66,7 +64,6 @@ func TestNewWithAuthTokensPath(t *testing.T) {
 		"invalid_tokens_at_path": {
 			inputAuthTokensPath: invalidTokensPath,
 			inputAdapters:       map[string]framework.Adapter[TestConfig]{"test": nil},
-			inputStopChan:       nil,
 			wantAdapterServer: &internal.Server[TestConfig]{
 				Adapters: map[string]framework.Adapter[TestConfig]{"test": nil},
 				Tokens:   nil,
@@ -76,10 +73,9 @@ func TestNewWithAuthTokensPath(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			gotAdapterServer := newWithAuthTokensPath(
+			gotAdapterServer, _ := newWithAuthTokensPath(
 				tc.inputAuthTokensPath,
 				tc.inputAdapters,
-				tc.inputStopChan,
 			)
 
 			AssertDeepEqual(t, tc.wantAdapterServer, gotAdapterServer)
@@ -95,12 +91,9 @@ func TestNewWithAuthTokensPathFileWatcher(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	stop := make(chan struct{})
-
-	gotAdapterServer := newWithAuthTokensPath(
+	gotAdapterServer, stop := newWithAuthTokensPath(
 		validTokensPath,
 		map[string]framework.Adapter[TestConfig]{"test": nil},
-		stop,
 	)
 
 	// Assert the initial state of the tokens are correct
