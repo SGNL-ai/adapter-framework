@@ -27,7 +27,9 @@ import (
 
 // New returns an AdapterServer that wraps the given high-level
 // Adapter implementation with the Tokens field populated.
-func New[Config any](adapters map[string]framework.Adapter[Config]) api_adapter_v1.AdapterServer {
+// The stop channel is used to signal when the file watcher should
+// be closed and stop watching for file changes.
+func New[Config any](adapters map[string]framework.Adapter[Config], stop <-chan struct{}) api_adapter_v1.AdapterServer {
 	path, exists := os.LookupEnv("AUTH_TOKENS_PATH")
 	if !exists {
 		panic("AUTH_TOKENS_PATH environment variable not set")
@@ -69,6 +71,10 @@ func New[Config any](adapters map[string]framework.Adapter[Config]) api_adapter_
 				// etc. This indicates the watcher may no longer be functioning correctly, so we'll panic.
 				watcher.Close()
 				panic(fmt.Sprintf("file watcher error: %v", err))
+			case <-stop:
+				watcher.Close()
+
+				return
 			}
 		}
 	}(server)
