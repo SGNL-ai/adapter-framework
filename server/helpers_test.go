@@ -26,11 +26,6 @@ type TestConfig struct {
 	B string `json:"b"`
 }
 
-// Ptr returns a pointer to the given value.
-func Ptr[T any](v T) *T {
-	return &v
-}
-
 // AssertDeepEqual asserts whether want and got are equal using
 // reflect.DeepEqual.
 func AssertDeepEqual(t *testing.T, want, got any) {
