@@ -18,8 +18,8 @@ import (
 	"fmt"
 	"time"
 
+	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
-	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -48,9 +48,9 @@ func validateAttributeValue(attribute *api_adapter_v1.AttributeConfig, value any
 		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DATE_TIME && attribute.List
 	case []*time.Time:
 		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DATE_TIME && attribute.List
-	case []time.Duration:
+	case []framework.Duration:
 		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DURATION && attribute.List
-	case []*time.Duration:
+	case []*framework.Duration:
 		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DURATION && attribute.List
 	case []float64:
 		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DOUBLE && attribute.List
@@ -72,9 +72,9 @@ func validateAttributeValue(attribute *api_adapter_v1.AttributeConfig, value any
 		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DATE_TIME && !attribute.List
 	case *time.Time:
 		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DATE_TIME && !attribute.List
-	case time.Duration:
+	case framework.Duration:
 		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DURATION && !attribute.List
-	case *time.Duration:
+	case *framework.Duration:
 		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DURATION && !attribute.List
 	case float64:
 		valid = attribute.Type == api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_DOUBLE && !attribute.List
@@ -119,9 +119,9 @@ func getAttributeValues(value any) (list []*api_adapter_v1.AttributeValue, adapt
 		return getAttributeListValues(v)
 	case []*time.Time:
 		return getAttributeListValues(v)
-	case []time.Duration:
+	case []framework.Duration:
 		return getAttributeListValues(v)
-	case []*time.Duration:
+	case []*framework.Duration:
 		return getAttributeListValues(v)
 	case []float64:
 		return getAttributeListValues(v)
@@ -199,11 +199,11 @@ func getAttributeValue(value any) (*api_adapter_v1.AttributeValue, *api_adapter_
 			return nullValue, nil
 		}
 		return getAttributeValue(*v)
-	case time.Duration:
+	case framework.Duration:
 		return &api_adapter_v1.AttributeValue{Value: &api_adapter_v1.AttributeValue_DurationValue{
-			DurationValue: durationpb.New(v),
+			DurationValue: &api_adapter_v1.Duration{Nanos: v.Nanos, Seconds: v.Seconds, Days: v.Days, Months: v.Months},
 		}}, nil
-	case *time.Duration:
+	case *framework.Duration:
 		if v == nil {
 			return nullValue, nil
 		}

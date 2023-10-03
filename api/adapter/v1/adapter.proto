@@ -210,10 +210,29 @@ message AttributeValue {
         bool bool_value = 2;
         DateTime datetime_value = 3;
         double double_value = 4;
-        google.protobuf.Duration duration_value = 5;
+        Duration duration_value = 5;
         int64 int64_value = 6;
         string string_value = 7;
     }
+}
+
+// A duration, as the sum of all the fields' durations.
+// Each field may be positive, zero, or negative.
+// The seconds and nanos fields have the same tags as in google.protobuf.Duration for backward compatibility:
+// when only seconds and/or nanos are set in the message, it is marshaled identically to google.protobuf.Duration.
+// The months and days fields are additions supported in Neo4j durations.
+message Duration {
+    // A duration as a number of seconds.
+    int64 seconds = 1;
+    
+    // A duration as a number of nanoseconds.
+    int32 nanos = 2;
+    
+    // A duration as a number of months.
+    int64 months = 3;
+    
+    // A duration as a number of days.
+    int64 days = 4;
 }
 
 // A date or timestamp.
