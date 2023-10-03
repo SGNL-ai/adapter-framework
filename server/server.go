@@ -33,12 +33,12 @@ import (
 func New[Config any](
 	adapters map[string]framework.Adapter[Config],
 ) (api_adapter_v1.AdapterServer, chan struct{}) {
-	path, exists := os.LookupEnv("AUTH_TOKENS_PATH")
+	authTokensPath, exists := os.LookupEnv("AUTH_TOKENS_PATH")
 	if !exists {
 		panic("AUTH_TOKENS_PATH environment variable not set")
 	}
 
-	return newWithAuthTokensPath(path, adapters)
+	return newWithAuthTokensPath(authTokensPath, adapters)
 
 }
 
