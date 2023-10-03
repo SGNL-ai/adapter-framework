@@ -103,9 +103,9 @@ func getTokensFromPath(path string) []string {
 		return nil
 	}
 
-	validTokens := new([]string)
+	var validTokens *[]string
 
-	if err := json.Unmarshal(jsonValidTokens, validTokens); err != nil || validTokens == nil {
+	if err := json.Unmarshal(jsonValidTokens, &validTokens); err != nil || validTokens == nil {
 		return nil
 	}
 
