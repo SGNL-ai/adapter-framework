@@ -26,6 +26,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+type AdapterGetPageFunc func(ctx context.Context, req *api_adapter_v1.GetPageRequest) (framework.Response, *EntityReverseIdMapping)
+
 // Server is an implementation of the AdapterServer gRPC service which
 // delegates the implementation of the RPCs to high-level Adapter
 // implementation based on a provided type, and translates and
@@ -33,14 +35,11 @@ import (
 //
 // The Config type parameter must be a struct type into which the configuration
 // JSON object can be unmarshaled into.
-type Server[Config any] struct {
+type Server struct {
 	api_adapter_v1.UnimplementedAdapterServer
 
-	// Adapters contains a map of high-level implementations of the service
-	// as well as their associated types.
-	// The key in this map should match the Supported Datasource Type
-	// specified on the Adapter object created in SGNL.
-	Adapters map[string]framework.Adapter[Config]
+	// TODO
+	AdapterGetPageFuncs map[string]AdapterGetPageFunc
 
 	// Tokens contains a lists of valid auth tokens for this server. This list of Tokens
 	// is populated when the server is created based on the JSON-encoded value in the file
@@ -53,24 +52,18 @@ type Server[Config any] struct {
 	TokensMutex sync.RWMutex
 }
 
-func (s *Server[Config]) GetPage(ctx context.Context, req *api_adapter_v1.GetPageRequest) (*api_adapter_v1.GetPageResponse, error) {
+func (s *Server) GetPage(ctx context.Context, req *api_adapter_v1.GetPageRequest) (*api_adapter_v1.GetPageResponse, error) {
 	if err := s.validateAuthenticationToken(ctx); err != nil {
 		return nil, err
 	}
 
-	adapterRequest, reverseMapping, adapterErr := getAdapterRequest[Config](req)
-
-	if adapterErr != nil {
-		return api_adapter_v1.NewGetPageResponseError(adapterErr), nil
-	}
-
-	if adapter, ok := s.Adapters[req.Datasource.Type]; ok {
-		adapterResponse := adapter.GetPage(ctx, adapterRequest)
+	if adapterGetPageFunc, ok := s.AdapterGetPageFuncs[req.Datasource.Type]; ok {
+		adapterResponse, reverseMapping := adapterGetPageFunc(ctx, req)
 
 		return getResponse(reverseMapping, &adapterResponse), nil
 	}
 
-	adapterErr = &api_adapter_v1.Error{
+	adapterErr := &api_adapter_v1.Error{
 		Message: fmt.Sprintf("Unsupported datasource type provided: %s.", req.Datasource.Type),
 		Code:    api_adapter_v1.ErrorCode_ERROR_CODE_INVALID_DATASOURCE_CONFIG,
 	}
@@ -82,7 +75,7 @@ func (s *Server[Config]) GetPage(ctx context.Context, req *api_adapter_v1.GetPag
 // adapter. Will return nil if the provided token matches any of the tokens
 // specified in the file located at AUTH_TOKENS_PATH.
 // Otherwise, will return an error.
-func (s *Server[Config]) validateAuthenticationToken(ctx context.Context) error {
+func (s *Server) validateAuthenticationToken(ctx context.Context) error {
 	metadata, ok := grpc_metadata.FromIncomingContext(ctx)
 	if !ok {
 		return status.Error(codes.Unauthenticated, "invalid or missing token")
@@ -104,4 +97,24 @@ func (s *Server[Config]) validateAuthenticationToken(ctx context.Context) error 
 	}
 
 	return status.Error(codes.Unauthenticated, "invalid or missing token")
+}
+
+func RegisterAdapter[Config any](s *Server, datasourceType string, adapter framework.Adapter[Config]) error {
+	// TODO: check for duplicates and return an error
+
+	s.AdapterGetPageFuncs[datasourceType] = func(ctx context.Context, req *api_adapter_v1.GetPageRequest) (framework.Response, *EntityReverseIdMapping) {
+		adapterRequest, reverseMapping, adapterErr := GetAdapterRequest[Config](req)
+		if adapterErr != nil {
+			return framework.NewGetPageResponseError(&framework.Error{
+				Message: adapterErr.Message,
+				Code:    adapterErr.Code,
+				// TODO
+				// RetryAfter: adapterErr.RetryAfter,
+			}), nil
+		}
+
+		return adapter.GetPage(ctx, adapterRequest), reverseMapping
+	}
+
+	return nil
 }

@@ -19,13 +19,6 @@ import (
 	"testing"
 )
 
-// TestConfig is an example Config type which can be used as the Config type
-// parameter of an Adapter for testing.
-type TestConfig struct {
-	A string `json:"a"`
-	B string `json:"b"`
-}
-
 // Ptr returns a pointer to the given value.
 func Ptr[T any](v T) *T {
 	return &v

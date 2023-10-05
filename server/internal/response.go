@@ -25,7 +25,7 @@ import (
 
 // getResponse converts an adapter Response into a GetPageResponse.
 func getResponse(
-	reverseMapping *entityReverseIdMapping,
+	reverseMapping *EntityReverseIdMapping,
 	resp *framework.Response,
 ) (rpcResponse *api_adapter_v1.GetPageResponse) {
 	if resp == nil {
@@ -72,7 +72,7 @@ func getResponse(
 // getEntityObjects converts an adapter list of objects for an entity into an
 // EntityObject.
 func getEntityObjects(
-	reverseMapping *entityReverseIdMapping,
+	reverseMapping *EntityReverseIdMapping,
 	objects []framework.Object,
 ) (entityObjects *api_adapter_v1.EntityObjects, adapterErr *api_adapter_v1.Error) {
 	entityObjects = &api_adapter_v1.EntityObjects{
@@ -100,7 +100,7 @@ func getEntityObjects(
 
 // getEntityObject converts an adapter Object into an RPC object.
 func getEntityObject(
-	reverseMapping *entityReverseIdMapping,
+	reverseMapping *EntityReverseIdMapping,
 	object framework.Object,
 ) (entityObject *api_adapter_v1.Object, adapterErr *api_adapter_v1.Error) {
 	entityObject = new(api_adapter_v1.Object)

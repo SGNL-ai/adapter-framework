@@ -24,8 +24,8 @@ import (
 func TestGetAdapterRequest(t *testing.T) {
 	tests := map[string]struct {
 		req                *api_adapter_v1.GetPageRequest
-		wantAdapterRequest *framework.Request[TestConfig]
-		wantReverseMapping *entityReverseIdMapping
+		wantAdapterRequest *framework.Request[TestConfigA]
+		wantReverseMapping *EntityReverseIdMapping
 		wantAdapterErr     *api_adapter_v1.Error
 	}{
 		"invalid_nil": {
@@ -222,8 +222,8 @@ func TestGetAdapterRequest(t *testing.T) {
 				PageSize: 100,
 				Cursor:   "the cursor",
 			},
-			wantAdapterRequest: &framework.Request[TestConfig]{
-				Config: &TestConfig{
+			wantAdapterRequest: &framework.Request[TestConfigA]{
+				Config: &TestConfigA{
 					A: "a value",
 					B: "b value",
 				},
@@ -244,7 +244,7 @@ func TestGetAdapterRequest(t *testing.T) {
 				PageSize: 100,
 				Cursor:   "the cursor",
 			},
-			wantReverseMapping: &entityReverseIdMapping{
+			wantReverseMapping: &EntityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -273,7 +273,7 @@ func TestGetAdapterRequest(t *testing.T) {
 				},
 				PageSize: 100,
 			},
-			wantAdapterRequest: &framework.Request[TestConfig]{
+			wantAdapterRequest: &framework.Request[TestConfigA]{
 				Entity: framework.EntityConfig{
 					ExternalId: "users",
 					Attributes: []*framework.AttributeConfig{
@@ -285,7 +285,7 @@ func TestGetAdapterRequest(t *testing.T) {
 				},
 				PageSize: 100,
 			},
-			wantReverseMapping: &entityReverseIdMapping{
+			wantReverseMapping: &EntityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -300,7 +300,7 @@ func TestGetAdapterRequest(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			gotAdapterRequest, gotReverseMapping, gotAdapterErr := getAdapterRequest[TestConfig](tc.req)
+			gotAdapterRequest, gotReverseMapping, gotAdapterErr := GetAdapterRequest[TestConfigA](tc.req)
 			AssertDeepEqual(t, tc.wantAdapterRequest, gotAdapterRequest)
 			AssertDeepEqual(t, tc.wantReverseMapping, gotReverseMapping)
 			AssertDeepEqual(t, tc.wantAdapterErr, gotAdapterErr)
@@ -361,7 +361,7 @@ func TestGetEntity(t *testing.T) {
 	tests := map[string]struct {
 		entity             *api_adapter_v1.EntityConfig
 		wantAdapterEntity  *framework.EntityConfig
-		wantReverseMapping *entityReverseIdMapping
+		wantReverseMapping *EntityReverseIdMapping
 		wantAdapterErr     *api_adapter_v1.Error
 	}{
 		"one_attribute": {
@@ -385,7 +385,7 @@ func TestGetEntity(t *testing.T) {
 					},
 				},
 			},
-			wantReverseMapping: &entityReverseIdMapping{
+			wantReverseMapping: &EntityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -455,7 +455,7 @@ func TestGetEntity(t *testing.T) {
 					},
 				},
 			},
-			wantReverseMapping: &entityReverseIdMapping{
+			wantReverseMapping: &EntityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -532,7 +532,7 @@ func TestGetEntity(t *testing.T) {
 					},
 				},
 			},
-			wantReverseMapping: &entityReverseIdMapping{
+			wantReverseMapping: &EntityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -541,7 +541,7 @@ func TestGetEntity(t *testing.T) {
 						Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
 					},
 				},
-				ChildEntities: map[string]*entityReverseIdMapping{
+				ChildEntities: map[string]*EntityReverseIdMapping{
 					"entitlements": {
 						Id: "05182a15-2451-4551-80ef-606fd05c1cc2",
 						Attributes: map[string]*api_adapter_v1.AttributeConfig{
@@ -620,7 +620,7 @@ func TestGetEntity(t *testing.T) {
 					},
 				},
 			},
-			wantReverseMapping: &entityReverseIdMapping{
+			wantReverseMapping: &EntityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -629,7 +629,7 @@ func TestGetEntity(t *testing.T) {
 						Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
 					},
 				},
-				ChildEntities: map[string]*entityReverseIdMapping{
+				ChildEntities: map[string]*EntityReverseIdMapping{
 					"entitlements": {
 						Id: "05182a15-2451-4551-80ef-606fd05c1cc2",
 						Attributes: map[string]*api_adapter_v1.AttributeConfig{

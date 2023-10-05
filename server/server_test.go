@@ -19,7 +19,6 @@ import (
 	"testing"
 	"time"
 
-	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
 	"github.com/sgnl-ai/adapter-framework/server/internal"
 )
@@ -41,35 +40,31 @@ func TestNewWithAuthTokensPath(t *testing.T) {
 
 	tests := map[string]struct {
 		inputAuthTokensPath string
-		inputAdapters       map[string]framework.Adapter[TestConfig]
 		inputStopChan       <-chan struct{}
 		wantAdapterServer   api_adapter_v1.AdapterServer
 	}{
 		"simple": {
 			inputAuthTokensPath: validTokensPath,
-			inputAdapters:       map[string]framework.Adapter[TestConfig]{"test": nil},
 			inputStopChan:       nil,
-			wantAdapterServer: &internal.Server[TestConfig]{
-				Adapters: map[string]framework.Adapter[TestConfig]{"test": nil},
-				Tokens:   []string{"dGhpc2lzYXRlc3R0b2tlbg==", "dGhpc2lzYWxzb2F0ZXN0dG9rZW4="},
+			wantAdapterServer: &internal.Server{
+				Tokens:              []string{"dGhpc2lzYXRlc3R0b2tlbg==", "dGhpc2lzYWxzb2F0ZXN0dG9rZW4="},
+				AdapterGetPageFuncs: make(map[string]internal.AdapterGetPageFunc),
 			},
 		},
 		"no_tokens_at_path": {
 			inputAuthTokensPath: "/",
-			inputAdapters:       map[string]framework.Adapter[TestConfig]{"test": nil},
 			inputStopChan:       nil,
-			wantAdapterServer: &internal.Server[TestConfig]{
-				Adapters: map[string]framework.Adapter[TestConfig]{"test": nil},
-				Tokens:   nil,
+			wantAdapterServer: &internal.Server{
+				Tokens:              nil,
+				AdapterGetPageFuncs: make(map[string]internal.AdapterGetPageFunc),
 			},
 		},
 		"invalid_tokens_at_path": {
 			inputAuthTokensPath: invalidTokensPath,
-			inputAdapters:       map[string]framework.Adapter[TestConfig]{"test": nil},
 			inputStopChan:       nil,
-			wantAdapterServer: &internal.Server[TestConfig]{
-				Adapters: map[string]framework.Adapter[TestConfig]{"test": nil},
-				Tokens:   nil,
+			wantAdapterServer: &internal.Server{
+				Tokens:              nil,
+				AdapterGetPageFuncs: make(map[string]internal.AdapterGetPageFunc),
 			},
 		},
 	}
@@ -78,7 +73,6 @@ func TestNewWithAuthTokensPath(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			gotAdapterServer := newWithAuthTokensPath(
 				tc.inputAuthTokensPath,
-				tc.inputAdapters,
 				tc.inputStopChan,
 			)
 
@@ -99,12 +93,11 @@ func TestNewWithAuthTokensPathFileWatcher(t *testing.T) {
 
 	gotAdapterServer := newWithAuthTokensPath(
 		validTokensPath,
-		map[string]framework.Adapter[TestConfig]{"test": nil},
 		stop,
 	)
 
 	// Assert the initial state of the tokens are correct
-	AssertDeepEqual(t, gotAdapterServer.(*internal.Server[TestConfig]).Tokens, []string{"dGhpc2lzYXRlc3R0b2tlbg==", "dGhpc2lzYWxzb2F0ZXN0dG9rZW4="})
+	AssertDeepEqual(t, gotAdapterServer.(*internal.Server).Tokens, []string{"dGhpc2lzYXRlc3R0b2tlbg==", "dGhpc2lzYWxzb2F0ZXN0dG9rZW4="})
 
 	// Add a third token to the file
 	tokens = []byte(`["dGhpc2lzYXRlc3R0b2tlbg==","dGhpc2lzYWxzb2F0ZXN0dG9rZW4=","TfGX4vJkrqfRyvUviDpj3Q=="]`)
@@ -115,7 +108,7 @@ func TestNewWithAuthTokensPathFileWatcher(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Assert the tokens have been updated
-	AssertDeepEqual(t, gotAdapterServer.(*internal.Server[TestConfig]).Tokens, []string{
+	AssertDeepEqual(t, gotAdapterServer.(*internal.Server).Tokens, []string{
 		"dGhpc2lzYXRlc3R0b2tlbg==", "dGhpc2lzYWxzb2F0ZXN0dG9rZW4=", "TfGX4vJkrqfRyvUviDpj3Q==",
 	})
 
@@ -131,7 +124,7 @@ func TestNewWithAuthTokensPathFileWatcher(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Assert the tokens have not been updated (e.g. that the file watcher was closed correctly)
-	AssertDeepEqual(t, gotAdapterServer.(*internal.Server[TestConfig]).Tokens, []string{
+	AssertDeepEqual(t, gotAdapterServer.(*internal.Server).Tokens, []string{
 		"dGhpc2lzYXRlc3R0b2tlbg==", "dGhpc2lzYWxzb2F0ZXN0dG9rZW4=", "TfGX4vJkrqfRyvUviDpj3Q==",
 	})
 }

@@ -20,7 +20,6 @@ import (
 	"os"
 
 	"github.com/fsnotify/fsnotify"
-	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
 	"github.com/sgnl-ai/adapter-framework/server/internal"
 )
@@ -31,7 +30,6 @@ import (
 // The stop channel is used to signal when the file watcher should
 // be closed and stop watching for file changes.
 func New[Config any](
-	adapters map[string]framework.Adapter[Config],
 	stop <-chan struct{},
 ) api_adapter_v1.AdapterServer {
 	authTokensPath, exists := os.LookupEnv("AUTH_TOKENS_PATH")
@@ -39,13 +37,11 @@ func New[Config any](
 		panic("AUTH_TOKENS_PATH environment variable not set")
 	}
 
-	return newWithAuthTokensPath(authTokensPath, adapters, stop)
-
+	return newWithAuthTokensPath(authTokensPath, stop)
 }
 
-func newWithAuthTokensPath[Config any](
+func newWithAuthTokensPath(
 	authTokensPath string,
-	adapters map[string]framework.Adapter[Config],
 	stop <-chan struct{},
 ) api_adapter_v1.AdapterServer {
 	watcher, err := fsnotify.NewWatcher()
@@ -57,12 +53,12 @@ func newWithAuthTokensPath[Config any](
 		panic(fmt.Sprintf("failed to add path to file watcher: %v", err))
 	}
 
-	server := &internal.Server[Config]{
-		Adapters: adapters,
-		Tokens:   getTokensFromPath(authTokensPath),
+	server := &internal.Server{
+		Tokens:              getTokensFromPath(authTokensPath),
+		AdapterGetPageFuncs: make(map[string]internal.AdapterGetPageFunc),
 	}
 
-	go func(s *internal.Server[Config]) {
+	go func(s *internal.Server) {
 		for {
 			select {
 			case _, ok := <-watcher.Events:
