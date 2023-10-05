@@ -32,13 +32,13 @@ type AdapterGetPageFunc func(ctx context.Context, req *api_adapter_v1.GetPageReq
 // delegates the implementation of the RPCs to high-level Adapter
 // implementation based on a provided type, and translates and
 // validates RPC requests and responses.
-//
-// The Config type parameter must be a struct type into which the configuration
-// JSON object can be unmarshaled into.
 type Server struct {
 	api_adapter_v1.UnimplementedAdapterServer
 
-	// TODO
+	// AdapterGetPageFuncs contains a map of wrapper functions that
+	// call the GetPage function on the associated high-level Adapter.
+	// The key in this map should match the Supported Datasource Type
+	// specified on the Adapter object created in SGNL.
 	AdapterGetPageFuncs map[string]AdapterGetPageFunc
 
 	// Tokens contains a lists of valid auth tokens for this server. This list of Tokens
