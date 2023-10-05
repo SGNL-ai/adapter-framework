@@ -25,12 +25,12 @@ import (
 
 func TestGetResponse(t *testing.T) {
 	tests := map[string]struct {
-		reverseMapping  *EntityReverseIdMapping
+		reverseMapping  *entityReverseIdMapping
 		resp            *framework.Response
 		wantRpcResponse *api_adapter_v1.GetPageResponse
 	}{
 		"error": {
-			reverseMapping: &EntityReverseIdMapping{
+			reverseMapping: &entityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -58,7 +58,7 @@ func TestGetResponse(t *testing.T) {
 			},
 		},
 		"success_no_objects": {
-			reverseMapping: &EntityReverseIdMapping{
+			reverseMapping: &entityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -67,7 +67,7 @@ func TestGetResponse(t *testing.T) {
 						Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
 					},
 				},
-				ChildEntities: map[string]*EntityReverseIdMapping{
+				ChildEntities: map[string]*entityReverseIdMapping{
 					"entitlements": {
 						Id: "05182a15-2451-4551-80ef-606fd05c1cc2",
 						Attributes: map[string]*api_adapter_v1.AttributeConfig{
@@ -104,7 +104,7 @@ func TestGetResponse(t *testing.T) {
 			},
 		},
 		"success_multiple_objects": {
-			reverseMapping: &EntityReverseIdMapping{
+			reverseMapping: &entityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -113,7 +113,7 @@ func TestGetResponse(t *testing.T) {
 						Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
 					},
 				},
-				ChildEntities: map[string]*EntityReverseIdMapping{
+				ChildEntities: map[string]*entityReverseIdMapping{
 					"entitlements": {
 						Id: "05182a15-2451-4551-80ef-606fd05c1cc2",
 						Attributes: map[string]*api_adapter_v1.AttributeConfig{
@@ -237,7 +237,7 @@ func TestGetResponse(t *testing.T) {
 			},
 		},
 		"invalid_nil_response": {
-			reverseMapping: &EntityReverseIdMapping{
+			reverseMapping: &entityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -258,7 +258,7 @@ func TestGetResponse(t *testing.T) {
 			},
 		},
 		"invalid_empty_response": {
-			reverseMapping: &EntityReverseIdMapping{
+			reverseMapping: &entityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -279,7 +279,7 @@ func TestGetResponse(t *testing.T) {
 			},
 		},
 		"invalid_objects": {
-			reverseMapping: &EntityReverseIdMapping{
+			reverseMapping: &entityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -320,13 +320,13 @@ func TestGetResponse(t *testing.T) {
 
 func TestGetEntityObject(t *testing.T) {
 	tests := map[string]struct {
-		reverseMapping   *EntityReverseIdMapping
+		reverseMapping   *entityReverseIdMapping
 		object           framework.Object
 		wantEntityObject *api_adapter_v1.Object
 		wantAdapterErr   *api_adapter_v1.Error
 	}{
 		"invalid_empty_object": {
-			reverseMapping: &EntityReverseIdMapping{
+			reverseMapping: &entityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -343,7 +343,7 @@ func TestGetEntityObject(t *testing.T) {
 			},
 		},
 		"one_attribute_string": {
-			reverseMapping: &EntityReverseIdMapping{
+			reverseMapping: &entityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -368,7 +368,7 @@ func TestGetEntityObject(t *testing.T) {
 			},
 		},
 		"one_attribute_string_list_multiple_values": {
-			reverseMapping: &EntityReverseIdMapping{
+			reverseMapping: &entityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -395,7 +395,7 @@ func TestGetEntityObject(t *testing.T) {
 			},
 		},
 		"one_attribute_string_list_empty": {
-			reverseMapping: &EntityReverseIdMapping{
+			reverseMapping: &entityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -419,7 +419,7 @@ func TestGetEntityObject(t *testing.T) {
 			},
 		},
 		"one_attribute_string_list_containing_null": {
-			reverseMapping: &EntityReverseIdMapping{
+			reverseMapping: &entityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -446,7 +446,7 @@ func TestGetEntityObject(t *testing.T) {
 			},
 		},
 		"null_attribute_skipped": {
-			reverseMapping: &EntityReverseIdMapping{
+			reverseMapping: &entityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -484,7 +484,7 @@ func TestGetEntityObject(t *testing.T) {
 			},
 		},
 		"invalid_no_non_null_attribute_value": {
-			reverseMapping: &EntityReverseIdMapping{
+			reverseMapping: &entityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -503,7 +503,7 @@ func TestGetEntityObject(t *testing.T) {
 			},
 		},
 		"invalid_attribute_external_id": {
-			reverseMapping: &EntityReverseIdMapping{
+			reverseMapping: &entityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -522,7 +522,7 @@ func TestGetEntityObject(t *testing.T) {
 			},
 		},
 		"invalid_attribute_value_type": {
-			reverseMapping: &EntityReverseIdMapping{
+			reverseMapping: &entityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -541,7 +541,7 @@ func TestGetEntityObject(t *testing.T) {
 			},
 		},
 		"one_child_entity": {
-			reverseMapping: &EntityReverseIdMapping{
+			reverseMapping: &entityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -550,7 +550,7 @@ func TestGetEntityObject(t *testing.T) {
 						Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
 					},
 				},
-				ChildEntities: map[string]*EntityReverseIdMapping{
+				ChildEntities: map[string]*entityReverseIdMapping{
 					"entitlements": {
 						Id: "05182a15-2451-4551-80ef-606fd05c1cc2",
 						Attributes: map[string]*api_adapter_v1.AttributeConfig{
@@ -600,7 +600,7 @@ func TestGetEntityObject(t *testing.T) {
 			},
 		},
 		"one_child_entity_no_objects": {
-			reverseMapping: &EntityReverseIdMapping{
+			reverseMapping: &entityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -609,7 +609,7 @@ func TestGetEntityObject(t *testing.T) {
 						Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
 					},
 				},
-				ChildEntities: map[string]*EntityReverseIdMapping{
+				ChildEntities: map[string]*entityReverseIdMapping{
 					"entitlements": {
 						Id: "05182a15-2451-4551-80ef-606fd05c1cc2",
 						Attributes: map[string]*api_adapter_v1.AttributeConfig{
@@ -638,7 +638,7 @@ func TestGetEntityObject(t *testing.T) {
 			},
 		},
 		"multiple_child_entities": {
-			reverseMapping: &EntityReverseIdMapping{
+			reverseMapping: &entityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -647,7 +647,7 @@ func TestGetEntityObject(t *testing.T) {
 						Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
 					},
 				},
-				ChildEntities: map[string]*EntityReverseIdMapping{
+				ChildEntities: map[string]*entityReverseIdMapping{
 					"entitlements": {
 						Id: "05182a15-2451-4551-80ef-606fd05c1cc2",
 						Attributes: map[string]*api_adapter_v1.AttributeConfig{
@@ -740,7 +740,7 @@ func TestGetEntityObject(t *testing.T) {
 			},
 		},
 		"invalid_child_object_external_id": {
-			reverseMapping: &EntityReverseIdMapping{
+			reverseMapping: &entityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -764,7 +764,7 @@ func TestGetEntityObject(t *testing.T) {
 			},
 		},
 		"invalid_attribute_external_id_in_child_object": {
-			reverseMapping: &EntityReverseIdMapping{
+			reverseMapping: &entityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -773,7 +773,7 @@ func TestGetEntityObject(t *testing.T) {
 						Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
 					},
 				},
-				ChildEntities: map[string]*EntityReverseIdMapping{
+				ChildEntities: map[string]*entityReverseIdMapping{
 					"entitlements": {
 						Id: "05182a15-2451-4551-80ef-606fd05c1cc2",
 						Attributes: map[string]*api_adapter_v1.AttributeConfig{

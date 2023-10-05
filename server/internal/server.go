@@ -26,7 +26,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-type AdapterGetPageFunc func(ctx context.Context, req *api_adapter_v1.GetPageRequest) (framework.Response, *EntityReverseIdMapping)
+type AdapterGetPageFunc func(ctx context.Context, req *api_adapter_v1.GetPageRequest) (framework.Response, *entityReverseIdMapping)
 
 // Server is an implementation of the AdapterServer gRPC service which
 // delegates the implementation of the RPCs to high-level Adapter
@@ -102,8 +102,8 @@ func (s *Server) validateAuthenticationToken(ctx context.Context) error {
 func RegisterAdapter[Config any](s *Server, datasourceType string, adapter framework.Adapter[Config]) error {
 	// TODO: check for duplicates and return an error
 
-	s.AdapterGetPageFuncs[datasourceType] = func(ctx context.Context, req *api_adapter_v1.GetPageRequest) (framework.Response, *EntityReverseIdMapping) {
-		adapterRequest, reverseMapping, adapterErr := GetAdapterRequest[Config](req)
+	s.AdapterGetPageFuncs[datasourceType] = func(ctx context.Context, req *api_adapter_v1.GetPageRequest) (framework.Response, *entityReverseIdMapping) {
+		adapterRequest, reverseMapping, adapterErr := getAdapterRequest[Config](req)
 		if adapterErr != nil {
 			return framework.NewGetPageResponseError(&framework.Error{
 				Message: adapterErr.Message,

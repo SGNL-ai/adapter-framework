@@ -21,11 +21,11 @@ import (
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
 )
 
-func TestGetAdapterRequest(t *testing.T) {
+func TestgetAdapterRequest(t *testing.T) {
 	tests := map[string]struct {
 		req                *api_adapter_v1.GetPageRequest
 		wantAdapterRequest *framework.Request[TestConfigA]
-		wantReverseMapping *EntityReverseIdMapping
+		wantReverseMapping *entityReverseIdMapping
 		wantAdapterErr     *api_adapter_v1.Error
 	}{
 		"invalid_nil": {
@@ -244,7 +244,7 @@ func TestGetAdapterRequest(t *testing.T) {
 				PageSize: 100,
 				Cursor:   "the cursor",
 			},
-			wantReverseMapping: &EntityReverseIdMapping{
+			wantReverseMapping: &entityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -285,7 +285,7 @@ func TestGetAdapterRequest(t *testing.T) {
 				},
 				PageSize: 100,
 			},
-			wantReverseMapping: &EntityReverseIdMapping{
+			wantReverseMapping: &entityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -300,7 +300,7 @@ func TestGetAdapterRequest(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			gotAdapterRequest, gotReverseMapping, gotAdapterErr := GetAdapterRequest[TestConfigA](tc.req)
+			gotAdapterRequest, gotReverseMapping, gotAdapterErr := getAdapterRequest[TestConfigA](tc.req)
 			AssertDeepEqual(t, tc.wantAdapterRequest, gotAdapterRequest)
 			AssertDeepEqual(t, tc.wantReverseMapping, gotReverseMapping)
 			AssertDeepEqual(t, tc.wantAdapterErr, gotAdapterErr)
@@ -361,7 +361,7 @@ func TestGetEntity(t *testing.T) {
 	tests := map[string]struct {
 		entity             *api_adapter_v1.EntityConfig
 		wantAdapterEntity  *framework.EntityConfig
-		wantReverseMapping *EntityReverseIdMapping
+		wantReverseMapping *entityReverseIdMapping
 		wantAdapterErr     *api_adapter_v1.Error
 	}{
 		"one_attribute": {
@@ -385,7 +385,7 @@ func TestGetEntity(t *testing.T) {
 					},
 				},
 			},
-			wantReverseMapping: &EntityReverseIdMapping{
+			wantReverseMapping: &entityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -455,7 +455,7 @@ func TestGetEntity(t *testing.T) {
 					},
 				},
 			},
-			wantReverseMapping: &EntityReverseIdMapping{
+			wantReverseMapping: &entityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -532,7 +532,7 @@ func TestGetEntity(t *testing.T) {
 					},
 				},
 			},
-			wantReverseMapping: &EntityReverseIdMapping{
+			wantReverseMapping: &entityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -541,7 +541,7 @@ func TestGetEntity(t *testing.T) {
 						Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
 					},
 				},
-				ChildEntities: map[string]*EntityReverseIdMapping{
+				ChildEntities: map[string]*entityReverseIdMapping{
 					"entitlements": {
 						Id: "05182a15-2451-4551-80ef-606fd05c1cc2",
 						Attributes: map[string]*api_adapter_v1.AttributeConfig{
@@ -620,7 +620,7 @@ func TestGetEntity(t *testing.T) {
 					},
 				},
 			},
-			wantReverseMapping: &EntityReverseIdMapping{
+			wantReverseMapping: &entityReverseIdMapping{
 				Id: "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				Attributes: map[string]*api_adapter_v1.AttributeConfig{
 					"name": {
@@ -629,7 +629,7 @@ func TestGetEntity(t *testing.T) {
 						Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
 					},
 				},
-				ChildEntities: map[string]*EntityReverseIdMapping{
+				ChildEntities: map[string]*entityReverseIdMapping{
 					"entitlements": {
 						Id: "05182a15-2451-4551-80ef-606fd05c1cc2",
 						Attributes: map[string]*api_adapter_v1.AttributeConfig{

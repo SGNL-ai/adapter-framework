@@ -21,8 +21,8 @@ import (
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
 )
 
-// EntityReverseMapping maps external IDs to IDs.
-type EntityReverseIdMapping struct {
+// entityReverseIdMapping maps external IDs to IDs.
+type entityReverseIdMapping struct {
 	// Id is the entity's ID.
 	Id string
 
@@ -31,14 +31,14 @@ type EntityReverseIdMapping struct {
 	Attributes map[string]*api_adapter_v1.AttributeConfig
 
 	// ChildEntities maps the entity's child entities' external IDs to their
-	// EntityReverseIdMapping.
-	ChildEntities map[string]*EntityReverseIdMapping
+	// entityReverseIdMapping.
+	ChildEntities map[string]*entityReverseIdMapping
 }
 
-// GetAdapterRequest converts a GetPageRequest into an adapter Request.
-func GetAdapterRequest[Config any](
+// getAdapterRequest converts a GetPageRequest into an adapter Request.
+func getAdapterRequest[Config any](
 	req *api_adapter_v1.GetPageRequest,
-) (adapterRequest *framework.Request[Config], reverseMapping *EntityReverseIdMapping, adapterErr *api_adapter_v1.Error) {
+) (adapterRequest *framework.Request[Config], reverseMapping *entityReverseIdMapping, adapterErr *api_adapter_v1.Error) {
 	var errMsg string
 
 	switch {
@@ -141,7 +141,7 @@ func getAdapterAuth(
 // getEntity converts a request EntityConfig into an adapter EntityConfig.
 func getEntity(
 	entity *api_adapter_v1.EntityConfig,
-) (adapterEntity *framework.EntityConfig, reverseMapping *EntityReverseIdMapping, adapterErr *api_adapter_v1.Error) {
+) (adapterEntity *framework.EntityConfig, reverseMapping *entityReverseIdMapping, adapterErr *api_adapter_v1.Error) {
 	var errMsg string
 
 	switch {
@@ -163,7 +163,7 @@ func getEntity(
 	}
 
 	adapterEntity = &framework.EntityConfig{}
-	reverseMapping = &EntityReverseIdMapping{}
+	reverseMapping = &entityReverseIdMapping{}
 
 	adapterEntity.ExternalId = entity.ExternalId
 	reverseMapping.Id = entity.Id
@@ -210,7 +210,7 @@ func getEntity(
 	if len(entity.ChildEntities) > 0 {
 		childEntityIds := make(map[string]bool, len(entity.ChildEntities))
 		adapterEntity.ChildEntities = make([]*framework.EntityConfig, 0, len(entity.ChildEntities))
-		reverseMapping.ChildEntities = make(map[string]*EntityReverseIdMapping, len(entity.ChildEntities))
+		reverseMapping.ChildEntities = make(map[string]*entityReverseIdMapping, len(entity.ChildEntities))
 
 		for _, childEntity := range entity.ChildEntities {
 			switch {
@@ -238,7 +238,7 @@ func getEntity(
 			childEntityIds[childEntity.Id] = true
 
 			var adapterChildEntity *framework.EntityConfig
-			var childReverseMapping *EntityReverseIdMapping
+			var childReverseMapping *entityReverseIdMapping
 
 			adapterChildEntity, childReverseMapping, adapterErr = getEntity(childEntity)
 
