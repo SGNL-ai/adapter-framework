@@ -21,7 +21,7 @@ import (
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
 )
 
-func TestgetAdapterRequest(t *testing.T) {
+func TestGetAdapterRequest(t *testing.T) {
 	tests := map[string]struct {
 		req                *api_adapter_v1.GetPageRequest
 		wantAdapterRequest *framework.Request[TestConfigA]
