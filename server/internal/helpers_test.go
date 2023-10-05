@@ -19,6 +19,20 @@ import (
 	"testing"
 )
 
+// TestConfigA is an example Config type which can be used as the Config type
+// parameter of an Adapter for testing.
+type TestConfigA struct {
+	A string `json:"a"`
+	B string `json:"b"`
+}
+
+// TestConfigB is an example Config type which can be used as the Config type
+// parameter of an Adapter for testing.
+type TestConfigB struct {
+	C string `json:"c"`
+	D string `json:"d"`
+}
+
 // Ptr returns a pointer to the given value.
 func Ptr[T any](v T) *T {
 	return &v

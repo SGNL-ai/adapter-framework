@@ -27,16 +27,6 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
-type TestConfigA struct {
-	A string `json:"a"`
-	B string `json:"b"`
-}
-
-type TestConfigB struct {
-	C string `json:"c"`
-	D string `json:"d"`
-}
-
 type MockAdapterA struct {
 	Response framework.Response
 }
