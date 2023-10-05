@@ -99,6 +99,12 @@ func (s *Server) validateAuthenticationToken(ctx context.Context) error {
 	return status.Error(codes.Unauthenticated, "invalid or missing token")
 }
 
+// RegisterAdapter registers a new high-level Adapter implementation with the server.
+// The Config type parameter is the type of the config object that will be passed to
+// the high-level Adapter implementation.
+//
+// If this function is called with the datasource type of an already-registered Adapter,
+// it will return an error.
 func RegisterAdapter[Config any](s *Server, datasourceType string, adapter framework.Adapter[Config]) error {
 	// Check for duplicate datasource types
 	if _, ok := s.AdapterGetPageFuncs[datasourceType]; ok {
