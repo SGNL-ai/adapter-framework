@@ -35,8 +35,8 @@ type AdapterGetPageFunc func(ctx context.Context, req *api_adapter_v1.GetPageReq
 type Server struct {
 	api_adapter_v1.UnimplementedAdapterServer
 
-	// AdapterGetPageFuncs contains a map of wrapper functions that
-	// call the GetPage function on the associated high-level Adapter.
+	// AdapterGetPageFuncs contains a map of wrapper functions that call the
+	// GetPage function on the associated high-level Adapter implementation.
 	// The key in this map should match the Supported Datasource Type
 	// specified on the Adapter object created in SGNL.
 	AdapterGetPageFuncs map[string]AdapterGetPageFunc
@@ -108,11 +108,12 @@ func RegisterAdapter[Config any](s *Server, datasourceType string, adapter frame
 	s.AdapterGetPageFuncs[datasourceType] = func(ctx context.Context, req *api_adapter_v1.GetPageRequest) (framework.Response, *entityReverseIdMapping) {
 		adapterRequest, reverseMapping, adapterErr := getAdapterRequest[Config](req)
 		if adapterErr != nil {
+			adapterErrRetryAfter := adapterErr.RetryAfter.AsDuration()
+
 			return framework.NewGetPageResponseError(&framework.Error{
-				Message: adapterErr.Message,
-				Code:    adapterErr.Code,
-				// TODO
-				// RetryAfter: adapterErr.RetryAfter,
+				Message:    adapterErr.Message,
+				Code:       adapterErr.Code,
+				RetryAfter: &adapterErrRetryAfter,
 			}), nil
 		}
 
