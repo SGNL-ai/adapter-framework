@@ -100,7 +100,10 @@ func (s *Server) validateAuthenticationToken(ctx context.Context) error {
 }
 
 func RegisterAdapter[Config any](s *Server, datasourceType string, adapter framework.Adapter[Config]) error {
-	// TODO: check for duplicates and return an error
+	// Check for duplicate datasource types
+	if _, ok := s.AdapterGetPageFuncs[datasourceType]; ok {
+		return fmt.Errorf("duplicate datasource type provided: %s", datasourceType)
+	}
 
 	s.AdapterGetPageFuncs[datasourceType] = func(ctx context.Context, req *api_adapter_v1.GetPageRequest) (framework.Response, *entityReverseIdMapping) {
 		adapterRequest, reverseMapping, adapterErr := getAdapterRequest[Config](req)
