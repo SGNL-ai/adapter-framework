@@ -33,7 +33,7 @@ type Server = internal.Server
 // which name is configured in the AUTH_TOKENS_PATH environment variable.
 // The stop channel is used to signal when the file watcher should
 // be closed and stop watching for file changes.
-func New[Config any](
+func New(
 	stop <-chan struct{},
 ) api_adapter_v1.AdapterServer {
 	authTokensPath, exists := os.LookupEnv("AUTH_TOKENS_PATH")
