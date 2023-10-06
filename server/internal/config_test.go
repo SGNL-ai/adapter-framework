@@ -19,27 +19,27 @@ import (
 )
 
 func TestParseConfig(t *testing.T) {
-	var wantConfig, gotConfig *TestConfig
+	var wantConfig, gotConfig *TestConfigA
 	var err error
 
-	gotConfig, err = ParseConfig[TestConfig](nil)
+	gotConfig, err = ParseConfig[TestConfigA](nil)
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
 	wantConfig = nil
 	AssertDeepEqual(t, wantConfig, gotConfig)
 
-	gotConfig, err = ParseConfig[TestConfig]([]byte(`{"a":"a value","b":"b value"}`))
+	gotConfig, err = ParseConfig[TestConfigA]([]byte(`{"a":"a value","b":"b value"}`))
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
-	wantConfig = &TestConfig{
+	wantConfig = &TestConfigA{
 		A: "a value",
 		B: "b value",
 	}
 	AssertDeepEqual(t, wantConfig, gotConfig)
 
-	_, err = ParseConfig[TestConfig]([]byte(`invalid JSON`))
+	_, err = ParseConfig[TestConfigA]([]byte(`invalid JSON`))
 	if err == nil || err.Error() != "invalid character 'i' looking for beginning of value" {
 		t.Errorf("Expected %v, got %v", "invalid character 'i' looking for beginning of value", err)
 	}

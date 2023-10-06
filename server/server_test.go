@@ -15,6 +15,8 @@
 package server
 
 import (
+	"context"
+	"errors"
 	"os"
 	"testing"
 	"time"
@@ -23,6 +25,26 @@ import (
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
 	"github.com/sgnl-ai/adapter-framework/server/internal"
 )
+
+type MockAdapterA struct{}
+
+func (a *MockAdapterA) GetPage(ctx context.Context, request *framework.Request[TestConfigA]) framework.Response {
+	return framework.Response{}
+}
+
+func NewAdapterA() framework.Adapter[TestConfigA] {
+	return &MockAdapterA{}
+}
+
+type MockAdapterB struct{}
+
+func (a *MockAdapterB) GetPage(ctx context.Context, request *framework.Request[TestConfigB]) framework.Response {
+	return framework.Response{}
+}
+
+func NewAdapterB() framework.Adapter[TestConfigB] {
+	return &MockAdapterB{}
+}
 
 func TestNewWithAuthTokensPath(t *testing.T) {
 	validTokensPath := "./TOKENS_0"
@@ -41,35 +63,31 @@ func TestNewWithAuthTokensPath(t *testing.T) {
 
 	tests := map[string]struct {
 		inputAuthTokensPath string
-		inputAdapters       map[string]framework.Adapter[TestConfig]
 		inputStopChan       <-chan struct{}
 		wantAdapterServer   api_adapter_v1.AdapterServer
 	}{
 		"simple": {
 			inputAuthTokensPath: validTokensPath,
-			inputAdapters:       map[string]framework.Adapter[TestConfig]{"test": nil},
 			inputStopChan:       nil,
-			wantAdapterServer: &internal.Server[TestConfig]{
-				Adapters: map[string]framework.Adapter[TestConfig]{"test": nil},
-				Tokens:   []string{"dGhpc2lzYXRlc3R0b2tlbg==", "dGhpc2lzYWxzb2F0ZXN0dG9rZW4="},
+			wantAdapterServer: &internal.Server{
+				Tokens:              []string{"dGhpc2lzYXRlc3R0b2tlbg==", "dGhpc2lzYWxzb2F0ZXN0dG9rZW4="},
+				AdapterGetPageFuncs: make(map[string]internal.AdapterGetPageFunc),
 			},
 		},
 		"no_tokens_at_path": {
 			inputAuthTokensPath: "/",
-			inputAdapters:       map[string]framework.Adapter[TestConfig]{"test": nil},
 			inputStopChan:       nil,
-			wantAdapterServer: &internal.Server[TestConfig]{
-				Adapters: map[string]framework.Adapter[TestConfig]{"test": nil},
-				Tokens:   nil,
+			wantAdapterServer: &internal.Server{
+				Tokens:              nil,
+				AdapterGetPageFuncs: make(map[string]internal.AdapterGetPageFunc),
 			},
 		},
 		"invalid_tokens_at_path": {
 			inputAuthTokensPath: invalidTokensPath,
-			inputAdapters:       map[string]framework.Adapter[TestConfig]{"test": nil},
 			inputStopChan:       nil,
-			wantAdapterServer: &internal.Server[TestConfig]{
-				Adapters: map[string]framework.Adapter[TestConfig]{"test": nil},
-				Tokens:   nil,
+			wantAdapterServer: &internal.Server{
+				Tokens:              nil,
+				AdapterGetPageFuncs: make(map[string]internal.AdapterGetPageFunc),
 			},
 		},
 	}
@@ -78,7 +96,6 @@ func TestNewWithAuthTokensPath(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			gotAdapterServer := newWithAuthTokensPath(
 				tc.inputAuthTokensPath,
-				tc.inputAdapters,
 				tc.inputStopChan,
 			)
 
@@ -99,12 +116,11 @@ func TestNewWithAuthTokensPathFileWatcher(t *testing.T) {
 
 	gotAdapterServer := newWithAuthTokensPath(
 		validTokensPath,
-		map[string]framework.Adapter[TestConfig]{"test": nil},
 		stop,
 	)
 
 	// Assert the initial state of the tokens are correct
-	AssertDeepEqual(t, gotAdapterServer.(*internal.Server[TestConfig]).Tokens, []string{"dGhpc2lzYXRlc3R0b2tlbg==", "dGhpc2lzYWxzb2F0ZXN0dG9rZW4="})
+	AssertDeepEqual(t, gotAdapterServer.(*internal.Server).Tokens, []string{"dGhpc2lzYXRlc3R0b2tlbg==", "dGhpc2lzYWxzb2F0ZXN0dG9rZW4="})
 
 	// Add a third token to the file
 	tokens = []byte(`["dGhpc2lzYXRlc3R0b2tlbg==","dGhpc2lzYWxzb2F0ZXN0dG9rZW4=","TfGX4vJkrqfRyvUviDpj3Q=="]`)
@@ -115,7 +131,7 @@ func TestNewWithAuthTokensPathFileWatcher(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Assert the tokens have been updated
-	AssertDeepEqual(t, gotAdapterServer.(*internal.Server[TestConfig]).Tokens, []string{
+	AssertDeepEqual(t, gotAdapterServer.(*internal.Server).Tokens, []string{
 		"dGhpc2lzYXRlc3R0b2tlbg==", "dGhpc2lzYWxzb2F0ZXN0dG9rZW4=", "TfGX4vJkrqfRyvUviDpj3Q==",
 	})
 
@@ -131,7 +147,51 @@ func TestNewWithAuthTokensPathFileWatcher(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Assert the tokens have not been updated (e.g. that the file watcher was closed correctly)
-	AssertDeepEqual(t, gotAdapterServer.(*internal.Server[TestConfig]).Tokens, []string{
+	AssertDeepEqual(t, gotAdapterServer.(*internal.Server).Tokens, []string{
 		"dGhpc2lzYXRlc3R0b2tlbg==", "dGhpc2lzYWxzb2F0ZXN0dG9rZW4=", "TfGX4vJkrqfRyvUviDpj3Q==",
 	})
+}
+
+func TestRegisterAdapter(t *testing.T) {
+	s := &internal.Server{
+		AdapterGetPageFuncs: make(map[string]internal.AdapterGetPageFunc),
+	}
+
+	var adapterServer api_adapter_v1.AdapterServer = s
+
+	if err := RegisterAdapter(adapterServer, "Mock-1.0.1", NewAdapterA()); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := RegisterAdapter(adapterServer, "Mock-1.0.2", NewAdapterB()); err != nil {
+		t.Fatal(err)
+	}
+
+	var registeredDatasources []string
+
+	for k := range s.AdapterGetPageFuncs {
+		registeredDatasources = append(registeredDatasources, k)
+	}
+
+	want := []string{"Mock-1.0.1", "Mock-1.0.2"}
+
+	AssertDeepEqual(t, want, registeredDatasources)
+}
+
+func TestRegisterAdapterInvalidServer(t *testing.T) {
+	type InvalidServer struct {
+		api_adapter_v1.UnimplementedAdapterServer
+	}
+
+	s := &InvalidServer{}
+
+	var adapterServer api_adapter_v1.AdapterServer = s
+
+	err := RegisterAdapter(adapterServer, "Mock-1.0.1", NewAdapterA())
+
+	if err == nil {
+		t.Fatal("Expected error, got nil")
+	}
+
+	AssertDeepEqual(t, err, errors.New("type assertion to *internal.Server failed"))
 }

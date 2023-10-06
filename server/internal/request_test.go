@@ -24,7 +24,7 @@ import (
 func TestGetAdapterRequest(t *testing.T) {
 	tests := map[string]struct {
 		req                *api_adapter_v1.GetPageRequest
-		wantAdapterRequest *framework.Request[TestConfig]
+		wantAdapterRequest *framework.Request[TestConfigA]
 		wantReverseMapping *entityReverseIdMapping
 		wantAdapterErr     *api_adapter_v1.Error
 	}{
@@ -222,8 +222,8 @@ func TestGetAdapterRequest(t *testing.T) {
 				PageSize: 100,
 				Cursor:   "the cursor",
 			},
-			wantAdapterRequest: &framework.Request[TestConfig]{
-				Config: &TestConfig{
+			wantAdapterRequest: &framework.Request[TestConfigA]{
+				Config: &TestConfigA{
 					A: "a value",
 					B: "b value",
 				},
@@ -273,7 +273,7 @@ func TestGetAdapterRequest(t *testing.T) {
 				},
 				PageSize: 100,
 			},
-			wantAdapterRequest: &framework.Request[TestConfig]{
+			wantAdapterRequest: &framework.Request[TestConfigA]{
 				Entity: framework.EntityConfig{
 					ExternalId: "users",
 					Attributes: []*framework.AttributeConfig{
@@ -300,7 +300,7 @@ func TestGetAdapterRequest(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			gotAdapterRequest, gotReverseMapping, gotAdapterErr := getAdapterRequest[TestConfig](tc.req)
+			gotAdapterRequest, gotReverseMapping, gotAdapterErr := getAdapterRequest[TestConfigA](tc.req)
 			AssertDeepEqual(t, tc.wantAdapterRequest, gotAdapterRequest)
 			AssertDeepEqual(t, tc.wantReverseMapping, gotReverseMapping)
 			AssertDeepEqual(t, tc.wantAdapterErr, gotAdapterErr)

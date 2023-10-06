@@ -21,7 +21,7 @@ import (
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
 )
 
-// entityReverseMapping maps external IDs to IDs.
+// entityReverseIdMapping maps external IDs to IDs.
 type entityReverseIdMapping struct {
 	// Id is the entity's ID.
 	Id string

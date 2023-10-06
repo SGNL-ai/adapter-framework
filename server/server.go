@@ -16,6 +16,7 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 
@@ -31,7 +32,6 @@ import (
 // The stop channel is used to signal when the file watcher should
 // be closed and stop watching for file changes.
 func New[Config any](
-	adapters map[string]framework.Adapter[Config],
 	stop <-chan struct{},
 ) api_adapter_v1.AdapterServer {
 	authTokensPath, exists := os.LookupEnv("AUTH_TOKENS_PATH")
@@ -39,13 +39,26 @@ func New[Config any](
 		panic("AUTH_TOKENS_PATH environment variable not set")
 	}
 
-	return newWithAuthTokensPath(authTokensPath, adapters, stop)
-
+	return newWithAuthTokensPath(authTokensPath, stop)
 }
 
-func newWithAuthTokensPath[Config any](
+// RegisterAdapter registers a new high-level Adapter implementation with the server.
+// The Config type parameter is the type of the config object that will be passed to
+// the high-level Adapter implementation.
+//
+// If this function is called with the datasource type of an already-registered Adapter,
+// it will return an error.
+func RegisterAdapter[Config any](s api_adapter_v1.AdapterServer, datasourceType string, adapter framework.Adapter[Config]) error {
+	internalServer, ok := s.(*internal.Server)
+	if !ok {
+		return errors.New("type assertion to *internal.Server failed")
+	}
+
+	return internal.RegisterAdapter(internalServer, datasourceType, adapter)
+}
+
+func newWithAuthTokensPath(
 	authTokensPath string,
-	adapters map[string]framework.Adapter[Config],
 	stop <-chan struct{},
 ) api_adapter_v1.AdapterServer {
 	watcher, err := fsnotify.NewWatcher()
@@ -57,12 +70,12 @@ func newWithAuthTokensPath[Config any](
 		panic(fmt.Sprintf("failed to add path to file watcher: %v", err))
 	}
 
-	server := &internal.Server[Config]{
-		Adapters: adapters,
-		Tokens:   getTokensFromPath(authTokensPath),
+	server := &internal.Server{
+		Tokens:              getTokensFromPath(authTokensPath),
+		AdapterGetPageFuncs: make(map[string]internal.AdapterGetPageFunc),
 	}
 
-	go func(s *internal.Server[Config]) {
+	go func(s *internal.Server) {
 		for {
 			select {
 			case _, ok := <-watcher.Events:

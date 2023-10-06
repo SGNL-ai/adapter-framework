@@ -27,12 +27,28 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
-type mockAdapter[Config any] struct {
+type MockAdapterA struct {
 	Response framework.Response
 }
 
-func (a *mockAdapter[Config]) GetPage(ctx context.Context, request *framework.Request[Config]) framework.Response {
+func (a *MockAdapterA) GetPage(ctx context.Context, request *framework.Request[TestConfigA]) framework.Response {
 	return a.Response
+}
+
+func NewAdapterA(resp framework.Response) framework.Adapter[TestConfigA] {
+	return &MockAdapterA{resp}
+}
+
+type MockAdapterB struct {
+	Response framework.Response
+}
+
+func (a *MockAdapterB) GetPage(ctx context.Context, request *framework.Request[TestConfigB]) framework.Response {
+	return a.Response
+}
+
+func NewAdapterB(resp framework.Response) framework.Adapter[TestConfigB] {
+	return &MockAdapterB{resp}
 }
 
 func TestServer_GetPage(t *testing.T) {
@@ -386,15 +402,20 @@ func TestServer_GetPage(t *testing.T) {
 				"token": tc.tokens,
 			})
 
-			server := Server[TestConfig]{
-				Adapters: map[string]framework.Adapter[TestConfig]{
-					"":           &mockAdapter[TestConfig]{Response: tc.adapterResponse},
-					"Mock-1.0.1": &mockAdapter[TestConfig]{Response: tc.adapterResponse},
-				},
-				Tokens: validTokens,
+			s := &Server{
+				Tokens:              validTokens,
+				AdapterGetPageFuncs: make(map[string]AdapterGetPageFunc),
 			}
 
-			gotResp, gotError := server.GetPage(ctx, tc.req)
+			if err := RegisterAdapter(s, "Mock-1.0.1", NewAdapterA(tc.adapterResponse)); err != nil {
+				t.Fatal(err)
+			}
+
+			if err := RegisterAdapter(s, "", NewAdapterB(tc.adapterResponse)); err != nil {
+				t.Fatal(err)
+			}
+
+			gotResp, gotError := s.GetPage(ctx, tc.req)
 
 			AssertDeepEqual(t, tc.wantResp, gotResp)
 			AssertDeepEqual(t, tc.wantError, gotError)
