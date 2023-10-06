@@ -15,13 +15,36 @@
 package server
 
 import (
+	"context"
+	"errors"
 	"os"
 	"testing"
 	"time"
 
+	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
 	"github.com/sgnl-ai/adapter-framework/server/internal"
 )
+
+type MockAdapterA struct{}
+
+func (a *MockAdapterA) GetPage(ctx context.Context, request *framework.Request[TestConfigA]) framework.Response {
+	return framework.Response{}
+}
+
+func NewAdapterA() framework.Adapter[TestConfigA] {
+	return &MockAdapterA{}
+}
+
+type MockAdapterB struct{}
+
+func (a *MockAdapterB) GetPage(ctx context.Context, request *framework.Request[TestConfigB]) framework.Response {
+	return framework.Response{}
+}
+
+func NewAdapterB() framework.Adapter[TestConfigB] {
+	return &MockAdapterB{}
+}
 
 func TestNewWithAuthTokensPath(t *testing.T) {
 	validTokensPath := "./TOKENS_0"
@@ -127,4 +150,48 @@ func TestNewWithAuthTokensPathFileWatcher(t *testing.T) {
 	AssertDeepEqual(t, gotAdapterServer.(*internal.Server).Tokens, []string{
 		"dGhpc2lzYXRlc3R0b2tlbg==", "dGhpc2lzYWxzb2F0ZXN0dG9rZW4=", "TfGX4vJkrqfRyvUviDpj3Q==",
 	})
+}
+
+func TestRegisterAdapter(t *testing.T) {
+	s := &internal.Server{
+		AdapterGetPageFuncs: make(map[string]internal.AdapterGetPageFunc),
+	}
+
+	var adapterServer api_adapter_v1.AdapterServer = s
+
+	if err := RegisterAdapter(adapterServer, "Mock-1.0.1", NewAdapterA()); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := RegisterAdapter(adapterServer, "Mock-1.0.2", NewAdapterB()); err != nil {
+		t.Fatal(err)
+	}
+
+	var registeredDatasources []string
+
+	for k := range s.AdapterGetPageFuncs {
+		registeredDatasources = append(registeredDatasources, k)
+	}
+
+	want := []string{"Mock-1.0.1", "Mock-1.0.2"}
+
+	AssertDeepEqual(t, want, registeredDatasources)
+}
+
+func TestRegisterAdapterInvalidServer(t *testing.T) {
+	type InvalidServer struct {
+		api_adapter_v1.UnimplementedAdapterServer
+	}
+
+	s := &InvalidServer{}
+
+	var adapterServer api_adapter_v1.AdapterServer = s
+
+	err := RegisterAdapter(adapterServer, "Mock-1.0.1", NewAdapterA())
+
+	if err == nil {
+		t.Fatal("Expected error, got nil")
+	}
+
+	AssertDeepEqual(t, err, errors.New("type assertion to *internal.Server failed"))
 }

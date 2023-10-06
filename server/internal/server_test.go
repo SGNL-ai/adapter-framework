@@ -407,8 +407,13 @@ func TestServer_GetPage(t *testing.T) {
 				AdapterGetPageFuncs: make(map[string]AdapterGetPageFunc),
 			}
 
-			RegisterAdapter(s, "Mock-1.0.1", NewAdapterA(tc.adapterResponse))
-			RegisterAdapter(s, "", NewAdapterB(tc.adapterResponse))
+			if err := RegisterAdapter(s, "Mock-1.0.1", NewAdapterA(tc.adapterResponse)); err != nil {
+				t.Fatal(err)
+			}
+
+			if err := RegisterAdapter(s, "", NewAdapterB(tc.adapterResponse)); err != nil {
+				t.Fatal(err)
+			}
 
 			gotResp, gotError := s.GetPage(ctx, tc.req)
 

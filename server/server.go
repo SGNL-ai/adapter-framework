@@ -16,10 +16,12 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 
 	"github.com/fsnotify/fsnotify"
+	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
 	"github.com/sgnl-ai/adapter-framework/server/internal"
 )
@@ -38,6 +40,21 @@ func New[Config any](
 	}
 
 	return newWithAuthTokensPath(authTokensPath, stop)
+}
+
+// RegisterAdapter registers a new high-level Adapter implementation with the server.
+// The Config type parameter is the type of the config object that will be passed to
+// the high-level Adapter implementation.
+//
+// If this function is called with the datasource type of an already-registered Adapter,
+// it will return an error.
+func RegisterAdapter[Config any](s api_adapter_v1.AdapterServer, datasourceType string, adapter framework.Adapter[Config]) error {
+	internalServer, ok := s.(*internal.Server)
+	if !ok {
+		return errors.New("type assertion to *internal.Server failed")
+	}
+
+	return internal.RegisterAdapter(internalServer, datasourceType, adapter)
 }
 
 func newWithAuthTokensPath(
