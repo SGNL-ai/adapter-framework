@@ -26,6 +26,8 @@ import (
 	"github.com/sgnl-ai/adapter-framework/server/internal"
 )
 
+type Server = internal.Server
+
 // New returns an AdapterServer that wraps the given high-level
 // Adapter implementation with the Tokens field populated from the file
 // which name is configured in the AUTH_TOKENS_PATH environment variable.
