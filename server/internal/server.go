@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
@@ -114,12 +115,17 @@ func RegisterAdapter[Config any](s *Server, datasourceType string, adapter frame
 	s.AdapterGetPageFuncs[datasourceType] = func(ctx context.Context, req *api_adapter_v1.GetPageRequest) (framework.Response, *entityReverseIdMapping) {
 		adapterRequest, reverseMapping, adapterErr := getAdapterRequest[Config](req)
 		if adapterErr != nil {
-			adapterErrRetryAfter := adapterErr.RetryAfter.AsDuration()
+			var adapterErrRetryAfter *time.Duration
+
+			if adapterErr.RetryAfter != nil {
+				d := adapterErr.RetryAfter.AsDuration()
+				adapterErrRetryAfter = &d
+			}
 
 			return framework.NewGetPageResponseError(&framework.Error{
 				Message:    adapterErr.Message,
 				Code:       adapterErr.Code,
-				RetryAfter: &adapterErrRetryAfter,
+				RetryAfter: adapterErrRetryAfter,
 			}), nil
 		}
 
