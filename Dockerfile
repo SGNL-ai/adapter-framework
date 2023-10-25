@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG GOLANG_IMAGE=golang:1.18-bullseye
+ARG GOLANG_IMAGE=golang:1.21.3-bookworm
 
 FROM ${GOLANG_IMAGE} as build
 
