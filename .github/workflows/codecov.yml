@@ -11,10 +11,6 @@ env:
 jobs:
   upload-coverage-report:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      packages: write
-      security-events: write
     steps:
       # CodeCov
       - name: Upload coverage reports to Codecov
