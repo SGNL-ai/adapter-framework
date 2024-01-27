@@ -16,6 +16,7 @@ package web
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -169,7 +170,16 @@ func convertJSONAttributeListValue[Element any](attribute *framework.AttributeCo
 // ParseDateTime parses a timestamp against a set of predefined formats.
 func ParseDateTime(dateTimeFormats []DateTimeFormatWithTimeZone, localTimeZoneOffset int, dateTimeStr string) (dateTime time.Time, err error) {
 	for _, format := range dateTimeFormats {
-		dateTime, err = time.Parse(format.Format, dateTimeStr)
+		if format.Format == "sgnl-unix-ns" {
+			var unixTimestamp int64
+			unixTimestamp, err = strconv.ParseInt(dateTimeStr, 10, 64)
+			if err == nil {
+				dateTime = time.Unix(unixTimestamp, 0)
+			}
+		} else {
+			dateTime, err = time.Parse(format.Format, dateTimeStr)
+		}
+
 		if err == nil {
 			if !format.HasTimeZone {
 				var loc *time.Location
@@ -190,6 +200,15 @@ func ParseDateTime(dateTimeFormats []DateTimeFormatWithTimeZone, localTimeZoneOf
 					dateTime.Nanosecond(),
 					loc,
 				)
+			}
+
+			// Convert unix timestamp to rfc3339 format
+			if format.Format == "sgnl-unix-ns" {
+				rfc3339Time := dateTime.Format(time.RFC3339)
+				dateTime, err = time.Parse(time.RFC3339, rfc3339Time)
+				if err != nil {
+					err = fmt.Errorf("panic: unix post conversion to rfc3339 failed. dateTimeStr: %s, parse error: %v", dateTimeStr, err)
+				}
 			}
 
 			return

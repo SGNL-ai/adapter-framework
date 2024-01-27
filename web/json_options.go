@@ -75,6 +75,7 @@ func defaultJSONOptions() *jsonOptions {
 			{"01-02-2006", false},
 			{"01/02/2006", false},
 			{"01/02/06", false},
+			{"sgnl-unix-ns", true},
 		},
 		enableJSONPath:      false, // Disabled.
 		localTimeZoneOffset: 0,
