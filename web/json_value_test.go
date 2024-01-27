@@ -95,7 +95,7 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 			},
 			valueJSON: `"1706041056"`,
 
-			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{"sgnl-unix-ns", false}, {"2006-01-02", false}}},
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{"sgnl-unix-ts", false}, {"2006-01-02", false}}},
 			wantValue: MustParseTime(t, "2024-01-23T20:17:36Z"),
 		},
 		"neg_unix": {
@@ -105,7 +105,7 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 			},
 			valueJSON: `"-1706041056"`,
 
-			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{"sgnl-unix-ns", false}, {"2006-01-02", false}}},
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{"sgnl-unix-ts", false}, {"2006-01-02", false}}},
 			wantValue: MustParseTime(t, "1915-12-10T03:42:24Z"),
 		},
 		"unix_with_tz_offset": {
@@ -115,7 +115,7 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 			},
 			valueJSON: `"1706041056"`,
 
-			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{"sgnl-unix-ns", true}, {"2006-01-02", false}}, localTimeZoneOffset: 60 * 60},
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{"sgnl-unix-ts", true}, {"2006-01-02", false}}, localTimeZoneOffset: 60 * 60},
 			wantValue: MustParseTime(t, "2024-01-23T20:17:36Z"),
 		},
 		"unix_with_neg_tz_offset": {
@@ -125,7 +125,7 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 			},
 			valueJSON: `"1706041056"`,
 
-			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{"sgnl-unix-ns", true}, {"2006-01-02", false}}, localTimeZoneOffset: -10 * 60 * 60},
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{"sgnl-unix-ts", true}, {"2006-01-02", false}}, localTimeZoneOffset: -10 * 60 * 60},
 			wantValue: MustParseTime(t, "2024-01-23T20:17:36Z"),
 		},
 		"datetime": {
