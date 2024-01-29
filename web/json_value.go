@@ -170,7 +170,7 @@ func convertJSONAttributeListValue[Element any](attribute *framework.AttributeCo
 // ParseDateTime parses a timestamp against a set of predefined formats.
 func ParseDateTime(dateTimeFormats []DateTimeFormatWithTimeZone, localTimeZoneOffset int, dateTimeStr string) (dateTime time.Time, err error) {
 	for _, format := range dateTimeFormats {
-		if format.Format == "sgnl-unix-ns-timestamp" {
+		if format.Format == "SGNLUnixSec" {
 			var unixTimestamp int64
 			unixTimestamp, err = strconv.ParseInt(dateTimeStr, 10, 64)
 			if err == nil {
