@@ -16,6 +16,7 @@ package web
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -169,7 +170,16 @@ func convertJSONAttributeListValue[Element any](attribute *framework.AttributeCo
 // ParseDateTime parses a timestamp against a set of predefined formats.
 func ParseDateTime(dateTimeFormats []DateTimeFormatWithTimeZone, localTimeZoneOffset int, dateTimeStr string) (dateTime time.Time, err error) {
 	for _, format := range dateTimeFormats {
-		dateTime, err = time.Parse(format.Format, dateTimeStr)
+		if format.Format == "SGNLUnixSec" {
+			var unixTimestamp int64
+			unixTimestamp, err = strconv.ParseInt(dateTimeStr, 10, 64)
+			if err == nil {
+				dateTime = time.Unix(unixTimestamp, 0)
+			}
+		} else {
+			dateTime, err = time.Parse(format.Format, dateTimeStr)
+		}
+
 		if err == nil {
 			if !format.HasTimeZone {
 				var loc *time.Location

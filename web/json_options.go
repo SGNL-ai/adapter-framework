@@ -54,6 +54,10 @@ type DateTimeFormatWithTimeZone struct {
 	HasTimeZone bool
 }
 
+const (
+	SGNLUnixSec = "SGNLUnixSec"
+)
+
 func defaultJSONOptions() *jsonOptions {
 	return &jsonOptions{
 		complexAttributeNameDelimiter: "", // Disabled.
@@ -75,6 +79,7 @@ func defaultJSONOptions() *jsonOptions {
 			{"01-02-2006", false},
 			{"01/02/2006", false},
 			{"01/02/06", false},
+			{SGNLUnixSec, false}, // Unix timestamp representing seconds since 1970-01-01 00:00:00 UTC.
 		},
 		enableJSONPath:      false, // Disabled.
 		localTimeZoneOffset: 0,
