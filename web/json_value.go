@@ -82,14 +82,20 @@ func convertJSONAttributeValue(attribute *framework.AttributeConfig, value any, 
 		return boolValue, nil
 
 	case framework.AttributeTypeDateTime:
-		v, ok := value.(string)
-		if !ok {
-			return nil, fmt.Errorf("attribute %s cannot be parsed into a string date-time value", attribute.ExternalId)
+		var dateTimeStr string
+		switch v := value.(type) {
+		case string:
+			dateTimeStr = v
+		case float64:
+			dateTimeStr = fmt.Sprintf("%f", v)
+		default:
+			return nil, fmt.Errorf("attribute %s cannot be parsed into a string date-time value because its type is %T, not string or float64", attribute.ExternalId, v)
 		}
-		if v == "" {
+
+		if dateTimeStr == "" {
 			return nil, nil
 		}
-		t, err := ParseDateTime(opts.dateTimeFormats, opts.localTimeZoneOffset, v)
+		t, err := ParseDateTime(opts.dateTimeFormats, opts.localTimeZoneOffset, dateTimeStr)
 		if err != nil {
 			return nil, fmt.Errorf("attribute %s cannot be parsed into a date-time value: %w", attribute.ExternalId, err)
 		}
