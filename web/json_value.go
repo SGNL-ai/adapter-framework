@@ -16,6 +16,7 @@ package web
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -87,7 +88,10 @@ func convertJSONAttributeValue(attribute *framework.AttributeConfig, value any, 
 		case string:
 			dateTimeStr = v
 		case float64:
-			dateTimeStr = fmt.Sprintf("%f", v)
+			if v > float64(math.MaxInt64) || v < float64(math.MinInt64) {
+				return nil, fmt.Errorf("attribute %s cannot be parsed into a string date-time value because the float64 value is out of the int64 range", attribute.ExternalId)
+			}
+			dateTimeStr = fmt.Sprintf("%d", int(v))
 		default:
 			return nil, fmt.Errorf("attribute %s cannot be parsed into a string date-time value because its type is %T, not string or float64", attribute.ExternalId, v)
 		}
