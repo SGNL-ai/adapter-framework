@@ -93,7 +93,7 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 				ExternalId: "a",
 				Type:       framework.AttributeTypeDateTime,
 			},
-			valueJSON: `"1706041056"`,
+			valueJSON: `1706041056.0`,
 
 			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{"SGNLUnixSec", false}}},
 			wantValue: MustParseTime(t, "2024-01-23T20:17:36Z"),
@@ -103,7 +103,7 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 				ExternalId: "a",
 				Type:       framework.AttributeTypeDateTime,
 			},
-			valueJSON: `"1706041056"`,
+			valueJSON: `1706041056.0`,
 
 			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{time.RFC3339, true}}},
 			wantError: errors.New("attribute a cannot be parsed into a date-time value: failed to parse date-time value: 1706041056"),
@@ -114,7 +114,6 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 				Type:       framework.AttributeTypeDateTime,
 			},
 			valueJSON: `"+1706041056"`,
-
 			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{"SGNLUnixSec", false}}},
 			wantValue: MustParseTime(t, "2024-01-23T20:17:36Z"),
 		},
@@ -133,17 +132,17 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 				ExternalId: "a",
 				Type:       framework.AttributeTypeDateTime,
 			},
-			valueJSON: `"9999999999999999999999999999999999999999"`,
+			valueJSON: `9999999999999999999999999999999999999999.0`,
 
 			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{"SGNLUnixSec", false}}},
-			wantError: errors.New("attribute a cannot be parsed into a date-time value: failed to parse date-time value: 9999999999999999999999999999999999999999"),
+			wantError: errors.New("attribute a cannot be parsed into a string date-time value because the float64 value is out of the int64 range"),
 		},
 		"neg_unix": {
 			attribute: &framework.AttributeConfig{
 				ExternalId: "a",
 				Type:       framework.AttributeTypeDateTime,
 			},
-			valueJSON: `"-1706041056"`,
+			valueJSON: `-1706041056.0`,
 
 			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{"SGNLUnixSec", false}}},
 			wantValue: MustParseTime(t, "1915-12-10T03:42:24Z"),
@@ -153,7 +152,7 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 				ExternalId: "a",
 				Type:       framework.AttributeTypeDateTime,
 			},
-			valueJSON: `"1706041056"`,
+			valueJSON: `1706041056.0`,
 
 			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{"SGNLUnixSec", false}}, localTimeZoneOffset: 10 * 60 * 60},
 			wantValue: MustParseTime(t, "2024-01-23T20:17:36+10:00"),
@@ -163,7 +162,7 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 				ExternalId: "a",
 				Type:       framework.AttributeTypeDateTime,
 			},
-			valueJSON: `"1706041056"`,
+			valueJSON: `1706041056.0`,
 
 			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{"SGNLUnixSec", false}}, localTimeZoneOffset: -10 * 60 * 60},
 			wantValue: MustParseTime(t, "2024-01-23T20:17:36-10:00"),
