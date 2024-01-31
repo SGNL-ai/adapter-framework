@@ -127,6 +127,16 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{"SGNLUnixSec", false}}},
 			wantError: errors.New("attribute a cannot be parsed into a date-time value: failed to parse date-time value: 17060invalid6"),
 		},
+		"invalid_float_unix_timestamp": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDateTime,
+			},
+			valueJSON: `1706041056.005`,
+
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{"SGNLUnixSec", false}}},
+			wantError: errors.New("attribute a cannot be parsed into a date-time because the value is not an integer"),
+		},
 		"unix_timestamp_int64_overflow": {
 			attribute: &framework.AttributeConfig{
 				ExternalId: "a",

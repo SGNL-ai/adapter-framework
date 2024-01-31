@@ -93,7 +93,7 @@ func convertJSONAttributeValue(attribute *framework.AttributeConfig, value any, 
 				return nil, fmt.Errorf("attribute %s cannot be parsed into a date-time value as the value is out of the valid range", attribute.ExternalId)
 			}
 			// make sure float only has 0 decimals (e.g. 123.00000)
-			if float64(int(v)) != v {
+			if float64(int64(v)) != v {
 				return nil, fmt.Errorf("attribute %s cannot be parsed into a date-time because the value is not an integer", attribute.ExternalId)
 			}
 			dateTimeStr = fmt.Sprintf("%d", int64(v))
