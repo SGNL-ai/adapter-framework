@@ -88,17 +88,17 @@ func convertJSONAttributeValue(attribute *framework.AttributeConfig, value any, 
 		case string:
 			dateTimeStr = v
 		case float64:
-			// make sure float is in int64 range
+			// make sure the value is in int64 range
 			if v > float64(math.MaxInt64) || v < float64(math.MinInt64) {
-				return nil, fmt.Errorf("attribute %s cannot be parsed into a string date-time value because the float64 value is out of the int64 range", attribute.ExternalId)
+				return nil, fmt.Errorf("attribute %s cannot be parsed into a date-time value as the value is out of the valid range", attribute.ExternalId)
 			}
 			// make sure float only has 0 decimals (e.g. 123.00000)
 			if float64(int(v)) != v {
-				return nil, fmt.Errorf("attribute %s cannot be parsed into a string date-time value because the float64 value is not an exact integer", attribute.ExternalId)
+				return nil, fmt.Errorf("attribute %s cannot be parsed into a date-time because the value is not an integer", attribute.ExternalId)
 			}
-			dateTimeStr = fmt.Sprintf("%d", int(v))
+			dateTimeStr = fmt.Sprintf("%d", int64(v))
 		default:
-			return nil, fmt.Errorf("attribute %s cannot be parsed into a string date-time value because its type is %T, not string or float64", attribute.ExternalId, v)
+			return nil, fmt.Errorf("attribute %s cannot be parsed into a date-time due to invalid type: %T", attribute.ExternalId, v)
 		}
 
 		if dateTimeStr == "" {
