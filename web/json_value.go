@@ -16,6 +16,7 @@ package web
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -82,14 +83,28 @@ func convertJSONAttributeValue(attribute *framework.AttributeConfig, value any, 
 		return boolValue, nil
 
 	case framework.AttributeTypeDateTime:
-		v, ok := value.(string)
-		if !ok {
-			return nil, fmt.Errorf("attribute %s cannot be parsed into a string date-time value", attribute.ExternalId)
+		var dateTimeStr string
+		switch v := value.(type) {
+		case string:
+			dateTimeStr = v
+		case float64:
+			// make sure the value is in int64 range
+			if v > float64(math.MaxInt64) || v < float64(math.MinInt64) {
+				return nil, fmt.Errorf("attribute %s cannot be parsed into a date-time value as the value is out of the valid range", attribute.ExternalId)
+			}
+			// make sure float only has 0 decimals (e.g. 123.00000)
+			if float64(int64(v)) != v {
+				return nil, fmt.Errorf("attribute %s cannot be parsed into a date-time because the value is not an integer", attribute.ExternalId)
+			}
+			dateTimeStr = fmt.Sprintf("%d", int64(v))
+		default:
+			return nil, fmt.Errorf("attribute %s cannot be parsed into a date-time due to invalid type: %T", attribute.ExternalId, v)
 		}
-		if v == "" {
+
+		if dateTimeStr == "" {
 			return nil, nil
 		}
-		t, err := ParseDateTime(opts.dateTimeFormats, opts.localTimeZoneOffset, v)
+		t, err := ParseDateTime(opts.dateTimeFormats, opts.localTimeZoneOffset, dateTimeStr)
 		if err != nil {
 			return nil, fmt.Errorf("attribute %s cannot be parsed into a date-time value: %w", attribute.ExternalId, err)
 		}
