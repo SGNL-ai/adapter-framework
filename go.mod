@@ -5,7 +5,7 @@ go 1.21
 require (
 	github.com/PaesslerAG/gval v1.2.2
 	github.com/PaesslerAG/jsonpath v0.1.1
-	github.com/fsnotify/fsnotify v1.6.0
+	github.com/fsnotify/fsnotify v1.7.0
 	github.com/sosodev/duration v1.2.0
 	google.golang.org/grpc v1.58.3
 	google.golang.org/protobuf v1.33.0
