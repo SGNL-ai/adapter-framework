@@ -135,6 +135,9 @@ message AttributeConfig {
     // Indicates whether the attribute contains a list of values vs. a single
     // value.
     bool list = 4;
+
+    // Indicates whether the attribute represents a unique identifier for the entity.
+    bool unique_id = 5;
 }
 
 // The type of the values for an attribute.
