@@ -21,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	ber "github.com/go-asn1-ber/asn1-ber"
 	framework "github.com/sgnl-ai/adapter-framework"
 )
 
@@ -191,6 +192,8 @@ func ParseDateTime(dateTimeFormats []DateTimeFormatWithTimeZone, localTimeZoneOf
 			if err == nil {
 				dateTime = time.Unix(unixTimestamp, 0)
 			}
+		} else if format.Format == SGNLGeneralizedTime {
+			dateTime, err = ber.ParseGeneralizedTime([]byte(dateTimeStr))
 		} else {
 			dateTime, err = time.Parse(format.Format, dateTimeStr)
 		}
