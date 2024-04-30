@@ -12,6 +12,7 @@ require (
 )
 
 require (
+	github.com/go-asn1-ber/asn1-ber v1.5.6 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect

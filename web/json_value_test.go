@@ -177,6 +177,108 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{"SGNLUnixSec", false}}, localTimeZoneOffset: -10 * 60 * 60},
 			wantValue: MustParseTime(t, "2024-01-23T20:17:36-10:00"),
 		},
+		"generalized_with_seconds_and_z": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDateTime,
+			},
+			valueJSON: `"20240222190527Z"`,
+
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{SGNLGeneralizedTime, true}}},
+			wantValue: time.Date(2024, time.Month(2), 22, 19, 5, 27, 0, time.UTC),
+		},
+		"generalized_with_minutes_and_z": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDateTime,
+			},
+			valueJSON: `"202402221905Z"`,
+
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{SGNLGeneralizedTime, true}}},
+			wantValue: time.Date(2024, time.Month(2), 22, 19, 5, 0, 0, time.UTC),
+		},
+		"generalized_with_hours_and_z": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDateTime,
+			},
+			valueJSON: `"2024022219Z"`,
+
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{SGNLGeneralizedTime, true}}},
+			wantValue: time.Date(2024, time.Month(2), 22, 19, 0, 0, 0, time.UTC),
+		},
+		"generalized_with_fractional_minutes_and_z": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDateTime,
+			},
+			valueJSON: `"2024022219.25Z"`,
+
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{SGNLGeneralizedTime, true}}},
+			wantValue: time.Date(2024, time.Month(2), 22, 19, 15, 0, 0, time.UTC),
+		},
+		"generalized_with_fractional_seconds_and_z": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDateTime,
+			},
+			valueJSON: `"202402221905.25Z"`,
+
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{SGNLGeneralizedTime, true}}},
+			wantValue: time.Date(2024, time.Month(2), 22, 19, 5, 15, 0, time.UTC),
+		},
+		"generalized_with_timezone_offset": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDateTime,
+			},
+			valueJSON: `"20240222190525-0100"`,
+
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{SGNLGeneralizedTime, true}}},
+			wantValue: time.Date(2024, time.Month(2), 22, 19, 5, 25, 0, time.FixedZone("", -3600)),
+		},
+
+		"generalized_with_positive_timezone_offset": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDateTime,
+			},
+			valueJSON: `"20240222190525+0100"`,
+
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{SGNLGeneralizedTime, true}}},
+			wantValue: time.Date(2024, time.Month(2), 22, 19, 5, 25, 0, time.FixedZone("", 3600)),
+		},
+		"generalized_with_short_positive_timezone_offset": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDateTime,
+			},
+			valueJSON: `"20240222190525+0100"`,
+
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{SGNLGeneralizedTime, true}}},
+			wantValue: time.Date(2024, time.Month(2), 22, 19, 5, 25, 0, time.FixedZone("", 3600)),
+		},
+
+		"generalized_with_milliseconds_and_z": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDateTime,
+			},
+			valueJSON: `"20240222190527.123Z"`,
+
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{SGNLGeneralizedTime, true}}},
+			wantValue: time.Date(2024, time.Month(2), 22, 19, 5, 27, 123*1000*1000, time.UTC),
+		},
+		"generalized_with_timezone_offset_and_z": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDateTime,
+			},
+			valueJSON: `"2024022219-0100"`,
+
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{SGNLGeneralizedTime, true}}},
+			wantValue: time.Date(2024, time.Month(2), 22, 19, 0, 0, 0, time.FixedZone("", -3600)),
+		},
 		"datetime": {
 			attribute: &framework.AttributeConfig{
 				ExternalId: "a",
