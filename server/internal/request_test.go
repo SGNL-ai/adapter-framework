@@ -215,6 +215,8 @@ func TestGetAdapterRequest(t *testing.T) {
 							Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
 							ExternalId: "name",
 							Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+							List:       false,
+							UniqueId:   true,
 						},
 					},
 					Ordered: true,
@@ -237,6 +239,8 @@ func TestGetAdapterRequest(t *testing.T) {
 						{
 							ExternalId: "name",
 							Type:       framework.AttributeTypeString,
+							List:       false,
+							UniqueId:   true,
 						},
 					},
 				},
@@ -251,6 +255,8 @@ func TestGetAdapterRequest(t *testing.T) {
 						Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
 						ExternalId: "name",
 						Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+						List:       false,
+						UniqueId:   true,
 					},
 				},
 			},
@@ -373,6 +379,7 @@ func TestGetEntity(t *testing.T) {
 						Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
 						ExternalId: "name",
 						Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+						UniqueId:   true,
 					},
 				},
 			},
@@ -382,6 +389,7 @@ func TestGetEntity(t *testing.T) {
 					{
 						ExternalId: "name",
 						Type:       framework.AttributeTypeString,
+						UniqueId:   true,
 					},
 				},
 			},
@@ -392,6 +400,7 @@ func TestGetEntity(t *testing.T) {
 						Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
 						ExternalId: "name",
 						Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+						UniqueId:   true,
 					},
 				},
 			},
@@ -405,6 +414,7 @@ func TestGetEntity(t *testing.T) {
 						Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
 						ExternalId: "name",
 						Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+						UniqueId:   true,
 					},
 					{
 						Id:         "32b6245b-25a6-480b-9ca9-ac9bbe237a4e",
@@ -435,6 +445,7 @@ func TestGetEntity(t *testing.T) {
 					{
 						ExternalId: "name",
 						Type:       framework.AttributeTypeString,
+						UniqueId:   true,
 					},
 					{
 						ExternalId: "email",
@@ -462,6 +473,7 @@ func TestGetEntity(t *testing.T) {
 						Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
 						ExternalId: "name",
 						Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+						UniqueId:   true,
 					},
 					"email": {
 						Id:         "32b6245b-25a6-480b-9ca9-ac9bbe237a4e",
@@ -507,6 +519,7 @@ func TestGetEntity(t *testing.T) {
 								Id:         "41325064-39ac-4a67-994f-bdcc092642e4",
 								ExternalId: "id",
 								Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+								UniqueId:   true,
 							},
 						},
 					},
@@ -527,6 +540,7 @@ func TestGetEntity(t *testing.T) {
 							{
 								ExternalId: "id",
 								Type:       framework.AttributeTypeString,
+								UniqueId:   true,
 							},
 						},
 					},
@@ -549,6 +563,7 @@ func TestGetEntity(t *testing.T) {
 								Id:         "41325064-39ac-4a67-994f-bdcc092642e4",
 								ExternalId: "id",
 								Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+								UniqueId:   true,
 							},
 						},
 					},
@@ -564,6 +579,7 @@ func TestGetEntity(t *testing.T) {
 						Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
 						ExternalId: "name",
 						Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+						UniqueId:   true,
 					},
 				},
 				ChildEntities: []*api_adapter_v1.EntityConfig{
@@ -575,6 +591,7 @@ func TestGetEntity(t *testing.T) {
 								Id:         "41325064-39ac-4a67-994f-bdcc092642e4",
 								ExternalId: "id",
 								Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+								UniqueId:   true,
 							},
 						},
 					},
@@ -586,6 +603,7 @@ func TestGetEntity(t *testing.T) {
 								Id:         "4b316f65f-2ce0-4577-8a77-74f52da4ad90",
 								ExternalId: "displayName",
 								Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+								UniqueId:   true,
 							},
 						},
 					},
@@ -597,6 +615,7 @@ func TestGetEntity(t *testing.T) {
 					{
 						ExternalId: "name",
 						Type:       framework.AttributeTypeString,
+						UniqueId:   true,
 					},
 				},
 				ChildEntities: []*framework.EntityConfig{
@@ -606,6 +625,7 @@ func TestGetEntity(t *testing.T) {
 							{
 								ExternalId: "id",
 								Type:       framework.AttributeTypeString,
+								UniqueId:   true,
 							},
 						},
 					},
@@ -615,6 +635,7 @@ func TestGetEntity(t *testing.T) {
 							{
 								ExternalId: "displayName",
 								Type:       framework.AttributeTypeString,
+								UniqueId:   true,
 							},
 						},
 					},
@@ -627,6 +648,7 @@ func TestGetEntity(t *testing.T) {
 						Id:         "12268f03-f99d-476f-91cc-5fe3404e1654",
 						ExternalId: "name",
 						Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+						UniqueId:   true,
 					},
 				},
 				ChildEntities: map[string]*entityReverseIdMapping{
@@ -637,6 +659,7 @@ func TestGetEntity(t *testing.T) {
 								Id:         "41325064-39ac-4a67-994f-bdcc092642e4",
 								ExternalId: "id",
 								Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+								UniqueId:   true,
 							},
 						},
 					},
@@ -647,6 +670,7 @@ func TestGetEntity(t *testing.T) {
 								Id:         "4b316f65f-2ce0-4577-8a77-74f52da4ad90",
 								ExternalId: "displayName",
 								Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+								UniqueId:   true,
 							},
 						},
 					},

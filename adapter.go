@@ -115,6 +115,9 @@ type AttributeConfig struct {
 	// List indicates whether the attribute contains a list of values vs. a
 	// single value.
 	List bool `json:"list,omitempty"`
+
+	// Indicates whether the attribute represents a unique identifier for the entity.
+	UniqueId bool `json:"unique_id,omitempty"`
 }
 
 // AttributeType is the type of the values for an attribute.

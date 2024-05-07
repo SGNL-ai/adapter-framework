@@ -202,6 +202,7 @@ func getEntity(
 			ExternalId: attribute.ExternalId,
 			Type:       framework.AttributeType(attribute.Type),
 			List:       attribute.List,
+			UniqueId:   attribute.UniqueId,
 		})
 
 		reverseMapping.Attributes[attribute.ExternalId] = attribute
