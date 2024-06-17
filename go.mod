@@ -6,13 +6,13 @@ require (
 	github.com/PaesslerAG/gval v1.2.2
 	github.com/PaesslerAG/jsonpath v0.1.1
 	github.com/fsnotify/fsnotify v1.7.0
-	github.com/sosodev/duration v1.3.0
+	github.com/go-asn1-ber/asn1-ber v1.5.6
+	github.com/sosodev/duration v1.3.1
 	google.golang.org/grpc v1.63.2
 	google.golang.org/protobuf v1.33.0
 )
 
 require (
-	github.com/go-asn1-ber/asn1-ber v1.5.6 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
 	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
