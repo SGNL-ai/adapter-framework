@@ -55,6 +55,7 @@ type DateTimeFormatWithTimeZone struct {
 }
 
 const (
+	SGNLUnixMilli       = "SGNLUnixMilli"
 	SGNLUnixSec         = "SGNLUnixSec"
 	SGNLGeneralizedTime = "SGNLGeneralizedTime"
 )
@@ -80,7 +81,11 @@ func defaultJSONOptions() *jsonOptions {
 			{"01-02-2006", false},
 			{"01/02/2006", false},
 			{"01/02/06", false},
-			{SGNLUnixSec, false},        // Unix timestamp representing seconds since 1970-01-01 00:00:00 UTC.
+
+			// The ordering of SGNLUnixMilli and SGNLUnixSec is important.
+			{SGNLUnixMilli, false}, // Unix timestamp representing milliseconds since 1970-01-01 00:00:00 UTC.
+			{SGNLUnixSec, false},   // Unix timestamp representing seconds since 1970-01-01 00:00:00 UTC.
+
 			{SGNLGeneralizedTime, true}, // https://datatracker.ietf.org/doc/html/rfc4517#section-3.3.13  Generalized Time
 		},
 		enableJSONPath:      false, // Disabled.
