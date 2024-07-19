@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"sort"
 	"testing"
 	"time"
 
@@ -172,6 +173,8 @@ func TestRegisterAdapter(t *testing.T) {
 	for k := range s.AdapterGetPageFuncs {
 		registeredDatasources = append(registeredDatasources, k)
 	}
+
+	sort.Strings(registeredDatasources)
 
 	want := []string{"Mock-1.0.1", "Mock-1.0.2"}
 

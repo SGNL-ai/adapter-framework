@@ -55,6 +55,7 @@ type DateTimeFormatWithTimeZone struct {
 }
 
 const (
+	SGNLUnixMilli       = "SGNLUnixMilli"
 	SGNLUnixSec         = "SGNLUnixSec"
 	SGNLGeneralizedTime = "SGNLGeneralizedTime"
 )
@@ -136,6 +137,8 @@ func WithComplexAttributeNameDelimiter(delimiter string) JSONOption {
 // attribute values from strings.
 // The formats must be ordered by decreasing likelihood of matching.
 // Each format must be a valid time format accepted by time.Parse.
+// Note: Adding both SGNLUnixSec and SGNLUnixMilli to formats is not recommended. Any valid numerical value can be
+// parsed by both formats. The output would depend on the ordering of the format thereby yielding undesired results.
 func WithDateTimeFormats(formats ...DateTimeFormatWithTimeZone) JSONOption {
 	return &funcJSONOption{
 		f: func(jo *jsonOptions) {

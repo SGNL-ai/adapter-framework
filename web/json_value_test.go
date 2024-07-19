@@ -88,17 +88,106 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 			valueJSON: `[true, 0, "true"]`,
 			wantValue: []bool{true, false, true},
 		},
-		"unix": {
+		"unix_milli": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDateTime,
+			},
+			valueJSON: `1706041056000`,
+
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{SGNLUnixMilli, false}}},
+			wantValue: MustParseTime(t, "2024-01-23T20:17:36Z"),
+		},
+		"valid_unix_milli_missing_option": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDateTime,
+			},
+			valueJSON: `1706041056000`,
+
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{time.RFC3339, true}}},
+			wantError: errors.New("attribute a cannot be parsed into a date-time value: failed to parse date-time value: 1706041056000"),
+		},
+		"unix_milli_prefixed_with_+": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDateTime,
+			},
+			valueJSON: `"+1706041056000"`,
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{SGNLUnixMilli, false}}},
+			wantValue: MustParseTime(t, "2024-01-23T20:17:36Z"),
+		},
+		"invalid_unix_milli_timestamp": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDateTime,
+			},
+			valueJSON: `"17060invalid6"`,
+
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{SGNLUnixMilli, false}}},
+			wantError: errors.New("attribute a cannot be parsed into a date-time value: failed to parse date-time value: 17060invalid6"),
+		},
+		"invalid_float_unix_milli_timestamp": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDateTime,
+			},
+			valueJSON: `1706041056.005`,
+
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{SGNLUnixMilli, false}}},
+			wantError: errors.New("attribute a cannot be parsed into a date-time because the value is not an integer"),
+		},
+		"unix_milli_timestamp_int64_overflow": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDateTime,
+			},
+			valueJSON: `9999999999999999999999999999999999999999`,
+
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{SGNLUnixMilli, false}}},
+			wantError: errors.New("attribute a cannot be parsed into a date-time value as the value is out of the valid range"),
+		},
+		"neg_unix_milli": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDateTime,
+			},
+			valueJSON: `-1706041056000`,
+
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{SGNLUnixMilli, false}}},
+			wantValue: MustParseTime(t, "1915-12-10T03:42:24Z"),
+		},
+		"unix_milli_with_local_timezone_offset": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDateTime,
+			},
+			valueJSON: `1706041056000`,
+
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{SGNLUnixMilli, false}}, localTimeZoneOffset: 10 * 60 * 60},
+			wantValue: MustParseTime(t, "2024-01-23T20:17:36+10:00"),
+		},
+		"unix_milli_with_negative_time_zone_offset": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDateTime,
+			},
+			valueJSON: `1706041056000`,
+
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{SGNLUnixMilli, false}}, localTimeZoneOffset: -10 * 60 * 60},
+			wantValue: MustParseTime(t, "2024-01-23T20:17:36-10:00"),
+		},
+		"unix_sec": {
 			attribute: &framework.AttributeConfig{
 				ExternalId: "a",
 				Type:       framework.AttributeTypeDateTime,
 			},
 			valueJSON: `1706041056`,
 
-			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{"SGNLUnixSec", false}}},
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{SGNLUnixSec, false}}},
 			wantValue: MustParseTime(t, "2024-01-23T20:17:36Z"),
 		},
-		"valid_unix_missing_option": {
+		"valid_unix_sec_missing_option": {
 			attribute: &framework.AttributeConfig{
 				ExternalId: "a",
 				Type:       framework.AttributeTypeDateTime,
@@ -108,73 +197,73 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{time.RFC3339, true}}},
 			wantError: errors.New("attribute a cannot be parsed into a date-time value: failed to parse date-time value: 1706041056"),
 		},
-		"unix_prefixed_with_+": {
+		"unix_sec_prefixed_with_+": {
 			attribute: &framework.AttributeConfig{
 				ExternalId: "a",
 				Type:       framework.AttributeTypeDateTime,
 			},
 			valueJSON: `"+1706041056"`,
-			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{"SGNLUnixSec", false}}},
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{SGNLUnixSec, false}}},
 			wantValue: MustParseTime(t, "2024-01-23T20:17:36Z"),
 		},
-		"invalid_unix_timestamp": {
+		"invalid_unix_sec_timestamp": {
 			attribute: &framework.AttributeConfig{
 				ExternalId: "a",
 				Type:       framework.AttributeTypeDateTime,
 			},
 			valueJSON: `"17060invalid6"`,
 
-			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{"SGNLUnixSec", false}}},
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{SGNLUnixSec, false}}},
 			wantError: errors.New("attribute a cannot be parsed into a date-time value: failed to parse date-time value: 17060invalid6"),
 		},
-		"invalid_float_unix_timestamp": {
+		"invalid_float_unix_sec_timestamp": {
 			attribute: &framework.AttributeConfig{
 				ExternalId: "a",
 				Type:       framework.AttributeTypeDateTime,
 			},
 			valueJSON: `1706041056.005`,
 
-			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{"SGNLUnixSec", false}}},
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{SGNLUnixSec, false}}},
 			wantError: errors.New("attribute a cannot be parsed into a date-time because the value is not an integer"),
 		},
-		"unix_timestamp_int64_overflow": {
+		"unix_sec_timestamp_int64_overflow": {
 			attribute: &framework.AttributeConfig{
 				ExternalId: "a",
 				Type:       framework.AttributeTypeDateTime,
 			},
 			valueJSON: `9999999999999999999999999999999999999999`,
 
-			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{"SGNLUnixSec", false}}},
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{SGNLUnixSec, false}}},
 			wantError: errors.New("attribute a cannot be parsed into a date-time value as the value is out of the valid range"),
 		},
-		"neg_unix": {
+		"neg_unix_sec": {
 			attribute: &framework.AttributeConfig{
 				ExternalId: "a",
 				Type:       framework.AttributeTypeDateTime,
 			},
 			valueJSON: `-1706041056`,
 
-			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{"SGNLUnixSec", false}}},
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{SGNLUnixSec, false}}},
 			wantValue: MustParseTime(t, "1915-12-10T03:42:24Z"),
 		},
-		"unix_with_local_timezone_offset": {
+		"unix_sec_with_local_timezone_offset": {
 			attribute: &framework.AttributeConfig{
 				ExternalId: "a",
 				Type:       framework.AttributeTypeDateTime,
 			},
 			valueJSON: `1706041056`,
 
-			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{"SGNLUnixSec", false}}, localTimeZoneOffset: 10 * 60 * 60},
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{SGNLUnixSec, false}}, localTimeZoneOffset: 10 * 60 * 60},
 			wantValue: MustParseTime(t, "2024-01-23T20:17:36+10:00"),
 		},
-		"unix_with_negative_time_zone_offset": {
+		"unix_sec_with_negative_time_zone_offset": {
 			attribute: &framework.AttributeConfig{
 				ExternalId: "a",
 				Type:       framework.AttributeTypeDateTime,
 			},
 			valueJSON: `1706041056`,
 
-			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{"SGNLUnixSec", false}}, localTimeZoneOffset: -10 * 60 * 60},
+			opts:      &jsonOptions{dateTimeFormats: []DateTimeFormatWithTimeZone{{SGNLUnixSec, false}}, localTimeZoneOffset: -10 * 60 * 60},
 			wantValue: MustParseTime(t, "2024-01-23T20:17:36-10:00"),
 		},
 		"generalized_with_seconds_and_z": {
