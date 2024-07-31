@@ -36,6 +36,10 @@ type Adapter[Config any] interface {
 // The Config type parameter must be a struct type the configuration
 // JSON object can be unmarshaled into.
 type Request[Config any] struct {
+	// DatasourceID is the ID of the datasource.
+	// Required.
+	DatasourceID string `json:"datasourceID"`
+
 	// Config is configuration for the datasource.
 	// Optional.
 	Config *Config `json:"config,omitempty"`

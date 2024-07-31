@@ -225,6 +225,7 @@ func TestGetAdapterRequest(t *testing.T) {
 				Cursor:   "the cursor",
 			},
 			wantAdapterRequest: &framework.Request[TestConfigA]{
+				DatasourceID: "1f530a64-0565-49e6-8647-b88e908b7229",
 				Config: &TestConfigA{
 					A: "a value",
 					B: "b value",
@@ -280,6 +281,7 @@ func TestGetAdapterRequest(t *testing.T) {
 				PageSize: 100,
 			},
 			wantAdapterRequest: &framework.Request[TestConfigA]{
+				DatasourceID: "1f530a64-0565-49e6-8647-b88e908b7229",
 				Entity: framework.EntityConfig{
 					ExternalId: "users",
 					Attributes: []*framework.AttributeConfig{
