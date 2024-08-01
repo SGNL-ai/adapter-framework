@@ -100,6 +100,7 @@ func getAdapterRequest[Config any](
 		return nil, nil, adapterErr
 	}
 
+	adapterRequest.DatasourceID = req.Datasource.Id
 	adapterRequest.Address = req.Datasource.Address
 	adapterRequest.Auth = getAdapterAuth(req.Datasource.Auth)
 	adapterRequest.Entity = *entityConfig
