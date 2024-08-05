@@ -167,6 +167,7 @@ func getEntity(
 	reverseMapping = &entityReverseIdMapping{}
 
 	adapterEntity.ExternalId = entity.ExternalId
+	adapterEntity.Id = entity.Id
 	reverseMapping.Id = entity.Id
 
 	attributeIds := make(map[string]bool, len(entity.Attributes))
