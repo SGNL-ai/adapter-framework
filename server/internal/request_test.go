@@ -235,6 +235,7 @@ func TestGetAdapterRequest(t *testing.T) {
 					HTTPAuthorization: "Bearer mysecret",
 				},
 				Entity: framework.EntityConfig{
+					Id:         "00d58abb-0b80-4745-927a-af9b2fb612dd",
 					ExternalId: "users",
 					Attributes: []*framework.AttributeConfig{
 						{
@@ -283,6 +284,7 @@ func TestGetAdapterRequest(t *testing.T) {
 			wantAdapterRequest: &framework.Request[TestConfigA]{
 				DatasourceID: "1f530a64-0565-49e6-8647-b88e908b7229",
 				Entity: framework.EntityConfig{
+					Id:         "00d58abb-0b80-4745-927a-af9b2fb612dd",
 					ExternalId: "users",
 					Attributes: []*framework.AttributeConfig{
 						{
@@ -386,6 +388,7 @@ func TestGetEntity(t *testing.T) {
 				},
 			},
 			wantAdapterEntity: &framework.EntityConfig{
+				Id:         "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				ExternalId: "users",
 				Attributes: []*framework.AttributeConfig{
 					{
@@ -442,6 +445,7 @@ func TestGetEntity(t *testing.T) {
 				},
 			},
 			wantAdapterEntity: &framework.EntityConfig{
+				Id:         "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				ExternalId: "users",
 				Attributes: []*framework.AttributeConfig{
 					{
@@ -528,6 +532,7 @@ func TestGetEntity(t *testing.T) {
 				},
 			},
 			wantAdapterEntity: &framework.EntityConfig{
+				Id:         "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				ExternalId: "users",
 				Attributes: []*framework.AttributeConfig{
 					{
@@ -537,6 +542,7 @@ func TestGetEntity(t *testing.T) {
 				},
 				ChildEntities: []*framework.EntityConfig{
 					{
+						Id:         "05182a15-2451-4551-80ef-606fd05c1cc2",
 						ExternalId: "entitlements",
 						Attributes: []*framework.AttributeConfig{
 							{
@@ -612,6 +618,7 @@ func TestGetEntity(t *testing.T) {
 				},
 			},
 			wantAdapterEntity: &framework.EntityConfig{
+				Id:         "00d58abb-0b80-4745-927a-af9b2fb612dd",
 				ExternalId: "users",
 				Attributes: []*framework.AttributeConfig{
 					{
@@ -622,6 +629,7 @@ func TestGetEntity(t *testing.T) {
 				},
 				ChildEntities: []*framework.EntityConfig{
 					{
+						Id:         "05182a15-2451-4551-80ef-606fd05c1cc2",
 						ExternalId: "entitlements",
 						Attributes: []*framework.AttributeConfig{
 							{
@@ -632,6 +640,7 @@ func TestGetEntity(t *testing.T) {
 						},
 					},
 					{
+						Id:         "a974da7c-48da-4262-8270-b83396abb563",
 						ExternalId: "addresses",
 						Attributes: []*framework.AttributeConfig{
 							{
