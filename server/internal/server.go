@@ -17,6 +17,7 @@ package internal
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sync"
 	"time"
 
@@ -90,11 +91,8 @@ func (s *Server) validateAuthenticationToken(ctx context.Context) error {
 	s.TokensMutex.RLock()
 	defer s.TokensMutex.RUnlock()
 
-	// TODO: After upgrading go to 1.21+, replace with the `Contains` method
-	for _, y := range s.Tokens {
-		if y == requestTokens[0] {
-			return nil
-		}
+	if slices.Contains(s.Tokens, requestTokens[0]) {
+		return nil
 	}
 
 	return status.Error(codes.Unauthenticated, "invalid or missing token")
