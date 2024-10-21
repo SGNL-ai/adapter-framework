@@ -3,7 +3,7 @@ module github.com/sgnl-ai/adapter-framework
 go 1.23
 
 require (
-	github.com/PaesslerAG/gval v1.2.2
+	github.com/PaesslerAG/gval v1.2.3
 	github.com/PaesslerAG/jsonpath v0.1.1
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/go-asn1-ber/asn1-ber v1.5.7
