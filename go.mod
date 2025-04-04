@@ -1,7 +1,6 @@
 module github.com/sgnl-ai/adapter-framework
 
 go 1.23
-
 require (
 	github.com/PaesslerAG/gval v1.2.4
 	github.com/PaesslerAG/jsonpath v0.1.1
@@ -14,7 +13,7 @@ require (
 
 require (
 	github.com/shopspring/decimal v1.3.1 // indirect
-	golang.org/x/net v0.35.0 // indirect
+	golang.org/x/net v0.36.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/text v0.22.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250115164207-1a7da9e5054f // indirect
