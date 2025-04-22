@@ -32,7 +32,7 @@ func TestFromContext(t *testing.T) {
 		{
 			name:         "nil context with value should panic",
 			wantPanic:    true,
-			wantPanicMsg: "cannot create connector context from nil parent",
+			wantPanicMsg: "cannot read connector info value from nil context",
 		},
 	}
 
