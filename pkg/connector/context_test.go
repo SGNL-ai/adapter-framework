@@ -7,10 +7,12 @@ import (
 
 func TestFromContext(t *testing.T) {
 	tests := []struct {
-		name    string
-		ctx     context.Context
-		wantVal ConnectorInfo
-		wantOk  bool
+		name         string
+		ctx          context.Context
+		wantVal      ConnectorInfo
+		wantOk       bool
+		wantPanic    bool
+		wantPanicMsg string
 	}{
 		{
 			name:    "empty context returns false",
@@ -26,10 +28,24 @@ func TestFromContext(t *testing.T) {
 			wantVal: ConnectorInfo{ID: "test-id"},
 			wantOk:  true,
 		},
+		{
+			name:         "nil context with value should panic",
+			wantPanic:    true,
+			wantPanicMsg: "cannot create connector context from nil parent",
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.wantPanic {
+				defer func() {
+					if r := recover(); r == nil {
+						t.Errorf("Test didn't panic")
+					} else if r != tt.wantPanicMsg {
+						t.Errorf("Unexpected panic messages: got %v, want: %v", r, tt.wantPanicMsg)
+					}
+				}()
+			}
 			gotVal, gotOk := FromContext(tt.ctx)
 			if gotOk != tt.wantOk {
 				t.Errorf("FromContext() ok = %v, want %v", gotOk, tt.wantOk)

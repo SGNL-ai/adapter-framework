@@ -30,6 +30,9 @@ type key struct{}
 
 // FromContext returns the ConnectorInfo value stored in the ctx, if any.
 func FromContext(ctx context.Context) (v ConnectorInfo, ok bool) {
+	if ctx == nil {
+		panic("cannot create connector context from nil parent")
+	}
 	v, ok = ctx.Value(key{}).(ConnectorInfo)
 	return
 }
