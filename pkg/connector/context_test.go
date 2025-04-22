@@ -2,6 +2,7 @@ package connector
 
 import (
 	"context"
+	"strings"
 	"testing"
 )
 
@@ -88,7 +89,7 @@ func TestWithContext(t *testing.T) {
 				return
 			}
 			if tt.wantErr {
-				if err == nil || !contains(err.Error(), tt.wantErrText) {
+				if err == nil || !strings.Contains(err.Error(), tt.wantErrText) {
 					t.Errorf("WithContext() error = %v, want error containing %v", err, tt.wantErrText)
 				}
 				return
@@ -104,9 +105,4 @@ func TestWithContext(t *testing.T) {
 			}
 		})
 	}
-}
-
-// Helper function to check if a string contains another string
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && s[:len(substr)] == substr
 }
