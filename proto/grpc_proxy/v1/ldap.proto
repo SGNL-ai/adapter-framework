@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package sgnl.grpc_proxy.v1;
+
+option go_package = "github.com/sgnl-ai/adapter-framework/pkg/grpc_proxy/v1";
+
+// LdapConnectionConfig for setting up the connection to a
+// LDAP server.
+message LDAPConnectionConfigRequest {
+  bool is_ldaps = 1;
+  string cert_chain = 2;
+  string host = 3;
+  string base_url = 4;
+  string bind_dn = 5;
+  string bind_password = 6;
+}
+
+message LDAPConnectionConfigResponse {
+  string error = 1;
+  int32 error_code = 2;
+}
+
+// SearchRequest represents a serialized LDAP search request.
+message LDAPSearchRequest {
+  string base_dn = 1;
+  int32 scope = 2;
+  string filter = 3;
+  repeated string attributes = 4;
+  uint32 page_size = 5;
+  string page_cursor = 6; // Cursor from the previous page for pagination
+}
+
+// LDAPSearchResponse represents a serialized LDAP search response.
+message LDAPSearchResponse {
+  int32 status_code = 1;
+  string objects = 2;
+  string composite_cursor = 3;
+  string retry_after_header = 4;
+  string error = 4;
+  string error_code = 5;
+}

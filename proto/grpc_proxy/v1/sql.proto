@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package sgnl.grpc_proxy.v1;
+
+option go_package = "github.com/sgnl-ai/adapter-framework/pkg/grpc_proxy/v1";
+
+// SQLQueryRequest represents a query request
+message SQLQueryRequest {
+  string datasource_name = 1;
+  string query = 2;
+  string unique_attribute_external_id = 3;
+  int64 page_size = 4;
+  int64 cursor = 5;
+}
+
+// SQLQueryResponse represents a query response
+message SQLQueryResponse {
+  int32 status_code = 1;
+  string objects = 2;
+  string retry_after_header = 3;
+  int64 cursor = 4;
+  string error = 5;
+  string error_code = 6;
+}
+

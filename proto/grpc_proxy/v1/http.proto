@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package sgnl.grpc_proxy.v1;
+
+option go_package = "github.com/sgnl-ai/adapter-framework/pkg/grpc_proxy/v1";
+
+// StringValues for a list of string values.
+message StringValues {
+  repeated string values = 1;
+}
+
+// HTTPRequest represents an HTTP request to be proxied
+message HTTPRequest {
+  string method = 1;
+  string url = 2;
+  map<string, StringValues> headers = 3;
+  bytes body = 4;
+}
+
+// HTTPResponse represents an HTTP response from the proxy
+message HTTPResponse {
+  int32 status_code = 1;
+  map<string, StringValues> headers = 2;
+  bytes body = 3;
+}
+
