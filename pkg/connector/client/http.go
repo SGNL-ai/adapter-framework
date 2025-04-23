@@ -10,45 +10,15 @@ import (
 
 	"github.com/sgnl-ai/adapter-framework/pkg/connector"
 	v1proxy "github.com/sgnl-ai/adapter-framework/pkg/grpc_proxy/v1"
+	"google.golang.org/grpc/metadata"
 )
-
-type customTransport struct {
-	userAgent string
-	base      http.RoundTripper
-}
-
-func (t *customTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	clonedReq := req.Clone(req.Context())
-	clonedReq.Header.Set("User-Agent", t.userAgent)
-
-	return t.base.RoundTrip(clonedReq)
-}
-
-func NewSGNLHttpClient(timeout time.Duration, userAgent string) *http.Client {
-	// This is a default value if a SGNL 1P adapter does not define a custom user agent.
-	if userAgent == "" {
-		userAgent = "sgnl-adapter"
-	}
-
-	t := &customTransport{
-		base:      http.DefaultTransport,
-		userAgent: userAgent,
-	}
-
-	return &http.Client{
-		Timeout:   timeout,
-		Transport: t,
-	}
-}
 
 // NewSGNLHTTPClientWithProxy for proxying http requests based on the Connector context
 // present in the request.
-// TODO: Replace `NewSGNLHttpClient()` with `NewSGNLHTTPClientWithProxy` for adapters with protocols suppurted by
-// the `ProxyServiceClient“.
 func NewSGNLHTTPClientWithProxy(timeout time.Duration, userAgent string, client v1proxy.ProxyServiceClient) *http.Client {
-	// This is a default value if a SGNL 1P adapter does not define a custom user agent.
+	// This is a default value if custom user agent is not specified.
 	if userAgent == "" {
-		userAgent = "sgnl-adapter"
+		userAgent = "sgnl-"
 	}
 
 	return &http.Client{
@@ -81,11 +51,17 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 	// In case, context is not present the request is forward using default
 	// HTTP round-tripper.
 	ctx := req.Context()
-	_, ok := connector.FromContext(ctx)
+	ci, ok := connector.FromContext(ctx)
 
 	if !ok {
 		return t.rt.RoundTrip(req)
 	}
+
+	// Update the metadata context with connector information
+	ctx = metadata.AppendToOutgoingContext(req.Context(),
+		connector.METADATA_CLIENT_ID, ci.ClientID,
+		connector.METADATA_CONNECTOR_ID, ci.ID,
+		connector.METADATA_TENANT_ID, ci.TenantID)
 
 	// Prepare the request payload for the proxied request.
 	var body []byte
@@ -102,34 +78,36 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 		req.Body = io.NopCloser(bytes.NewReader(body))
 	}
 
+	// Copy all the header key and values from the request header.
+	headers := make(map[string]*v1proxy.StringValues)
+	for k, v := range req.Header {
+		if len(v) > 0 {
+			headers[k] = &v1proxy.StringValues{
+				Values: v,
+			}
+		}
+	}
+
 	// Create proxied HTTP request message.
 	// TODO: to include connector metadata in the request.
 	grpcReq := &v1proxy.Request{
 		RequestType: &v1proxy.Request_HttpRequest{
 			HttpRequest: &v1proxy.HTTPRequest{
-				Method: req.Method,
-				Url:    req.URL.String(),
-				Headers: func() map[string]*v1proxy.StringValues {
-					headers := make(map[string]*v1proxy.StringValues)
-					for k, v := range req.Header {
-						if len(v) > 0 {
-							headers[k] = &v1proxy.StringValues{
-								Values: v,
-							}
-						}
-					}
-
-					return headers
-				}(),
-				Body: body,
+				Method:  req.Method,
+				Url:     req.URL.String(),
+				Headers: headers,
+				Body:    body,
 			},
 		},
 	}
 
 	// Send request.
-	resp, err := t.proxyClient.ProxyRequest(req.Context(), grpcReq)
+	resp, err := t.proxyClient.ProxyRequest(ctx, grpcReq)
 	if err != nil {
 		return nil, err
+	}
+	if resp.Error != "" {
+		return nil, fmt.Errorf("%s", resp.Error)
 	}
 
 	// Convert gRPC response message to the http.Response

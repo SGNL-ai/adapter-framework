@@ -2,6 +2,7 @@ package client
 
 import (
 	context "context"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	grpc "google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/test/bufconn"
 
 	"github.com/sgnl-ai/adapter-framework/pkg/connector"
@@ -25,7 +27,7 @@ func TestCustomUserAgent(t *testing.T) {
 	}{
 		"empty input": {
 			inputUserAgent: "",
-			wantUserAgent:  "sgnl-adapter",
+			wantUserAgent:  "sgnl-",
 		},
 		"non-empty input": {
 			inputUserAgent: "sgnl-myAdapter/1.0.0",
@@ -49,7 +51,7 @@ func TestCustomUserAgent(t *testing.T) {
 			defer testServer.Close()
 
 			// Create an HTTP client with the custom User-Agent
-			client := NewSGNLHttpClient(time.Second, tc.inputUserAgent)
+			client := NewSGNLHTTPClientWithProxy(time.Second, tc.inputUserAgent, nil)
 
 			// Fire a request
 			resp, err := client.Get(testServer.URL)
@@ -78,7 +80,7 @@ func TestGivenSGNLHTTPClientWithTimeoutThenRequestTimesout(t *testing.T) {
 	defer ts.Close()
 	defer close(block) // Ensure channel cleanup
 
-	client := NewSGNLHttpClient(time.Second, "")
+	client := NewSGNLHTTPClientWithProxy(time.Second, "", nil)
 
 	// Test
 	_, err := client.Get(ts.URL)
@@ -116,10 +118,22 @@ func TestGivenSGNLHTTPClientWithoutGRPCProxyThenSendRequestSentWithoutProxyAndRe
 var GRPCTestServerResponse = "response from the grpc test server"
 
 type testServer struct {
+	ci *connector.ConnectorInfo
 	v1proxy.UnimplementedProxyServiceServer
 }
 
 func (s *testServer) ProxyRequest(ctx context.Context, req *v1proxy.Request) (*v1proxy.Response, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if s.ci != nil && !ok {
+		return nil, fmt.Errorf("Missing metadata context in the proxied request")
+	}
+	if s.ci != nil {
+		ids := md.Get(connector.METADATA_CONNECTOR_ID)
+		if len(ids) == 0 || ids[0] != s.ci.ID {
+			return nil, fmt.Errorf("Connector ID didn't match from the metadata ctx, exp:%v, got:%v", s.ci.ID, ids[0])
+		}
+	}
+
 	return &v1proxy.Response{
 		ResponseType: &v1proxy.Response_HttpResponse{
 			HttpResponse: &v1proxy.HTTPResponse{
@@ -186,9 +200,18 @@ func TestGivenSGNLHTTPClientWithGRPCProxyAndRequestWithConnectorContextThenReque
 	lis := bufconn.Listen(1024 * 1024)
 	defer lis.Close()
 
+	connectorInfo := connector.ConnectorInfo{
+		ID:         "123-456-789",
+		ClientID:   "client-id",
+		SourceType: connector.Datasource,
+		SourceID:   "datasource-id",
+	}
+
 	// Create gRPC test server and serve from the in-memory listener
 	srv := grpc.NewServer()
-	v1proxy.RegisterProxyServiceServer(srv, &testServer{})
+	v1proxy.RegisterProxyServiceServer(srv, &testServer{
+		ci: &connectorInfo,
+	})
 	go srv.Serve(lis)
 	defer srv.Stop()
 
@@ -206,12 +229,7 @@ func TestGivenSGNLHTTPClientWithGRPCProxyAndRequestWithConnectorContextThenReque
 	client := NewSGNLHTTPClientWithProxy(time.Second, "", v1proxy.NewProxyServiceClient(conn))
 
 	// Create and pass the connector context to the http request.
-	ctx, err := connector.WithContext(context.Background(), connector.ConnectorInfo{
-		ID:         "connector-id",
-		ClientID:   "client-id",
-		SourceType: connector.Datasource,
-		SourceID:   "datasource-id",
-	})
+	ctx, err := connector.WithContext(context.Background(), connectorInfo)
 	if err != nil {
 		t.Fatalf("failed to create connector info context %v", err)
 	}

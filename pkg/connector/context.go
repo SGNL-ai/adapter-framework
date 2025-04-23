@@ -25,6 +25,16 @@ type ConnectorInfo struct {
 	SourceID   string
 }
 
+// Metadata context key constants.
+const (
+	METADATA_CONNECTOR_ID = "connector-id"
+	METADATA_CLIENT_ID    = "client-id"
+	METADATA_TENANT_ID    = "tenant-id"
+	METADATA_AUTH_TOKEN   = "auth-token"
+	METADATA_VERSION      = "version"
+	METADATA_LABEL_PREFIX = "label-"
+)
+
 // key for storing the ConnectorInfo in a derived context.
 type key struct{}
 
