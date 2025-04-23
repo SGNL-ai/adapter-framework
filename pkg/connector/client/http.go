@@ -1,4 +1,5 @@
 // Copyright 2025 SGNL.ai, Inc.
+
 package client
 
 import (
