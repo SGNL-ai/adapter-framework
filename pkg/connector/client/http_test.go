@@ -123,7 +123,7 @@ type testServer struct {
 	v1proxy.UnimplementedProxyServiceServer
 }
 
-func (s *testServer) ProxyRequestMessage(ctx context.Context, req *v1proxy.ProxyRequestMessage) (*v1proxy.Response, error) {
+func (s *testServer) ProxyRequest(ctx context.Context, req *v1proxy.ProxyRequestMessage) (*v1proxy.Response, error) {
 	if s.ci != nil {
 		if req.ClientId != s.ci.ClientID {
 			return nil, fmt.Errorf("Expected %v, got %v client id", req.ClientId, s.ci.ClientID)
