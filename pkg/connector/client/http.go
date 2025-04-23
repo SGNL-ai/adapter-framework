@@ -11,7 +11,6 @@ import (
 
 	"github.com/sgnl-ai/adapter-framework/pkg/connector"
 	v1proxy "github.com/sgnl-ai/adapter-framework/pkg/grpc_proxy/v1"
-	"google.golang.org/grpc/metadata"
 )
 
 // NewSGNLHTTPClientWithProxy for proxying http requests based on the Connector context
@@ -58,12 +57,6 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 		return t.rt.RoundTrip(req)
 	}
 
-	// Update the metadata context with connector information
-	ctx = metadata.AppendToOutgoingContext(req.Context(),
-		connector.METADATA_CLIENT_ID, ci.ClientID,
-		connector.METADATA_CONNECTOR_ID, ci.ID,
-		connector.METADATA_TENANT_ID, ci.TenantID)
-
 	// Prepare the request payload for the proxied request.
 	var body []byte
 
@@ -91,13 +84,18 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 
 	// Create proxied HTTP request message.
 	// TODO: to include connector metadata in the request.
-	grpcReq := &v1proxy.Request{
-		RequestType: &v1proxy.Request_HttpRequest{
-			HttpRequest: &v1proxy.HTTPRequest{
-				Method:  req.Method,
-				Url:     req.URL.String(),
-				Headers: headers,
-				Body:    body,
+	grpcReq := &v1proxy.ProxyRequestMessage{
+		ConnectorId: ci.ID,
+		ClientId:    ci.ClientID,
+		TenantId:    ci.TenantID,
+		Request: &v1proxy.Request{
+			RequestType: &v1proxy.Request_HttpRequest{
+				HttpRequest: &v1proxy.HTTPRequest{
+					Method:  req.Method,
+					Url:     req.URL.String(),
+					Headers: headers,
+					Body:    body,
+				},
 			},
 		},
 	}

@@ -31,7 +31,7 @@ const (
 // relaying them to the remote on-premises Connectors.
 type ProxyServiceClient interface {
 	// ProxyRequest forwards a request through the proxy
-	ProxyRequest(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error)
+	ProxyRequest(ctx context.Context, in *ProxyRequestMessage, opts ...grpc.CallOption) (*Response, error)
 }
 
 type proxyServiceClient struct {
@@ -42,7 +42,7 @@ func NewProxyServiceClient(cc grpc.ClientConnInterface) ProxyServiceClient {
 	return &proxyServiceClient{cc}
 }
 
-func (c *proxyServiceClient) ProxyRequest(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error) {
+func (c *proxyServiceClient) ProxyRequest(ctx context.Context, in *ProxyRequestMessage, opts ...grpc.CallOption) (*Response, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Response)
 	err := c.cc.Invoke(ctx, ProxyService_ProxyRequest_FullMethodName, in, out, cOpts...)
@@ -61,7 +61,7 @@ func (c *proxyServiceClient) ProxyRequest(ctx context.Context, in *Request, opts
 // relaying them to the remote on-premises Connectors.
 type ProxyServiceServer interface {
 	// ProxyRequest forwards a request through the proxy
-	ProxyRequest(context.Context, *Request) (*Response, error)
+	ProxyRequest(context.Context, *ProxyRequestMessage) (*Response, error)
 	mustEmbedUnimplementedProxyServiceServer()
 }
 
@@ -72,7 +72,7 @@ type ProxyServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedProxyServiceServer struct{}
 
-func (UnimplementedProxyServiceServer) ProxyRequest(context.Context, *Request) (*Response, error) {
+func (UnimplementedProxyServiceServer) ProxyRequest(context.Context, *ProxyRequestMessage) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ProxyRequest not implemented")
 }
 func (UnimplementedProxyServiceServer) mustEmbedUnimplementedProxyServiceServer() {}
@@ -97,7 +97,7 @@ func RegisterProxyServiceServer(s grpc.ServiceRegistrar, srv ProxyServiceServer)
 }
 
 func _ProxyService_ProxyRequest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Request)
+	in := new(ProxyRequestMessage)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func _ProxyService_ProxyRequest_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: ProxyService_ProxyRequest_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProxyServiceServer).ProxyRequest(ctx, req.(*Request))
+		return srv.(ProxyServiceServer).ProxyRequest(ctx, req.(*ProxyRequestMessage))
 	}
 	return interceptor(ctx, in, info, handler)
 }

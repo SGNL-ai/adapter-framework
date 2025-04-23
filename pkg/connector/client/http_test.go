@@ -14,7 +14,6 @@ import (
 	"time"
 
 	grpc "google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/test/bufconn"
 
 	"github.com/sgnl-ai/adapter-framework/pkg/connector"
@@ -124,15 +123,14 @@ type testServer struct {
 	v1proxy.UnimplementedProxyServiceServer
 }
 
-func (s *testServer) ProxyRequest(ctx context.Context, req *v1proxy.Request) (*v1proxy.Response, error) {
-	md, ok := metadata.FromIncomingContext(ctx)
-	if s.ci != nil && !ok {
-		return nil, fmt.Errorf("Missing metadata context in the proxied request")
-	}
+func (s *testServer) ProxyRequestMessage(ctx context.Context, req *v1proxy.ProxyRequestMessage) (*v1proxy.Response, error) {
 	if s.ci != nil {
-		ids := md.Get(connector.METADATA_CONNECTOR_ID)
-		if len(ids) == 0 || ids[0] != s.ci.ID {
-			return nil, fmt.Errorf("Connector ID didn't match from the metadata ctx, exp:%v, got:%v", s.ci.ID, ids[0])
+		if req.ClientId != s.ci.ClientID {
+			return nil, fmt.Errorf("Expected %v, got %v client id", req.ClientId, s.ci.ClientID)
+		} else if req.ConnectorId != s.ci.ID {
+			return nil, fmt.Errorf("Expected %v, got %v connector id", req.ConnectorId, s.ci.ID)
+		} else if req.TenantId != s.ci.TenantID {
+			return nil, fmt.Errorf("Expected %v, got %v tenant id", req.TenantId, s.ci.TenantID)
 		}
 	}
 

@@ -169,6 +169,7 @@ type ProxyRequestMessage struct {
 	Request       *Request               `protobuf:"bytes,1,opt,name=request,proto3" json:"request,omitempty"`
 	ConnectorId   string                 `protobuf:"bytes,2,opt,name=connector_id,json=connectorId,proto3" json:"connector_id,omitempty"`
 	ClientId      string                 `protobuf:"bytes,3,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	TenantId      string                 `protobuf:"bytes,4,opt,name=tenant_id,json=tenantId,proto3" json:"tenant_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -224,6 +225,13 @@ func (x *ProxyRequestMessage) GetClientId() string {
 	return ""
 }
 
+func (x *ProxyRequestMessage) GetTenantId() string {
+	if x != nil {
+		return x.TenantId
+	}
+	return ""
+}
+
 var File_proto_grpc_proxy_v1_grpc_proxy_proto protoreflect.FileDescriptor
 
 const file_proto_grpc_proxy_v1_grpc_proxy_proto_rawDesc = "" +
@@ -235,13 +243,14 @@ const file_proto_grpc_proxy_v1_grpc_proxy_proto_rawDesc = "" +
 	"\bResponse\x12\x14\n" +
 	"\x05error\x18\x01 \x01(\tR\x05error\x12G\n" +
 	"\rhttp_response\x18\x02 \x01(\v2 .sgnl.grpc_proxy.v1.HTTPResponseH\x00R\fhttpResponseB\x0f\n" +
-	"\rresponse_type\"\x8c\x01\n" +
+	"\rresponse_type\"\xa9\x01\n" +
 	"\x13ProxyRequestMessage\x125\n" +
 	"\arequest\x18\x01 \x01(\v2\x1b.sgnl.grpc_proxy.v1.RequestR\arequest\x12!\n" +
 	"\fconnector_id\x18\x02 \x01(\tR\vconnectorId\x12\x1b\n" +
-	"\tclient_id\x18\x03 \x01(\tR\bclientId2[\n" +
-	"\fProxyService\x12K\n" +
-	"\fProxyRequest\x12\x1b.sgnl.grpc_proxy.v1.Request\x1a\x1c.sgnl.grpc_proxy.v1.Response\"\x00B8Z6github.com/sgnl-ai/adapter-framework/pkg/grpc_proxy/v1b\x06proto3"
+	"\tclient_id\x18\x03 \x01(\tR\bclientId\x12\x1b\n" +
+	"\ttenant_id\x18\x04 \x01(\tR\btenantId2g\n" +
+	"\fProxyService\x12W\n" +
+	"\fProxyRequest\x12'.sgnl.grpc_proxy.v1.ProxyRequestMessage\x1a\x1c.sgnl.grpc_proxy.v1.Response\"\x00B8Z6github.com/sgnl-ai/adapter-framework/pkg/grpc_proxy/v1b\x06proto3"
 
 var (
 	file_proto_grpc_proxy_v1_grpc_proxy_proto_rawDescOnce sync.Once
@@ -267,7 +276,7 @@ var file_proto_grpc_proxy_v1_grpc_proxy_proto_depIdxs = []int32{
 	3, // 0: sgnl.grpc_proxy.v1.Request.http_request:type_name -> sgnl.grpc_proxy.v1.HTTPRequest
 	4, // 1: sgnl.grpc_proxy.v1.Response.http_response:type_name -> sgnl.grpc_proxy.v1.HTTPResponse
 	0, // 2: sgnl.grpc_proxy.v1.ProxyRequestMessage.request:type_name -> sgnl.grpc_proxy.v1.Request
-	0, // 3: sgnl.grpc_proxy.v1.ProxyService.ProxyRequest:input_type -> sgnl.grpc_proxy.v1.Request
+	2, // 3: sgnl.grpc_proxy.v1.ProxyService.ProxyRequest:input_type -> sgnl.grpc_proxy.v1.ProxyRequestMessage
 	1, // 4: sgnl.grpc_proxy.v1.ProxyService.ProxyRequest:output_type -> sgnl.grpc_proxy.v1.Response
 	4, // [4:5] is the sub-list for method output_type
 	3, // [3:4] is the sub-list for method input_type

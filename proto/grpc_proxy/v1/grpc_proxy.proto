@@ -1,5 +1,3 @@
-// Copyright 2025 SGNL.ai, Inc.
-
 syntax = "proto3";
 
 package sgnl.grpc_proxy.v1;
@@ -15,7 +13,7 @@ import "proto/grpc_proxy/v1/http.proto";
 // relaying them to the remote on-premises Connectors.
 service ProxyService {
   // ProxyRequest forwards a request through the proxy
-  rpc ProxyRequest(Request) returns (Response) {}
+  rpc ProxyRequest(ProxyRequestMessage) returns (Response) {}
 }
 
 // Request represents a request to be proxied
@@ -23,8 +21,7 @@ message Request {
   oneof request_type {
     sgnl.grpc_proxy.v1.HTTPRequest http_request = 1;
     //sgnl.grpc_proxy.v1.SQLQueryRequest sql_query_req = 2;
-    //sgnl.grpc_proxy.v1.LDAPConnectionConfigRequest ldap_conn_config_request = 3;
-    //sgnl.grpc_proxy.v1.LDAPSearchRequest ldap_search_request = 4;
+    //sgnl.grpc_proxy.v1.LDAPSearchRequest ldap_search_request = 3;
   }
 }
 
@@ -34,8 +31,7 @@ message Response {
   oneof response_type {
     sgnl.grpc_proxy.v1.HTTPResponse http_response = 2;
     //sgnl.grpc_proxy.v1.SQLQueryResponse sql_query_response = 3;
-    //sgnl.grpc_proxy.v1.LDAPConnectionConfigResponse ldap_conn_config_response = 4;
-    //sgnl.grpc_proxy.v1.LDAPSearchResponse ldap_search_response = 5;
+    //sgnl.grpc_proxy.v1.LDAPSearchResponse ldap_search_response = 4;
   }
 }
 
@@ -44,4 +40,5 @@ message ProxyRequestMessage {
   Request request = 1;
   string connector_id = 2;
   string client_id = 3;
+  string tenant_id = 4;
 }
