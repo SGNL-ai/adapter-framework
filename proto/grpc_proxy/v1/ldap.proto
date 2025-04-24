@@ -1,0 +1,20 @@
+// Copyright 2025 SGNL.ai, Inc.
+
+syntax = "proto3";
+
+package sgnl.grpc_proxy.v1;
+
+option go_package = "github.com/sgnl-ai/adapter-framework/pkg/grpc_proxy/v1";
+
+// LDAPSearchRequest is a wrapper around a marshalled LDAP Adapter request to an 
+// on-premises connector.
+message LDAPSearchRequest {
+  string request = 1;
+}
+
+// LDAPSearchResponse is a wrapper around a marshalled LDAP processed response or
+// any error (marshalled framework.Error) while processing the request from an on-premises connector.
+message LDAPSearchResponse {
+  string response = 1;
+  string error = 2;
+}
