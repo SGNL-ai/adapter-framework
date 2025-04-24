@@ -29,6 +29,7 @@ type Request struct {
 	// Types that are valid to be assigned to RequestType:
 	//
 	//	*Request_HttpRequest
+	//	*Request_SqlQueryReq
 	//	*Request_LdapSearchRequest
 	RequestType   isRequest_RequestType `protobuf_oneof:"request_type"`
 	unknownFields protoimpl.UnknownFields
@@ -81,6 +82,15 @@ func (x *Request) GetHttpRequest() *HTTPRequest {
 	return nil
 }
 
+func (x *Request) GetSqlQueryReq() *SQLQueryRequest {
+	if x != nil {
+		if x, ok := x.RequestType.(*Request_SqlQueryReq); ok {
+			return x.SqlQueryReq
+		}
+	}
+	return nil
+}
+
 func (x *Request) GetLdapSearchRequest() *LDAPSearchRequest {
 	if x != nil {
 		if x, ok := x.RequestType.(*Request_LdapSearchRequest); ok {
@@ -98,12 +108,17 @@ type Request_HttpRequest struct {
 	HttpRequest *HTTPRequest `protobuf:"bytes,1,opt,name=http_request,json=httpRequest,proto3,oneof"`
 }
 
+type Request_SqlQueryReq struct {
+	SqlQueryReq *SQLQueryRequest `protobuf:"bytes,2,opt,name=sql_query_req,json=sqlQueryReq,proto3,oneof"`
+}
+
 type Request_LdapSearchRequest struct {
-	// sgnl.grpc_proxy.v1.SQLQueryRequest sql_query_req = 2;
 	LdapSearchRequest *LDAPSearchRequest `protobuf:"bytes,3,opt,name=ldap_search_request,json=ldapSearchRequest,proto3,oneof"`
 }
 
 func (*Request_HttpRequest) isRequest_RequestType() {}
+
+func (*Request_SqlQueryReq) isRequest_RequestType() {}
 
 func (*Request_LdapSearchRequest) isRequest_RequestType() {}
 
@@ -114,6 +129,7 @@ type Response struct {
 	// Types that are valid to be assigned to ResponseType:
 	//
 	//	*Response_HttpResponse
+	//	*Response_SqlQueryResponse
 	//	*Response_LdapSearchResponse
 	ResponseType  isResponse_ResponseType `protobuf_oneof:"response_type"`
 	unknownFields protoimpl.UnknownFields
@@ -173,6 +189,15 @@ func (x *Response) GetHttpResponse() *HTTPResponse {
 	return nil
 }
 
+func (x *Response) GetSqlQueryResponse() *SQLQueryResponse {
+	if x != nil {
+		if x, ok := x.ResponseType.(*Response_SqlQueryResponse); ok {
+			return x.SqlQueryResponse
+		}
+	}
+	return nil
+}
+
 func (x *Response) GetLdapSearchResponse() *LDAPSearchResponse {
 	if x != nil {
 		if x, ok := x.ResponseType.(*Response_LdapSearchResponse); ok {
@@ -190,12 +215,17 @@ type Response_HttpResponse struct {
 	HttpResponse *HTTPResponse `protobuf:"bytes,2,opt,name=http_response,json=httpResponse,proto3,oneof"`
 }
 
+type Response_SqlQueryResponse struct {
+	SqlQueryResponse *SQLQueryResponse `protobuf:"bytes,3,opt,name=sql_query_response,json=sqlQueryResponse,proto3,oneof"`
+}
+
 type Response_LdapSearchResponse struct {
-	// sgnl.grpc_proxy.v1.SQLQueryResponse sql_query_response = 3;
 	LdapSearchResponse *LDAPSearchResponse `protobuf:"bytes,4,opt,name=ldap_search_response,json=ldapSearchResponse,proto3,oneof"`
 }
 
 func (*Response_HttpResponse) isResponse_ResponseType() {}
+
+func (*Response_SqlQueryResponse) isResponse_ResponseType() {}
 
 func (*Response_LdapSearchResponse) isResponse_ResponseType() {}
 
@@ -272,14 +302,16 @@ var File_proto_grpc_proxy_v1_grpc_proxy_proto protoreflect.FileDescriptor
 
 const file_proto_grpc_proxy_v1_grpc_proxy_proto_rawDesc = "" +
 	"\n" +
-	"$proto/grpc_proxy/v1/grpc_proxy.proto\x12\x12sgnl.grpc_proxy.v1\x1a\x1eproto/grpc_proxy/v1/http.proto\x1a\x1eproto/grpc_proxy/v1/ldap.proto\"\xb8\x01\n" +
+	"$proto/grpc_proxy/v1/grpc_proxy.proto\x12\x12sgnl.grpc_proxy.v1\x1a\x1eproto/grpc_proxy/v1/http.proto\x1a\x1dproto/grpc_proxy/v1/sql.proto\x1a\x1eproto/grpc_proxy/v1/ldap.proto\"\x83\x02\n" +
 	"\aRequest\x12D\n" +
-	"\fhttp_request\x18\x01 \x01(\v2\x1f.sgnl.grpc_proxy.v1.HTTPRequestH\x00R\vhttpRequest\x12W\n" +
+	"\fhttp_request\x18\x01 \x01(\v2\x1f.sgnl.grpc_proxy.v1.HTTPRequestH\x00R\vhttpRequest\x12I\n" +
+	"\rsql_query_req\x18\x02 \x01(\v2#.sgnl.grpc_proxy.v1.SQLQueryRequestH\x00R\vsqlQueryReq\x12W\n" +
 	"\x13ldap_search_request\x18\x03 \x01(\v2%.sgnl.grpc_proxy.v1.LDAPSearchRequestH\x00R\x11ldapSearchRequestB\x0e\n" +
-	"\frequest_type\"\xd6\x01\n" +
+	"\frequest_type\"\xac\x02\n" +
 	"\bResponse\x12\x14\n" +
 	"\x05error\x18\x01 \x01(\tR\x05error\x12G\n" +
-	"\rhttp_response\x18\x02 \x01(\v2 .sgnl.grpc_proxy.v1.HTTPResponseH\x00R\fhttpResponse\x12Z\n" +
+	"\rhttp_response\x18\x02 \x01(\v2 .sgnl.grpc_proxy.v1.HTTPResponseH\x00R\fhttpResponse\x12T\n" +
+	"\x12sql_query_response\x18\x03 \x01(\v2$.sgnl.grpc_proxy.v1.SQLQueryResponseH\x00R\x10sqlQueryResponse\x12Z\n" +
 	"\x14ldap_search_response\x18\x04 \x01(\v2&.sgnl.grpc_proxy.v1.LDAPSearchResponseH\x00R\x12ldapSearchResponseB\x0f\n" +
 	"\rresponse_type\"\xa9\x01\n" +
 	"\x13ProxyRequestMessage\x125\n" +
@@ -308,23 +340,27 @@ var file_proto_grpc_proxy_v1_grpc_proxy_proto_goTypes = []any{
 	(*Response)(nil),            // 1: sgnl.grpc_proxy.v1.Response
 	(*ProxyRequestMessage)(nil), // 2: sgnl.grpc_proxy.v1.ProxyRequestMessage
 	(*HTTPRequest)(nil),         // 3: sgnl.grpc_proxy.v1.HTTPRequest
-	(*LDAPSearchRequest)(nil),   // 4: sgnl.grpc_proxy.v1.LDAPSearchRequest
-	(*HTTPResponse)(nil),        // 5: sgnl.grpc_proxy.v1.HTTPResponse
-	(*LDAPSearchResponse)(nil),  // 6: sgnl.grpc_proxy.v1.LDAPSearchResponse
+	(*SQLQueryRequest)(nil),     // 4: sgnl.grpc_proxy.v1.SQLQueryRequest
+	(*LDAPSearchRequest)(nil),   // 5: sgnl.grpc_proxy.v1.LDAPSearchRequest
+	(*HTTPResponse)(nil),        // 6: sgnl.grpc_proxy.v1.HTTPResponse
+	(*SQLQueryResponse)(nil),    // 7: sgnl.grpc_proxy.v1.SQLQueryResponse
+	(*LDAPSearchResponse)(nil),  // 8: sgnl.grpc_proxy.v1.LDAPSearchResponse
 }
 var file_proto_grpc_proxy_v1_grpc_proxy_proto_depIdxs = []int32{
 	3, // 0: sgnl.grpc_proxy.v1.Request.http_request:type_name -> sgnl.grpc_proxy.v1.HTTPRequest
-	4, // 1: sgnl.grpc_proxy.v1.Request.ldap_search_request:type_name -> sgnl.grpc_proxy.v1.LDAPSearchRequest
-	5, // 2: sgnl.grpc_proxy.v1.Response.http_response:type_name -> sgnl.grpc_proxy.v1.HTTPResponse
-	6, // 3: sgnl.grpc_proxy.v1.Response.ldap_search_response:type_name -> sgnl.grpc_proxy.v1.LDAPSearchResponse
-	0, // 4: sgnl.grpc_proxy.v1.ProxyRequestMessage.request:type_name -> sgnl.grpc_proxy.v1.Request
-	2, // 5: sgnl.grpc_proxy.v1.ProxyService.ProxyRequest:input_type -> sgnl.grpc_proxy.v1.ProxyRequestMessage
-	1, // 6: sgnl.grpc_proxy.v1.ProxyService.ProxyRequest:output_type -> sgnl.grpc_proxy.v1.Response
-	6, // [6:7] is the sub-list for method output_type
-	5, // [5:6] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	4, // 1: sgnl.grpc_proxy.v1.Request.sql_query_req:type_name -> sgnl.grpc_proxy.v1.SQLQueryRequest
+	5, // 2: sgnl.grpc_proxy.v1.Request.ldap_search_request:type_name -> sgnl.grpc_proxy.v1.LDAPSearchRequest
+	6, // 3: sgnl.grpc_proxy.v1.Response.http_response:type_name -> sgnl.grpc_proxy.v1.HTTPResponse
+	7, // 4: sgnl.grpc_proxy.v1.Response.sql_query_response:type_name -> sgnl.grpc_proxy.v1.SQLQueryResponse
+	8, // 5: sgnl.grpc_proxy.v1.Response.ldap_search_response:type_name -> sgnl.grpc_proxy.v1.LDAPSearchResponse
+	0, // 6: sgnl.grpc_proxy.v1.ProxyRequestMessage.request:type_name -> sgnl.grpc_proxy.v1.Request
+	2, // 7: sgnl.grpc_proxy.v1.ProxyService.ProxyRequest:input_type -> sgnl.grpc_proxy.v1.ProxyRequestMessage
+	1, // 8: sgnl.grpc_proxy.v1.ProxyService.ProxyRequest:output_type -> sgnl.grpc_proxy.v1.Response
+	8, // [8:9] is the sub-list for method output_type
+	7, // [7:8] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	7, // [7:7] is the sub-list for extension extendee
+	0, // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_proto_grpc_proxy_v1_grpc_proxy_proto_init() }
@@ -333,13 +369,16 @@ func file_proto_grpc_proxy_v1_grpc_proxy_proto_init() {
 		return
 	}
 	file_proto_grpc_proxy_v1_http_proto_init()
+	file_proto_grpc_proxy_v1_sql_proto_init()
 	file_proto_grpc_proxy_v1_ldap_proto_init()
 	file_proto_grpc_proxy_v1_grpc_proxy_proto_msgTypes[0].OneofWrappers = []any{
 		(*Request_HttpRequest)(nil),
+		(*Request_SqlQueryReq)(nil),
 		(*Request_LdapSearchRequest)(nil),
 	}
 	file_proto_grpc_proxy_v1_grpc_proxy_proto_msgTypes[1].OneofWrappers = []any{
 		(*Response_HttpResponse)(nil),
+		(*Response_SqlQueryResponse)(nil),
 		(*Response_LdapSearchResponse)(nil),
 	}
 	type x struct{}
