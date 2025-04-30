@@ -139,6 +139,7 @@ func TestGivenSGNLHTTPClientWithConnectorContextAndWithoutGRPCProxyThenSendReque
 	if err != nil {
 		t.Fatalf("Failed to send a request to the Test server using SGNL client, %v", err)
 	}
+	defer resp.Body.Close()
 
 	// Verify
 	if resp.StatusCode != http.StatusOK {
