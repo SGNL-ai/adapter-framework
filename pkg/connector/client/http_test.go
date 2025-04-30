@@ -116,6 +116,36 @@ func TestGivenSGNLHTTPClientWithoutGRPCProxyThenSendRequestSentWithoutProxyAndRe
 	}
 }
 
+func TestGivenSGNLHTTPClientWithConnectorContextAndWithoutGRPCProxyThenSendRequestSentWithoutProxyAndReturnsStatusOK(t *testing.T) {
+	// Build
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer ts.Close()
+
+	client := NewSGNLHTTPClientWithProxy(time.Second, "", nil)
+
+	ctx, err := connector.WithContext(context.Background(), connector.ConnectorInfo{})
+	if err != nil {
+		t.Fatalf("failed to create connector info context %v", err)
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, ts.URL, nil)
+	if err != nil {
+		t.Fatalf("failed to create a http request, %v", err)
+	}
+
+	// Test
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatalf("Failed to send a request to the Test server using SGNL client, %v", err)
+	}
+
+	// Verify
+	if resp.StatusCode != http.StatusOK {
+		t.Errorf("Test server failed to return StatusOK using SGNL client")
+	}
+}
+
 var GRPCTestServerResponse = "response from the grpc test server"
 
 type testServer struct {
