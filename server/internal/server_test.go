@@ -244,7 +244,7 @@ func TestServer_GetPage(t *testing.T) {
 			wantResp: &api_adapter_v1.GetPageResponse{
 				Response: &api_adapter_v1.GetPageResponse_Error{
 					Error: &api_adapter_v1.Error{
-						Message: "error creating connector context, context is already configured with the connector info, {   0 }.",
+						Message: "Error creating connector context, context is already configured with the connector info, {   0 }.",
 						Code:    api_adapter_v1.ErrorCode_ERROR_CODE_INTERNAL, // INVALID_DATASOURCE_CONFIG
 					},
 				},

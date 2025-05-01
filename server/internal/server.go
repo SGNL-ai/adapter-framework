@@ -136,7 +136,7 @@ func RegisterAdapter[Config any](s *Server, datasourceType string, adapter frame
 			})
 			if err != nil {
 				return framework.NewGetPageResponseError(&framework.Error{
-					Message: fmt.Sprintf("error creating connector context, %v.", err),
+					Message: fmt.Sprintf("Error creating connector context, %v.", err),
 					Code:    api_adapter_v1.ErrorCode_ERROR_CODE_INTERNAL,
 				}), nil
 			}
