@@ -128,7 +128,7 @@ func RegisterAdapter[Config any](s *Server, datasourceType string, adapter frame
 			}), nil
 		}
 
-		if ci := req.Datasource.GetConectorInfo(); ci != nil {
+		if ci := req.Datasource.GetConnectorInfo(); ci != nil {
 			newCtx, err := connector.WithContext(ctx, connector.ConnectorInfo{
 				ID:       ci.Id,
 				TenantID: ci.TenantId,

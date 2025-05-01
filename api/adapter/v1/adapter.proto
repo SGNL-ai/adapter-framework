@@ -78,7 +78,7 @@ message DatasourceConfig {
     string type = 5;
 
     // On-Premises Connector Info associated with this datasource, if any.
-    ConnectorInfo conector_info = 6;
+    ConnectorInfo connector_info = 6;
 }
 
 message ConnectorInfo {

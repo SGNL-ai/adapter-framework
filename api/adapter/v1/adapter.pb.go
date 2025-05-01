@@ -379,7 +379,7 @@ type DatasourceConfig struct {
 	// If the adapter does not support this type, return an error.
 	Type string `protobuf:"bytes,5,opt,name=type,proto3" json:"type,omitempty"`
 	// On-Premises Connector Info associated with this datasource, if any.
-	ConectorInfo  *ConnectorInfo `protobuf:"bytes,6,opt,name=conector_info,json=conectorInfo,proto3" json:"conector_info,omitempty"`
+	ConnectorInfo *ConnectorInfo `protobuf:"bytes,6,opt,name=connector_info,json=connectorInfo,proto3" json:"connector_info,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -449,9 +449,9 @@ func (x *DatasourceConfig) GetType() string {
 	return ""
 }
 
-func (x *DatasourceConfig) GetConectorInfo() *ConnectorInfo {
+func (x *DatasourceConfig) GetConnectorInfo() *ConnectorInfo {
 	if x != nil {
-		return x.ConectorInfo
+		return x.ConnectorInfo
 	}
 	return nil
 }
@@ -1433,14 +1433,14 @@ const file_api_adapter_v1_adapter_proto_rawDesc = "" +
 	"\asuccess\x18\x01 \x01(\v2\x15.sgnl.adapter.v1.PageH\x00R\asuccess\x12.\n" +
 	"\x05error\x18\x02 \x01(\v2\x16.sgnl.adapter.v1.ErrorH\x00R\x05errorB\n" +
 	"\n" +
-	"\bresponse\"\xed\x01\n" +
+	"\bresponse\"\xef\x01\n" +
 	"\x10DatasourceConfig\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x16\n" +
 	"\x06config\x18\x02 \x01(\fR\x06config\x12\x18\n" +
 	"\aaddress\x18\x03 \x01(\tR\aaddress\x12>\n" +
 	"\x04auth\x18\x04 \x01(\v2*.sgnl.adapter.v1.DatasourceAuthCredentialsR\x04auth\x12\x12\n" +
-	"\x04type\x18\x05 \x01(\tR\x04type\x12C\n" +
-	"\rconector_info\x18\x06 \x01(\v2\x1e.sgnl.adapter.v1.ConnectorInfoR\fconectorInfo\"Y\n" +
+	"\x04type\x18\x05 \x01(\tR\x04type\x12E\n" +
+	"\x0econnector_info\x18\x06 \x01(\v2\x1e.sgnl.adapter.v1.ConnectorInfoR\rconnectorInfo\"Y\n" +
 	"\rConnectorInfo\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1b\n" +
 	"\ttenant_id\x18\a \x01(\tR\btenantId\x12\x1b\n" +
@@ -1577,7 +1577,7 @@ var file_api_adapter_v1_adapter_proto_depIdxs = []int32{
 	9,  // 2: sgnl.adapter.v1.GetPageResponse.success:type_name -> sgnl.adapter.v1.Page
 	16, // 3: sgnl.adapter.v1.GetPageResponse.error:type_name -> sgnl.adapter.v1.Error
 	6,  // 4: sgnl.adapter.v1.DatasourceConfig.auth:type_name -> sgnl.adapter.v1.DatasourceAuthCredentials
-	5,  // 5: sgnl.adapter.v1.DatasourceConfig.conector_info:type_name -> sgnl.adapter.v1.ConnectorInfo
+	5,  // 5: sgnl.adapter.v1.DatasourceConfig.connector_info:type_name -> sgnl.adapter.v1.ConnectorInfo
 	17, // 6: sgnl.adapter.v1.DatasourceAuthCredentials.basic:type_name -> sgnl.adapter.v1.DatasourceAuthCredentials.Basic
 	8,  // 7: sgnl.adapter.v1.EntityConfig.attributes:type_name -> sgnl.adapter.v1.AttributeConfig
 	7,  // 8: sgnl.adapter.v1.EntityConfig.child_entities:type_name -> sgnl.adapter.v1.EntityConfig
