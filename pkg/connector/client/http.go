@@ -47,6 +47,11 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 	req = req.Clone(req.Context()) // According to RoundTripper spec, we shouldn't modify the original request.
 	req.Header.Set("User-Agent", t.userAgentHeader)
 
+	// Check if the transport has proxy configured.
+	if t.proxyClient == nil {
+		return t.rt.RoundTrip(req)
+	}
+
 	// Lookup Connector context for proxying the request.
 	// In case, context is not present the request is forward using default
 	// HTTP round-tripper.
