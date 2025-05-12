@@ -76,6 +76,20 @@ message DatasourceConfig {
     // on adapter deployments supporting multiple datasources.
     // If the adapter does not support this type, return an error.
     string type = 5;
+
+    // On-Premises Connector Info associated with this datasource, if any.
+    ConnectorInfo connector_info = 6;
+}
+
+message ConnectorInfo {
+    // The unique identifier of the connector.
+    string id = 1;
+
+    // The tenant identifier to which the connector is associated.
+    string tenant_id = 7;
+
+    // The client identifier to which the connector is associated.
+    string client_id = 8;
 }
 
 // Credentials to use to authenticate with a datasource.
