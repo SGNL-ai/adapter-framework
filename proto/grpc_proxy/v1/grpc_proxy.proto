@@ -1,3 +1,5 @@
+// Copyright 2025 SGNL.ai, Inc.
+
 syntax = "proto3";
 
 package sgnl.grpc_proxy.v1;
@@ -5,8 +7,8 @@ package sgnl.grpc_proxy.v1;
 option go_package = "github.com/sgnl-ai/adapter-framework/pkg/grpc_proxy/v1";
 
 import "proto/grpc_proxy/v1/http.proto";
-//import "proto/grpc_proxy/v1/sql.proto";
-//import "proto/grpc_proxy/v1/ldap.proto";
+import "proto/grpc_proxy/v1/sql.proto";
+import "proto/grpc_proxy/v1/ldap.proto";
 
 // ProxyService is a gRPC service implemented by the Connector Service to
 // process proxied requests from the Adapters and Action Handlers and
@@ -20,8 +22,8 @@ service ProxyService {
 message Request {
   oneof request_type {
     sgnl.grpc_proxy.v1.HTTPRequest http_request = 1;
-    //sgnl.grpc_proxy.v1.SQLQueryRequest sql_query_req = 2;
-    //sgnl.grpc_proxy.v1.LDAPSearchRequest ldap_search_request = 3;
+    sgnl.grpc_proxy.v1.SQLQueryRequest sql_query_req = 2;
+    sgnl.grpc_proxy.v1.LDAPSearchRequest ldap_search_request = 3;
   }
 }
 
@@ -30,8 +32,8 @@ message Response {
   string error = 1;
   oneof response_type {
     sgnl.grpc_proxy.v1.HTTPResponse http_response = 2;
-    //sgnl.grpc_proxy.v1.SQLQueryResponse sql_query_response = 3;
-    //sgnl.grpc_proxy.v1.LDAPSearchResponse ldap_search_response = 4;
+    sgnl.grpc_proxy.v1.SQLQueryResponse sql_query_response = 3;
+    sgnl.grpc_proxy.v1.LDAPSearchResponse ldap_search_response = 4;
   }
 }
 

@@ -23,6 +23,7 @@ import (
 
 	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
+	"github.com/sgnl-ai/adapter-framework/pkg/connector"
 	"google.golang.org/grpc/codes"
 	grpc_metadata "google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -125,6 +126,21 @@ func RegisterAdapter[Config any](s *Server, datasourceType string, adapter frame
 				Code:       adapterErr.Code,
 				RetryAfter: adapterErrRetryAfter,
 			}), nil
+		}
+
+		if ci := req.Datasource.GetConnectorInfo(); ci != nil {
+			newCtx, err := connector.WithContext(ctx, connector.ConnectorInfo{
+				ID:       ci.Id,
+				TenantID: ci.TenantId,
+				ClientID: ci.ClientId,
+			})
+			if err != nil {
+				return framework.NewGetPageResponseError(&framework.Error{
+					Message: fmt.Sprintf("Error creating connector context, %v.", err),
+					Code:    api_adapter_v1.ErrorCode_ERROR_CODE_INTERNAL,
+				}), nil
+			}
+			ctx = newCtx
 		}
 
 		return adapter.GetPage(ctx, adapterRequest), reverseMapping
