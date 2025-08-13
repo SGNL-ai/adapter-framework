@@ -131,12 +131,32 @@ func convertJSONAttributeValue(attribute *framework.AttributeConfig, value any, 
 		}
 
 	case framework.AttributeTypeInt64:
-		// All numbers are unmarshalled into float64. Convert into int64.
-		v, ok := value.(float64)
-		if !ok {
-			return nil, fmt.Errorf("attribute %s cannot be parsed into an int64 value", attribute.ExternalId)
+		switch v := value.(type) {
+		case int64:
+			fmt.Printf("Got Int64 Value")
+			return v, nil
+		case float64:
+			// Check if the float64 value is within the safe integer range for accurate conversion
+			const maxSafeInteger = 1<<53 - 1 // 2^53 - 1
+			fmt.Printf("Got Float Value")
+			if v > maxSafeInteger || v < -maxSafeInteger {
+				return nil, fmt.Errorf("attribute %s cannot be accurately converted from float64 to int64: value %g is outside the safe integer range (±%d)", attribute.ExternalId, v, maxSafeInteger)
+			}
+			// Ensure the value is actually an integer (no fractional part)
+			if v != math.Trunc(v) {
+				return nil, fmt.Errorf("attribute %s cannot be converted to int64: value %g has a fractional part", attribute.ExternalId, v)
+			}
+			return int64(v), nil
+		case string:
+			fmt.Printf("Got String Value")
+			parsed, err := strconv.ParseInt(v, 10, 64)
+			if err != nil {
+				return nil, fmt.Errorf("attribute %s cannot be parsed into an int64 value: %w", attribute.ExternalId, err)
+			}
+			return parsed, nil
+		default:
+			return nil, fmt.Errorf("attribute %s cannot be parsed into an int64 value from type %T", attribute.ExternalId, v)
 		}
-		return int64(v), nil
 
 	case framework.AttributeTypeString:
 		v, ok := value.(string)

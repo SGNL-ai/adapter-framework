@@ -623,6 +623,78 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 			valueJSON: `[12, 34, 56]`,
 			wantValue: []int64{12, 34, 56},
 		},
+		"int64_from_string": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeInt64,
+			},
+			valueJSON: `"123456789012345"`,
+			wantValue: int64(123456789012345),
+		},
+		"int64_from_string_max_value": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeInt64,
+			},
+			valueJSON: `"9223372036854775807"`, // MaxInt64
+			wantValue: int64(9223372036854775807),
+		},
+		"int64_from_string_min_value": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeInt64,
+			},
+			valueJSON: `"-9223372036854775808"`, // MinInt64
+			wantValue: int64(-9223372036854775808),
+		},
+		"int64_from_string_invalid": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeInt64,
+			},
+			valueJSON: `"not_a_number"`,
+			wantError: errors.New("attribute a cannot be parsed into an int64 value: strconv.ParseInt: parsing \"not_a_number\": invalid syntax"),
+		},
+		"int64_from_string_overflow": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeInt64,
+			},
+			valueJSON: `"9223372036854775808"`, // MaxInt64 + 1
+			wantError: errors.New("attribute a cannot be parsed into an int64 value: strconv.ParseInt: parsing \"9223372036854775808\": value out of range"),
+		},
+		"int64_from_float64_safe_range": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeInt64,
+			},
+			valueJSON: `9007199254740991`, // 2^53 - 1 (max safe integer)
+			wantValue: int64(9007199254740991),
+		},
+		"int64_from_float64_unsafe_range": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeInt64,
+			},
+			valueJSON: `9007199254740992`, // 2^53 (unsafe)
+			wantError: errors.New("attribute a cannot be accurately converted from float64 to int64: value 9.007199254740992e+15 is outside the safe integer range (±9007199254740991)"),
+		},
+		"int64_from_float64_with_fractional": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeInt64,
+			},
+			valueJSON: `123.45`,
+			wantError: errors.New("attribute a cannot be converted to int64: value 123.45 has a fractional part"),
+		},
+		"int64_from_unsupported_type": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeInt64,
+			},
+			valueJSON: `true`,
+			wantError: errors.New("attribute a cannot be parsed into an int64 value from type bool"),
+		},
 		"string": {
 			attribute: &framework.AttributeConfig{
 				ExternalId: "a",

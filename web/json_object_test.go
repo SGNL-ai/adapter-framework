@@ -1259,3 +1259,448 @@ func TestConvertJSONObject_JSONPath(t *testing.T) {
 		})
 	}
 }
+
+func TestConvertJSONObject_Int64Support(t *testing.T) {
+	testJSONOptions := defaultJSONOptions()
+
+	tests := map[string]struct {
+		entity     *framework.EntityConfig
+		objectJSON string
+		opts       *jsonOptions
+		wantObject framework.Object
+		wantError  error
+	}{
+		"int64_from_json_number": {
+			entity: &framework.EntityConfig{
+				ExternalId: "test",
+				Attributes: []*framework.AttributeConfig{
+					{
+						ExternalId: "id",
+						Type:       framework.AttributeTypeInt64,
+					},
+				},
+			},
+			objectJSON: `{"id": 123456789012345}`,
+			opts:       testJSONOptions,
+			wantObject: framework.Object{
+				"id": int64(123456789012345),
+			},
+			wantError: nil,
+		},
+		"int64_from_string": {
+			entity: &framework.EntityConfig{
+				ExternalId: "test",
+				Attributes: []*framework.AttributeConfig{
+					{
+						ExternalId: "id",
+						Type:       framework.AttributeTypeInt64,
+					},
+				},
+			},
+			objectJSON: `{"id": "9223372036854775807"}`, // MaxInt64
+			opts:       testJSONOptions,
+			wantObject: framework.Object{
+				"id": int64(9223372036854775807),
+			},
+			wantError: nil,
+		},
+		"int64_list_mixed_sources": {
+			entity: &framework.EntityConfig{
+				ExternalId: "test",
+				Attributes: []*framework.AttributeConfig{
+					{
+						ExternalId: "ids",
+						Type:       framework.AttributeTypeInt64,
+						List:       true,
+					},
+				},
+			},
+			objectJSON: `{"ids": [123, "456", 789]}`,
+			opts:       testJSONOptions,
+			wantObject: framework.Object{
+				"ids": []int64{123, 456, 789},
+			},
+			wantError: nil,
+		},
+		"int64_precision_error": {
+			entity: &framework.EntityConfig{
+				ExternalId: "test",
+				Attributes: []*framework.AttributeConfig{
+					{
+						ExternalId: "id",
+						Type:       framework.AttributeTypeInt64,
+					},
+				},
+			},
+			objectJSON: `{"id": 9007199254740992}`, // 2^53 (unsafe)
+			opts:       testJSONOptions,
+			wantObject: nil,
+			wantError:  errors.New("attribute id cannot be accurately converted from float64 to int64: value 9.007199254740992e+15 is outside the safe integer range (±9007199254740991)"),
+		},
+		"int64_fractional_error": {
+			entity: &framework.EntityConfig{
+				ExternalId: "test",
+				Attributes: []*framework.AttributeConfig{
+					{
+						ExternalId: "id",
+						Type:       framework.AttributeTypeInt64,
+					},
+				},
+			},
+			objectJSON: `{"id": 123.45}`,
+			opts:       testJSONOptions,
+			wantObject: nil,
+			wantError:  errors.New("attribute id cannot be converted to int64: value 123.45 has a fractional part"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			var object map[string]any
+			err := json.Unmarshal([]byte(tc.objectJSON), &object)
+			if err != nil {
+				t.Fatalf("Failed to unmarshal test input JSON object: %v", err)
+			}
+
+			gotObject, gotError := convertJSONObject(tc.entity, object, tc.opts, nil)
+
+			if tc.wantError != nil {
+				AssertDeepEqual(t, tc.wantError.Error(), gotError.Error())
+			} else {
+				AssertDeepEqual(t, tc.wantError, gotError)
+			}
+			AssertDeepEqual(t, tc.wantObject, gotObject)
+		})
+	}
+
+	// Special test case: Direct int64 value (bypasses JSON unmarshaling)
+	t.Run("direct_int64_value", func(t *testing.T) {
+		entity := &framework.EntityConfig{
+			ExternalId: "test",
+			Attributes: []*framework.AttributeConfig{
+				{
+					ExternalId: "id",
+					Type:       framework.AttributeTypeInt64,
+				},
+			},
+		}
+
+		// Create object with actual int64 value (not from JSON)
+		object := map[string]any{
+			"id": int64(123456789012345), // Direct int64, not from JSON unmarshaling
+		}
+
+		gotObject, gotError := convertJSONObject(entity, object, testJSONOptions, nil)
+
+		AssertDeepEqual(t, nil, gotError)
+		wantObject := framework.Object{
+			"id": int64(123456789012345),
+		}
+		AssertDeepEqual(t, wantObject, gotObject)
+	})
+}
+
+func TestConvertJSONObject_AllDataTypes(t *testing.T) {
+	testJSONOptions := defaultJSONOptions()
+
+	tests := map[string]struct {
+		entity     *framework.EntityConfig
+		objectJSON string
+		opts       *jsonOptions
+		wantObject framework.Object
+		wantError  error
+	}{
+		"mixed_attribute_types": {
+			entity: &framework.EntityConfig{
+				ExternalId: "test",
+				Attributes: []*framework.AttributeConfig{
+					{
+						ExternalId: "stringAttr",
+						Type:       framework.AttributeTypeString,
+					},
+					{
+						ExternalId: "int64Attr",
+						Type:       framework.AttributeTypeInt64,
+					},
+					{
+						ExternalId: "boolAttr",
+						Type:       framework.AttributeTypeBool,
+					},
+					{
+						ExternalId: "doubleAttr",
+						Type:       framework.AttributeTypeDouble,
+					},
+					{
+						ExternalId: "dateTimeAttr",
+						Type:       framework.AttributeTypeDateTime,
+					},
+				},
+			},
+			objectJSON: `{
+				"stringAttr": "test value",
+				"int64Attr": 123456789,
+				"boolAttr": true,
+				"doubleAttr": 123.45,
+				"dateTimeAttr": "2023-06-23T12:34:56Z"
+			}`,
+			opts: &jsonOptions{
+				dateTimeFormats: []DateTimeFormatWithTimeZone{
+					{Format: "2006-01-02T15:04:05Z", HasTimeZone: true},
+				},
+			},
+			wantObject: framework.Object{
+				"stringAttr":   "test value",
+				"int64Attr":    int64(123456789),
+				"boolAttr":     true,
+				"doubleAttr":   123.45,
+				"dateTimeAttr": MustParseTime(t, "2023-06-23T12:34:56Z"),
+			},
+			wantError: nil,
+		},
+		"mixed_list_types": {
+			entity: &framework.EntityConfig{
+				ExternalId: "test",
+				Attributes: []*framework.AttributeConfig{
+					{
+						ExternalId: "stringList",
+						Type:       framework.AttributeTypeString,
+						List:       true,
+					},
+					{
+						ExternalId: "int64List",
+						Type:       framework.AttributeTypeInt64,
+						List:       true,
+					},
+					{
+						ExternalId: "boolList",
+						Type:       framework.AttributeTypeBool,
+						List:       true,
+					},
+					{
+						ExternalId: "doubleList",
+						Type:       framework.AttributeTypeDouble,
+						List:       true,
+					},
+				},
+			},
+			objectJSON: `{
+				"stringList": ["a", "b", "c"],
+				"int64List": [1, 2, 3],
+				"boolList": [true, false, true],
+				"doubleList": [1.1, 2.2, 3.3]
+			}`,
+			opts: testJSONOptions,
+			wantObject: framework.Object{
+				"stringList": []string{"a", "b", "c"},
+				"int64List":  []int64{1, 2, 3},
+				"boolList":   []bool{true, false, true},
+				"doubleList": []float64{1.1, 2.2, 3.3},
+			},
+			wantError: nil,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			var object map[string]any
+			err := json.Unmarshal([]byte(tc.objectJSON), &object)
+			if err != nil {
+				t.Fatalf("Failed to unmarshal test input JSON object: %v", err)
+			}
+
+			gotObject, gotError := convertJSONObject(tc.entity, object, tc.opts, nil)
+
+			AssertDeepEqual(t, tc.wantError, gotError)
+			AssertDeepEqual(t, tc.wantObject, gotObject)
+		})
+	}
+}
+
+func TestConvertJSONObject_ErrorHandling(t *testing.T) {
+	testJSONOptions := defaultJSONOptions()
+
+	tests := map[string]struct {
+		entity     *framework.EntityConfig
+		objectJSON string
+		opts       *jsonOptions
+		wantObject framework.Object
+		wantError  error
+	}{
+		"invalid_attribute_type": {
+			entity: &framework.EntityConfig{
+				ExternalId: "test",
+				Attributes: []*framework.AttributeConfig{
+					{
+						ExternalId: "stringAttr",
+						Type:       framework.AttributeTypeString,
+					},
+				},
+			},
+			objectJSON: `{"stringAttr": 123}`, // number instead of string
+			opts:       testJSONOptions,
+			wantObject: nil,
+			wantError:  errors.New("attribute stringAttr cannot be parsed into a string value"),
+		},
+		"invalid_bool_conversion": {
+			entity: &framework.EntityConfig{
+				ExternalId: "test",
+				Attributes: []*framework.AttributeConfig{
+					{
+						ExternalId: "boolAttr",
+						Type:       framework.AttributeTypeBool,
+					},
+				},
+			},
+			objectJSON: `{"boolAttr": "invalid"}`,
+			opts:       testJSONOptions,
+			wantObject: nil,
+			wantError:  errors.New("attribute boolAttr cannot be parsed into a bool value"),
+		},
+		"child_entity_with_invalid_attribute": {
+			entity: &framework.EntityConfig{
+				ExternalId: "test",
+				ChildEntities: []*framework.EntityConfig{
+					{
+						ExternalId: "children",
+						Attributes: []*framework.AttributeConfig{
+							{
+								ExternalId: "id",
+								Type:       framework.AttributeTypeInt64,
+							},
+						},
+					},
+				},
+			},
+			objectJSON: `{"children": [{"id": "invalid_int64"}]}`,
+			opts:       testJSONOptions,
+			wantObject: nil,
+			wantError:  errors.New("failed to parse objects for child entity children: attribute id cannot be parsed into an int64 value: strconv.ParseInt: parsing \"invalid_int64\": invalid syntax"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			var object map[string]any
+			err := json.Unmarshal([]byte(tc.objectJSON), &object)
+			if err != nil {
+				t.Fatalf("Failed to unmarshal test input JSON object: %v", err)
+			}
+
+			gotObject, gotError := convertJSONObject(tc.entity, object, tc.opts, nil)
+
+			if tc.wantError != nil {
+				AssertDeepEqual(t, tc.wantError.Error(), gotError.Error())
+			} else {
+				AssertDeepEqual(t, tc.wantError, gotError)
+			}
+			AssertDeepEqual(t, tc.wantObject, gotObject)
+		})
+	}
+}
+
+func TestConvertJSONObject_EdgeCases(t *testing.T) {
+	testJSONOptions := defaultJSONOptions()
+
+	tests := map[string]struct {
+		entity     *framework.EntityConfig
+		objectJSON string
+		opts       *jsonOptions
+		wantObject framework.Object
+		wantError  error
+	}{
+		"empty_lists": {
+			entity: &framework.EntityConfig{
+				ExternalId: "test",
+				Attributes: []*framework.AttributeConfig{
+					{
+						ExternalId: "emptyStringList",
+						Type:       framework.AttributeTypeString,
+						List:       true,
+					},
+				},
+				ChildEntities: []*framework.EntityConfig{
+					{
+						ExternalId: "emptyChildList",
+						Attributes: []*framework.AttributeConfig{
+							{
+								ExternalId: "name",
+								Type:       framework.AttributeTypeString,
+							},
+						},
+					},
+				},
+			},
+			objectJSON: `{
+				"emptyStringList": [],
+				"emptyChildList": []
+			}`,
+			opts: testJSONOptions,
+			wantObject: framework.Object{
+				"emptyStringList": []interface{}{},
+			},
+			wantError: nil,
+		},
+		"null_values": {
+			entity: &framework.EntityConfig{
+				ExternalId: "test",
+				Attributes: []*framework.AttributeConfig{
+					{
+						ExternalId: "nullString",
+						Type:       framework.AttributeTypeString,
+					},
+					{
+						ExternalId: "nullInt64",
+						Type:       framework.AttributeTypeInt64,
+					},
+					{
+						ExternalId: "validString",
+						Type:       framework.AttributeTypeString,
+					},
+				},
+			},
+			objectJSON: `{
+				"nullString": null,
+				"nullInt64": null,
+				"validString": "test"
+			}`,
+			opts: testJSONOptions,
+			wantObject: framework.Object{
+				"validString": "test",
+			},
+			wantError: nil,
+		},
+		"list_with_nulls": {
+			entity: &framework.EntityConfig{
+				ExternalId: "test",
+				Attributes: []*framework.AttributeConfig{
+					{
+						ExternalId: "mixedList",
+						Type:       framework.AttributeTypeString,
+						List:       true,
+					},
+				},
+			},
+			objectJSON: `{"mixedList": ["a", null, "b", null, "c"]}`,
+			opts:       testJSONOptions,
+			wantObject: framework.Object{
+				"mixedList": []string{"a", "b", "c"}, // nulls filtered out
+			},
+			wantError: nil,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			var object map[string]any
+			err := json.Unmarshal([]byte(tc.objectJSON), &object)
+			if err != nil {
+				t.Fatalf("Failed to unmarshal test input JSON object: %v", err)
+			}
+
+			gotObject, gotError := convertJSONObject(tc.entity, object, tc.opts, nil)
+
+			AssertDeepEqual(t, tc.wantError, gotError)
+			AssertDeepEqual(t, tc.wantObject, gotObject)
+		})
+	}
+}
