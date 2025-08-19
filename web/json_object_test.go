@@ -1335,7 +1335,7 @@ func TestConvertJSONObject_Int64Support(t *testing.T) {
 			objectJSON: `{"id": 9007199254740992}`, // 2^53 (unsafe)
 			opts:       testJSONOptions,
 			wantObject: nil,
-			wantError:  errors.New("attribute id cannot be accurately converted from float64 to int64: value 9.007199254740992e+15 is outside the safe integer range (±9007199254740991)"),
+			wantError:  errors.New("attribute id cannot be parsed into an int64 because the value 9.007199254740992e+15 is outside the safe integer range (±9007199254740991) and would lead into precision loss"),
 		},
 		"int64_fractional_error": {
 			entity: &framework.EntityConfig{
@@ -1350,7 +1350,7 @@ func TestConvertJSONObject_Int64Support(t *testing.T) {
 			objectJSON: `{"id": 123.45}`,
 			opts:       testJSONOptions,
 			wantObject: nil,
-			wantError:  errors.New("attribute id cannot be converted to int64: value 123.45 has a fractional part"),
+			wantError:  errors.New("attribute id cannot be parsed into an int64 because the value is not an integer and has a fractional part"),
 		},
 	}
 

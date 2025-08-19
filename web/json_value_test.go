@@ -17,6 +17,7 @@ package web
 import (
 	"encoding/json"
 	"errors"
+	"math"
 	"testing"
 	"time"
 
@@ -451,6 +452,62 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 			valueJSON: `[12, 34, 56]`,
 			wantValue: []float64{12, 34, 56},
 		},
+		"double_from_string": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDouble,
+			},
+			valueJSON: `"123.456"`,
+			wantValue: float64(123.456),
+		},
+		"double_from_string_integer": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDouble,
+			},
+			valueJSON: `"123"`,
+			wantValue: float64(123),
+		},
+		"double_from_string_scientific": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDouble,
+			},
+			valueJSON: `"1.23e-4"`,
+			wantValue: float64(0.000123),
+		},
+		"double_from_string_infinity": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDouble,
+			},
+			valueJSON: `"Inf"`,
+			wantValue: math.Inf(1),
+		},
+		"double_from_string_negative_infinity": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDouble,
+			},
+			valueJSON: `"-Inf"`,
+			wantValue: math.Inf(-1),
+		},
+		"double_from_string_invalid": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDouble,
+			},
+			valueJSON: `"not_a_number"`,
+			wantError: errors.New("attribute a cannot be parsed into a float64 value: strconv.ParseFloat: parsing \"not_a_number\": invalid syntax"),
+		},
+		"double_from_unsupported_type": {
+			attribute: &framework.AttributeConfig{
+				ExternalId: "a",
+				Type:       framework.AttributeTypeDouble,
+			},
+			valueJSON: `true`,
+			wantError: errors.New("attribute a cannot be parsed into a float64 value"),
+		},
 		"duration_iso8601_valid": {
 			attribute: &framework.AttributeConfig{
 				ExternalId: "a",
@@ -677,7 +734,7 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 				Type:       framework.AttributeTypeInt64,
 			},
 			valueJSON: `9007199254740992`, // 2^53 (unsafe)
-			wantError: errors.New("attribute a cannot be accurately converted from float64 to int64: value 9.007199254740992e+15 is outside the safe integer range (±9007199254740991)"),
+			wantError: errors.New("attribute a cannot be parsed into an int64 because the value 9.007199254740992e+15 is outside the safe integer range (±9007199254740991) and would lead into precision loss"),
 		},
 		"int64_from_float64_with_fractional": {
 			attribute: &framework.AttributeConfig{
@@ -685,7 +742,7 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 				Type:       framework.AttributeTypeInt64,
 			},
 			valueJSON: `123.45`,
-			wantError: errors.New("attribute a cannot be converted to int64: value 123.45 has a fractional part"),
+			wantError: errors.New("attribute a cannot be parsed into an int64 because the value is not an integer and has a fractional part"),
 		},
 		"int64_from_unsupported_type": {
 			attribute: &framework.AttributeConfig{
@@ -693,7 +750,7 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 				Type:       framework.AttributeTypeInt64,
 			},
 			valueJSON: `true`,
-			wantError: errors.New("attribute a cannot be parsed into an int64 value from type bool"),
+			wantError: errors.New("attribute a cannot be parsed into an int64 due to invalid type bool"),
 		},
 		"string": {
 			attribute: &framework.AttributeConfig{

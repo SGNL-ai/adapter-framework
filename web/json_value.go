@@ -112,11 +112,18 @@ func convertJSONAttributeValue(attribute *framework.AttributeConfig, value any, 
 		return t, nil
 
 	case framework.AttributeTypeDouble:
-		v, ok := value.(float64)
-		if !ok {
-			return nil, fmt.Errorf("attribute %s cannot be parsed into a float64 value", attribute.ExternalId)
+		switch v := value.(type) {
+		case float64:
+			return v, nil
+		case string:
+			parsed, err := strconv.ParseFloat(v, 64)
+			if err != nil {
+				return nil, fmt.Errorf("attribute %s cannot be parsed into a float64 value: %w", attribute.ExternalId, err)
+			}
+			return parsed, nil
+		default:
+			return nil, fmt.Errorf("attribute %s cannot be parsed into a float64 due to invalid type %T", attribute.ExternalId, v)
 		}
-		return v, nil
 
 	case framework.AttributeTypeDuration:
 		switch v := value.(type) {
@@ -138,11 +145,11 @@ func convertJSONAttributeValue(attribute *framework.AttributeConfig, value any, 
 			// Check if the float64 value is within the safe integer range for accurate conversion
 			const maxSafeInteger = 1<<53 - 1 // 2^53 - 1
 			if v > maxSafeInteger || v < -maxSafeInteger {
-				return nil, fmt.Errorf("attribute %s cannot be accurately converted from float64 to int64: value %g is outside the safe integer range (±%d)", attribute.ExternalId, v, maxSafeInteger)
+				return nil, fmt.Errorf("attribute %s cannot be parsed into an int64 because the value %g is outside the safe integer range (±%d) and would lead into precision loss", attribute.ExternalId, v, maxSafeInteger)
 			}
 			// Ensure the value is actually an integer (no fractional part)
-			if v != math.Trunc(v) {
-				return nil, fmt.Errorf("attribute %s cannot be converted to int64: value %g has a fractional part", attribute.ExternalId, v)
+			if float64(int64(v)) != v {
+				return nil, fmt.Errorf("attribute %s cannot be parsed into an int64 because the value is not an integer and has a fractional part", attribute.ExternalId)
 			}
 			return int64(v), nil
 		case string:
@@ -152,7 +159,7 @@ func convertJSONAttributeValue(attribute *framework.AttributeConfig, value any, 
 			}
 			return parsed, nil
 		default:
-			return nil, fmt.Errorf("attribute %s cannot be parsed into an int64 value from type %T", attribute.ExternalId, v)
+			return nil, fmt.Errorf("attribute %s cannot be parsed into an int64 due to invalid type %T", attribute.ExternalId, v)
 		}
 
 	case framework.AttributeTypeString:
