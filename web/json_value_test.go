@@ -506,7 +506,7 @@ func TestConvertJSONAttributeValue(t *testing.T) {
 				Type:       framework.AttributeTypeDouble,
 			},
 			valueJSON: `true`,
-			wantError: errors.New("attribute a cannot be parsed into a float64 value"),
+			wantError: errors.New("attribute a cannot be parsed into a float64 due to invalid type bool"),
 		},
 		"duration_iso8601_valid": {
 			attribute: &framework.AttributeConfig{
