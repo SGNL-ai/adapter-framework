@@ -159,7 +159,7 @@ func convertJSONAttributeValue(attribute *framework.AttributeConfig, value any, 
 			}
 			return parsed, nil
 		default:
-			return nil, fmt.Errorf("attribute %s cannot be parsed into an int64 due to invalid type %T", attribute.ExternalId, v)
+			return nil, fmt.Errorf("attribute %s cannot be parsed into an int64 due to invalid type: %T", attribute.ExternalId, v)
 		}
 
 	case framework.AttributeTypeString:
