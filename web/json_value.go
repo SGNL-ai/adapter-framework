@@ -145,7 +145,7 @@ func convertJSONAttributeValue(attribute *framework.AttributeConfig, value any, 
 			// Check if the float64 value is within the safe integer range for accurate conversion
 			const maxSafeInteger = 1<<53 - 1 // 2^53 - 1
 			if v > maxSafeInteger || v < -maxSafeInteger {
-				return nil, fmt.Errorf("attribute %s cannot be parsed into an int64 because the value %g is outside the safe integer range (±%d) and would lead into precision loss", attribute.ExternalId, v, maxSafeInteger)
+				return nil, fmt.Errorf("attribute %s cannot be parsed into an int64 because the value %g is outside the safe integer range (±%d) and would lead to precision loss", attribute.ExternalId, v, maxSafeInteger)
 			}
 			// Ensure the value is actually an integer (no fractional part)
 			if float64(int64(v)) != v {
