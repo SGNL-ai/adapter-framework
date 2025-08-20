@@ -1332,10 +1332,10 @@ func TestConvertJSONObject_Int64Support(t *testing.T) {
 					},
 				},
 			},
-			objectJSON: `{"id": 9007199254740992}`, // 2^53 (unsafe)
+			objectJSON: `{"id": 9007199254740992}`, // 2^53 (unsafe) = 9.007199254740992e+15
 			opts:       testJSONOptions,
 			wantObject: nil,
-			wantError:  errors.New("attribute id cannot be parsed into an int64 because the value 9.007199254740992e+15 is outside the safe integer range (±9007199254740991) and would lead into precision loss"),
+			wantError:  errors.New("attribute id cannot be parsed into an int64 because the value 9.007199254740992e+15 is outside the safe integer range (±9.007199254740991e+15) and would lead to precision loss"),
 		},
 		"int64_fractional_error": {
 			entity: &framework.EntityConfig{
