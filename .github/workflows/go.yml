@@ -24,14 +24,14 @@ jobs:
     steps:
       - if: ${{ github.event_name == 'pull_request' }}
         name: Checkout repository (pull_request) ✅
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
 
       - if: ${{ github.event_name == 'push' }}
         name: Checkout repository (push) ✅
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       
       - name: Run tests and code coverage 🧪
         run: docker run --rm --network="host" -v ./:/src -w /src golang:1.23.1-bookworm go test -coverprofile=coverage.txt -covermode=atomic -v ./...
