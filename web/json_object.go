@@ -319,7 +319,6 @@ func convertJSONObject(entity *framework.EntityConfig, object map[string]any, op
 			childObjectsRaw, err := jsonPath(context.Background(), object)
 			// The JSONPath didn't match or if the object is nil. Evaluate to null.
 			if err != nil || childObjectsRaw == nil {
-
 				continue
 			}
 
