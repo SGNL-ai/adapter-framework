@@ -1238,6 +1238,58 @@ func TestConvertJSONObject_JSONPath(t *testing.T) {
 			wantObject: nil,
 			wantError:  errors.New("non-list attribute $.emails[*].value matched multiple values"),
 		},
+		"child_entities_jsonpath_returns_nil": {
+			entity: &framework.EntityConfig{
+				ExternalId: "test",
+				Attributes: []*framework.AttributeConfig{
+					{
+						ExternalId: "id",
+						Type:       framework.AttributeTypeString,
+					},
+				},
+				ChildEntities: []*framework.EntityConfig{
+					{
+						ExternalId: "$.nullChildren", // This JSONPath will return nil (no error)
+						Attributes: []*framework.AttributeConfig{
+							{
+								ExternalId: "name",
+								Type:       framework.AttributeTypeString,
+							},
+						},
+					},
+					{
+						ExternalId: "$.existing.children",
+						Attributes: []*framework.AttributeConfig{
+							{
+								ExternalId: "name",
+								Type:       framework.AttributeTypeString,
+							},
+						},
+					},
+				},
+			},
+			objectJSON: `{
+				"id": "test123",
+				"nullChildren": null,
+				"existing": {
+					"children": [
+						{
+							"name": "child1"
+						}
+					]
+				}
+			}`,
+			opts: testJSONOptions,
+			wantObject: framework.Object{
+				"id": "test123",
+				"$.existing.children": []framework.Object{
+					{
+						"name": "child1",
+					},
+				},
+			},
+			wantError: nil,
+		},
 	}
 
 	for name, tc := range tests {
