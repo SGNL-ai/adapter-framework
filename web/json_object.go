@@ -317,7 +317,8 @@ func convertJSONObject(entity *framework.EntityConfig, object map[string]any, op
 
 		if jsonPath, found := jsonPaths[externalId]; found { // The entity external ID is a JSONPath.
 			childObjectsRaw, err := jsonPath(context.Background(), object)
-			if err != nil { // The JSONPath didn't match. Evaluate to null.
+			// The JSONPath didn't match or if the object is nil. Evaluate to null.
+			if err != nil || childObjectsRaw == nil {
 				continue
 			}
 
