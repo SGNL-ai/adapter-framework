@@ -15,7 +15,9 @@
 package internal
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"sort"
 
 	framework "github.com/sgnl-ai/adapter-framework"
@@ -87,7 +89,16 @@ func getEntityObjects(
 			entityObject, adapterErr = getEntityObject(reverseMapping, object)
 
 			if adapterErr != nil {
-				return nil, adapterErr
+				// Log the complete object and skip it instead of returning error
+				objectJSON, jsonErr := json.Marshal(object)
+				if jsonErr != nil {
+					log.Printf("[ERROR] Failed to marshal object for logging: %v. Original error: %s", jsonErr, adapterErr.Message)
+				} else {
+					log.Printf("[ERROR] Skipping object due to validation error. Entity: %s, Error: %s, Object: %s",
+						reverseMapping.Id, adapterErr.Message, string(objectJSON))
+				}
+
+				continue // Skip this object and process the next one
 			}
 
 			entityObjects.Objects = append(entityObjects.Objects, entityObject)
