@@ -29,7 +29,7 @@ func ContextWithLogger(ctx context.Context, logger *zap.Logger) context.Context 
 }
 
 // LoggerFromContext retrieves the logger from the context.
-// If no logger is found in the context, it returns nil.
+// If no logger is found in the context or the value is not a logger, it returns nil.
 func LoggerFromContext(ctx context.Context) *zap.Logger {
 	if logger, ok := ctx.Value(loggerContextKey{}).(*zap.Logger); ok {
 		return logger
