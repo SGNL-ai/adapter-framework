@@ -34,8 +34,15 @@ func EntityID(value string) zap.Field {
 	return zap.String(FieldEntityID, value)
 }
 
-func RequestCursor(value string) zap.Field {
-	return zap.String(FieldRequestCursor, value)
+func RequestCursor(value any) zap.Field {
+	switch v := value.(type) {
+	case string:
+		return zap.String(FieldRequestCursor, v)
+	case int:
+		return zap.Int(FieldRequestCursor, v)
+	default:
+		return zap.Any(FieldRequestCursor, value)
+	}
 }
 
 func RequestPageSize(value int64) zap.Field {
