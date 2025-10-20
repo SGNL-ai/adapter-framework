@@ -56,6 +56,8 @@ type Server struct {
 	// TokensMutex is the mutex that must be locked for every access to Tokens.
 	TokensMutex sync.RWMutex
 
+	// Logger is an optional logger that can be used throughout the server and passed to adapters
+	// via the context in a GetPage request.
 	Logger *zap.Logger
 }
 
