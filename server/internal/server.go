@@ -156,6 +156,7 @@ func RegisterAdapter[Config any](s *Server, datasourceType string, adapter frame
 				logs.RequestPageSize(req.PageSize),
 				logs.TenantID(req.TenantId),
 				logs.ClientID(req.ClientId),
+				logs.DatasourceAddress(req.Datasource.Address),
 				logs.DatasourceID(req.Datasource.Id),
 				logs.DatasourceType(req.Datasource.Type),
 				logs.EntityID(req.Entity.Id),
