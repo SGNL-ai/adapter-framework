@@ -29,6 +29,21 @@ import (
 
 type Server = internal.Server
 
+// ServerOption are options for configuring the AdapterServer.
+type ServerOption func(*serverConfig)
+
+// serverConfig holds configuration options for the AdapterServer.
+type serverConfig struct {
+	logger *zap.Logger
+}
+
+// WithLogger configures the server to use the provided Zap logger.
+func WithLogger(logger *zap.Logger) ServerOption {
+	return func(cfg *serverConfig) {
+		cfg.logger = logger
+	}
+}
+
 // New returns an AdapterServer that wraps the given high-level
 // Adapter implementation with the Tokens field populated from the file
 // which name is configured in the AUTH_TOKENS_PATH environment variable.
@@ -36,14 +51,19 @@ type Server = internal.Server
 // be closed and stop watching for file changes.
 func New(
 	stop <-chan struct{},
-	logger *zap.Logger,
+	opts ...ServerOption,
 ) api_adapter_v1.AdapterServer {
 	authTokensPath, exists := os.LookupEnv("AUTH_TOKENS_PATH")
 	if !exists {
 		panic("AUTH_TOKENS_PATH environment variable not set")
 	}
 
-	return newWithAuthTokensPath(authTokensPath, stop, logger)
+	cfg := &serverConfig{}
+	for _, opt := range opts {
+		opt(cfg)
+	}
+
+	return newWithAuthTokensPath(authTokensPath, stop, cfg.logger)
 }
 
 // RegisterAdapter registers a new high-level Adapter implementation with the server.
