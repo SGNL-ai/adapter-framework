@@ -149,7 +149,14 @@ func RegisterAdapter[Config any](s *Server, datasourceType string, adapter frame
 
 		if s.Logger != nil {
 			requestLogger := s.Logger.With(
+				logs.RequestCursor(req.Cursor),
+				logs.RequestPageSize(req.PageSize),
+				logs.TenantID(req.TenantId),
+				logs.ClientID(req.ClientId),
 				logs.DatasourceID(req.Datasource.Id),
+				logs.DatasourceType(req.Datasource.Type),
+				logs.EntityID(req.Entity.Id),
+				logs.EntityExternalID(req.Entity.ExternalId),
 			)
 
 			ctx = logs.ContextWithLogger(ctx, requestLogger)
