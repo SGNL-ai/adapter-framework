@@ -15,13 +15,18 @@
 package internal
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"testing"
 	"time"
 
 	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
 	"github.com/sgnl-ai/adapter-framework/pkg/connector"
+	"github.com/sgnl-ai/adapter-framework/pkg/logs"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc/codes"
 	grpc_metadata "google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -544,5 +549,137 @@ func TestServer_GetPage(t *testing.T) {
 			AssertDeepEqual(t, tc.wantResp, gotResp)
 			AssertDeepEqual(t, tc.wantError, gotError)
 		})
+	}
+}
+
+type MockAdapterWithContext struct {
+	Response    framework.Response
+	CapturedCtx context.Context
+}
+
+func (a *MockAdapterWithContext) GetPage(ctx context.Context, request *framework.Request[TestConfigA]) framework.Response {
+	a.CapturedCtx = ctx
+
+	return a.Response
+}
+
+func TestServer_GetPage_WithLogger(t *testing.T) {
+	validTokens := []string{"dGhpc2lzYXRlc3R0b2tlbg=="}
+
+	mockAdapter := &MockAdapterWithContext{
+		Response: framework.Response{
+			Success: &framework.Page{
+				Objects: []framework.Object{
+					{"name": "Alice"},
+				},
+			},
+		},
+	}
+
+	ctx := context.Background()
+	ctx = grpc_metadata.NewIncomingContext(ctx, grpc_metadata.MD{
+		"token": validTokens,
+	})
+
+	// Create a test logger with a memory buffer to capture log output.
+	var buf bytes.Buffer
+	encoderConfig := zap.NewProductionEncoderConfig()
+	encoderConfig.TimeKey = "" // Remove timestamp as it's variable and not needed for the test.
+	core := zapcore.NewCore(
+		zapcore.NewJSONEncoder(encoderConfig),
+		zapcore.AddSync(&buf),
+		zapcore.InfoLevel,
+	)
+	logger := zap.New(core)
+
+	s := &Server{
+		Tokens:              validTokens,
+		AdapterGetPageFuncs: make(map[string]AdapterGetPageFunc),
+		Logger:              logger,
+	}
+
+	if err := RegisterAdapter(s, "Mock-1.0.1", mockAdapter); err != nil {
+		t.Fatal(err)
+	}
+
+	req := &api_adapter_v1.GetPageRequest{
+		TenantId: "test-tenant-123",
+		ClientId: "test-client-456",
+		Datasource: &api_adapter_v1.DatasourceConfig{
+			Id:      "datasource-789",
+			Type:    "Mock-1.0.1",
+			Config:  []byte(`{"a":"a value"}`),
+			Address: "http://example.com/",
+			Auth: &api_adapter_v1.DatasourceAuthCredentials{
+				AuthMechanism: &api_adapter_v1.DatasourceAuthCredentials_HttpAuthorization{
+					HttpAuthorization: "Bearer mysecret",
+				},
+			},
+		},
+		Entity: &api_adapter_v1.EntityConfig{
+			Id:         "entity-abc",
+			ExternalId: "users",
+			Attributes: []*api_adapter_v1.AttributeConfig{
+				{
+					Id:         "attr-123",
+					ExternalId: "name",
+					Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+				},
+			},
+			Ordered: true,
+		},
+		PageSize: 50,
+		Cursor:   "test-cursor",
+	}
+
+	_, err := s.GetPage(ctx, req)
+	if err != nil {
+		t.Fatalf("GetPage returned error: %v", err)
+	}
+
+	// Verify logger was added to context
+	if mockAdapter.CapturedCtx == nil {
+		t.Fatal("Context was not passed to adapter")
+	}
+
+	retrievedLogger := logs.LoggerFromContext(mockAdapter.CapturedCtx)
+	if retrievedLogger == nil {
+		t.Fatal("Logger was not added to context")
+	}
+
+	// Test that the logger has the correct fields by logging a message and checking the output.
+	retrievedLogger.Info("test message")
+
+	var logEntry map[string]any
+	if err := json.Unmarshal(buf.Bytes(), &logEntry); err != nil {
+		t.Fatalf("Failed to parse log output: %v", err)
+	}
+
+	// Verify the expected fields are present with correct values.
+	expectedFields := map[string]any{
+		"datasourceType":  "Mock-1.0.1",
+		"datasourceId":    "datasource-789",
+		"entityId":        "entity-abc",
+		"tenantId":        "test-tenant-123",
+		"clientId":        "test-client-456",
+		"requestCursor":   "test-cursor",
+		"requestPageSize": float64(50),
+	}
+
+	for fieldName, expectedValue := range expectedFields {
+		actualValue, ok := logEntry[fieldName]
+		if !ok {
+			t.Errorf("Expected field %s not found in log output", fieldName)
+
+			continue
+		}
+
+		if actualValue != expectedValue {
+			t.Errorf("Field %s: expected %s, got %s", fieldName, expectedValue, actualValue)
+		}
+	}
+
+	if msg, ok := logEntry["msg"]; !ok || msg != "test message" {
+		t.Errorf("Expected message 'test message', got %s", msg)
 	}
 }

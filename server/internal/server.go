@@ -147,6 +147,7 @@ func RegisterAdapter[Config any](s *Server, datasourceType string, adapter frame
 			ctx = newCtx
 		}
 
+		// Create a child logger with request fields and add it to the context.
 		if s.Logger != nil {
 			requestLogger := s.Logger.With(
 				logs.RequestCursor(req.Cursor),

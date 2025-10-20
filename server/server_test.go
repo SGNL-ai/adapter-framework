@@ -98,6 +98,7 @@ func TestNewWithAuthTokensPath(t *testing.T) {
 			gotAdapterServer := newWithAuthTokensPath(
 				tc.inputAuthTokensPath,
 				tc.inputStopChan,
+				nil,
 			)
 
 			AssertDeepEqual(t, tc.wantAdapterServer, gotAdapterServer)
@@ -118,6 +119,7 @@ func TestNewWithAuthTokensPathFileWatcher(t *testing.T) {
 	gotAdapterServer := newWithAuthTokensPath(
 		validTokensPath,
 		stop,
+		nil,
 	)
 
 	// Assert the initial state of the tokens are correct
