@@ -15,9 +15,7 @@
 package internal
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"testing"
 	"time"
 
@@ -27,6 +25,7 @@ import (
 	"github.com/sgnl-ai/adapter-framework/pkg/logs"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"go.uber.org/zap/zaptest/observer"
 	"google.golang.org/grpc/codes"
 	grpc_metadata "google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -581,21 +580,14 @@ func TestServer_GetPage_WithLogger(t *testing.T) {
 		"token": validTokens,
 	})
 
-	// Create a test logger with a memory buffer to capture log output.
-	var buf bytes.Buffer
-	encoderConfig := zap.NewProductionEncoderConfig()
-	encoderConfig.TimeKey = "" // Remove timestamp as it's variable and not needed for the test.
-	core := zapcore.NewCore(
-		zapcore.NewJSONEncoder(encoderConfig),
-		zapcore.AddSync(&buf),
-		zapcore.InfoLevel,
-	)
-	logger := zap.New(core)
+	// Create an observable logger to capture log output.
+	observedCore, observedLogs := observer.New(zapcore.InfoLevel)
+	observableLogger := zap.New(observedCore)
 
 	s := &Server{
 		Tokens:              validTokens,
 		AdapterGetPageFuncs: make(map[string]AdapterGetPageFunc),
-		Logger:              logger,
+		Logger:              observableLogger,
 	}
 
 	if err := RegisterAdapter(s, "Mock-1.0.1", mockAdapter); err != nil {
@@ -650,24 +642,31 @@ func TestServer_GetPage_WithLogger(t *testing.T) {
 	// Test that the logger has the correct fields by logging a message and checking the output.
 	retrievedLogger.Info("test message")
 
-	var logEntry map[string]any
-	if err := json.Unmarshal(buf.Bytes(), &logEntry); err != nil {
-		t.Fatalf("Failed to parse log output: %v", err)
+	if observedLogs.Len() != 1 {
+		t.Fatalf("Expected 1 log entry, got %d", observedLogs.Len())
+	}
+
+	logEntry := observedLogs.All()[0]
+
+	if logEntry.Message != "test message" {
+		t.Errorf("Expected message 'test message', got %q", logEntry.Message)
 	}
 
 	// Verify the expected fields are present with correct values.
 	expectedFields := map[string]any{
-		"datasourceType":  "Mock-1.0.1",
-		"datasourceId":    "datasource-789",
-		"entityId":        "entity-abc",
-		"tenantId":        "test-tenant-123",
-		"clientId":        "test-client-456",
-		"requestCursor":   "test-cursor",
-		"requestPageSize": float64(50),
+		"requestCursor":    "test-cursor",
+		"requestPageSize":  int64(50),
+		"tenantId":         "test-tenant-123",
+		"clientId":         "test-client-456",
+		"datasourceId":     "datasource-789",
+		"datasourceType":   "Mock-1.0.1",
+		"entityId":         "entity-abc",
+		"entityExternalId": "users",
 	}
 
+	contextMap := logEntry.ContextMap()
 	for fieldName, expectedValue := range expectedFields {
-		actualValue, ok := logEntry[fieldName]
+		actualValue, ok := contextMap[fieldName]
 		if !ok {
 			t.Errorf("Expected field %s not found in log output", fieldName)
 
@@ -675,11 +674,7 @@ func TestServer_GetPage_WithLogger(t *testing.T) {
 		}
 
 		if actualValue != expectedValue {
-			t.Errorf("Field %s: expected %s, got %s", fieldName, expectedValue, actualValue)
+			t.Errorf("Field %s: expected %v, got %v", fieldName, expectedValue, actualValue)
 		}
-	}
-
-	if msg, ok := logEntry["msg"]; !ok || msg != "test message" {
-		t.Errorf("Expected message 'test message', got %s", msg)
 	}
 }
