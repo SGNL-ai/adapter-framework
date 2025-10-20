@@ -5,9 +5,9 @@ import "go.uber.org/zap"
 // Log field constants.
 const (
 	FieldClientID         = "clientId"
-	FieldDatasourceId     = "datasourceId"
+	FieldDatasourceID     = "datasourceId"
 	FieldDatasourceType   = "datasourceType"
-	FieldEntityExternalId = "entityExternalId"
+	FieldEntityExternalID = "entityExternalId"
 	FieldEntityID         = "entityId"
 	FieldRequestCursor    = "requestCursor"
 	FieldRequestPageSize  = "requestPageSize"
@@ -19,7 +19,7 @@ func ClientID(value string) zap.Field {
 }
 
 func DatasourceID(value string) zap.Field {
-	return zap.String(FieldDatasourceId, value)
+	return zap.String(FieldDatasourceID, value)
 }
 
 func DatasourceType(value string) zap.Field {
@@ -27,7 +27,7 @@ func DatasourceType(value string) zap.Field {
 }
 
 func EntityExternalID(value string) zap.Field {
-	return zap.String(FieldEntityExternalId, value)
+	return zap.String(FieldEntityExternalID, value)
 }
 
 func EntityID(value string) zap.Field {
