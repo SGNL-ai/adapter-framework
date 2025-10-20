@@ -24,6 +24,8 @@ import (
 	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
 	"github.com/sgnl-ai/adapter-framework/pkg/connector"
+	"github.com/sgnl-ai/adapter-framework/pkg/logs"
+	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	grpc_metadata "google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -53,6 +55,8 @@ type Server struct {
 
 	// TokensMutex is the mutex that must be locked for every access to Tokens.
 	TokensMutex sync.RWMutex
+
+	Logger *zap.Logger
 }
 
 func (s *Server) GetPage(ctx context.Context, req *api_adapter_v1.GetPageRequest) (*api_adapter_v1.GetPageResponse, error) {
@@ -141,6 +145,14 @@ func RegisterAdapter[Config any](s *Server, datasourceType string, adapter frame
 				}), nil
 			}
 			ctx = newCtx
+		}
+
+		if s.Logger != nil {
+			requestLogger := s.Logger.With(
+				logs.DatasourceID(req.Datasource.Id),
+			)
+
+			ctx = logs.ContextWithLogger(ctx, requestLogger)
 		}
 
 		return adapter.GetPage(ctx, adapterRequest), reverseMapping

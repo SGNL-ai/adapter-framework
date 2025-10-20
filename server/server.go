@@ -24,6 +24,7 @@ import (
 	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
 	"github.com/sgnl-ai/adapter-framework/server/internal"
+	"go.uber.org/zap"
 )
 
 type Server = internal.Server
@@ -35,13 +36,14 @@ type Server = internal.Server
 // be closed and stop watching for file changes.
 func New(
 	stop <-chan struct{},
+	logger *zap.Logger,
 ) api_adapter_v1.AdapterServer {
 	authTokensPath, exists := os.LookupEnv("AUTH_TOKENS_PATH")
 	if !exists {
 		panic("AUTH_TOKENS_PATH environment variable not set")
 	}
 
-	return newWithAuthTokensPath(authTokensPath, stop)
+	return newWithAuthTokensPath(authTokensPath, stop, logger)
 }
 
 // RegisterAdapter registers a new high-level Adapter implementation with the server.
@@ -62,6 +64,7 @@ func RegisterAdapter[Config any](s api_adapter_v1.AdapterServer, datasourceType 
 func newWithAuthTokensPath(
 	authTokensPath string,
 	stop <-chan struct{},
+	logger *zap.Logger,
 ) api_adapter_v1.AdapterServer {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -75,6 +78,7 @@ func newWithAuthTokensPath(
 	server := &internal.Server{
 		Tokens:              getTokensFromPath(authTokensPath),
 		AdapterGetPageFuncs: make(map[string]internal.AdapterGetPageFunc),
+		Logger:              logger,
 	}
 
 	go func(s *internal.Server) {
