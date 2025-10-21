@@ -654,15 +654,15 @@ func TestServer_GetPage_WithLogger(t *testing.T) {
 
 	// Verify the expected fields are present with correct values.
 	expectedFields := map[string]any{
-		"requestCursor":     "test-cursor",
-		"requestPageSize":   int64(50),
-		"tenantId":          "test-tenant-123",
-		"clientId":          "test-client-456",
-		"datasourceAddress": "http://example.com/",
-		"datasourceId":      "datasource-789",
-		"datasourceType":    "Mock-1.0.1",
-		"entityId":          "entity-abc",
-		"entityExternalId":  "users",
+		"adapterRequestCursor":   "test-cursor",
+		"adapterRequestPageSize": int64(50),
+		"tenantId":               "test-tenant-123",
+		"clientId":               "test-client-456",
+		"datasourceAddress":      "http://example.com/",
+		"datasourceId":           "datasource-789",
+		"datasourceType":         "Mock-1.0.1",
+		"entityId":               "entity-abc",
+		"entityExternalId":       "users",
 	}
 
 	contextMap := logEntry.ContextMap()

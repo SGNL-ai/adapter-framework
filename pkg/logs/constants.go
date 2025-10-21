@@ -4,15 +4,15 @@ import "go.uber.org/zap"
 
 // Log field constants.
 const (
-	FieldClientID          = "clientId"
-	FieldDatasourceAddress = "datasourceAddress"
-	FieldDatasourceID      = "datasourceId"
-	FieldDatasourceType    = "datasourceType"
-	FieldEntityExternalID  = "entityExternalId"
-	FieldEntityID          = "entityId"
-	FieldRequestCursor     = "requestCursor"
-	FieldRequestPageSize   = "requestPageSize"
-	FieldTenantID          = "tenantId"
+	FieldClientID               = "clientId"
+	FieldDatasourceAddress      = "datasourceAddress"
+	FieldDatasourceID           = "datasourceId"
+	FieldDatasourceType         = "datasourceType"
+	FieldEntityExternalID       = "entityExternalId"
+	FieldEntityID               = "entityId"
+	FieldAdapterRequestCursor   = "adapterRequestCursor" // Prefix with "adapter" because there may be multiple page cursors used in a single adapter request.
+	FieldAdapterRequestPageSize = "adapterRequestPageSize"
+	FieldTenantID               = "tenantId"
 )
 
 func ClientID(value string) zap.Field {
@@ -42,16 +42,16 @@ func EntityID(value string) zap.Field {
 func RequestCursor(value any) zap.Field {
 	switch v := value.(type) {
 	case string:
-		return zap.String(FieldRequestCursor, v)
+		return zap.String(FieldAdapterRequestCursor, v)
 	case int:
-		return zap.Int(FieldRequestCursor, v)
+		return zap.Int(FieldAdapterRequestCursor, v)
 	default:
-		return zap.Any(FieldRequestCursor, value)
+		return zap.Any(FieldAdapterRequestCursor, value)
 	}
 }
 
 func RequestPageSize(value int64) zap.Field {
-	return zap.Int64(FieldRequestPageSize, value)
+	return zap.Int64(FieldAdapterRequestPageSize, value)
 }
 
 func TenantID(value string) zap.Field {
