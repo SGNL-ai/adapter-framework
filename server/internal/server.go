@@ -25,7 +25,6 @@ import (
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
 	"github.com/sgnl-ai/adapter-framework/pkg/connector"
 	"github.com/sgnl-ai/adapter-framework/pkg/logs"
-	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	grpc_metadata "google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -58,7 +57,7 @@ type Server struct {
 
 	// Logger is an optional logger that can be used throughout the server and passed to adapters
 	// via the context in a GetPage request.
-	Logger *zap.Logger
+	Logger logs.Logger
 }
 
 func (s *Server) GetPage(ctx context.Context, req *api_adapter_v1.GetPageRequest) (*api_adapter_v1.GetPageResponse, error) {
@@ -163,7 +162,7 @@ func RegisterAdapter[Config any](s *Server, datasourceType string, adapter frame
 				logs.EntityExternalID(req.Entity.ExternalId),
 			)
 
-			ctx = logs.ContextWithLogger(ctx, requestLogger)
+			ctx = logs.NewContextWithLogger(ctx, requestLogger)
 		}
 
 		return adapter.GetPage(ctx, adapterRequest), reverseMapping

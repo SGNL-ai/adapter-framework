@@ -1,7 +1,5 @@
 package logs
 
-import "go.uber.org/zap"
-
 // Log field constants.
 const (
 	FieldClientID               = "clientId"
@@ -15,45 +13,47 @@ const (
 	FieldTenantID               = "tenantId"
 )
 
-func ClientID(value string) zap.Field {
-	return zap.String(FieldClientID, value)
+// ClientID returns a log field for the client ID.
+func ClientID(value string) Field {
+	return Field{Key: FieldClientID, Value: value}
 }
 
-func DatasourceAddress(value string) zap.Field {
-	return zap.String(FieldDatasourceAddress, value)
+// DatasourceAddress returns a log field for the datasource address.
+func DatasourceAddress(value string) Field {
+	return Field{Key: FieldDatasourceAddress, Value: value}
 }
 
-func DatasourceID(value string) zap.Field {
-	return zap.String(FieldDatasourceID, value)
+// DatasourceID returns a log field for the datasource ID.
+func DatasourceID(value string) Field {
+	return Field{Key: FieldDatasourceID, Value: value}
 }
 
-func DatasourceType(value string) zap.Field {
-	return zap.String(FieldDatasourceType, value)
+// DatasourceType returns a log field for the datasource type.
+func DatasourceType(value string) Field {
+	return Field{Key: FieldDatasourceType, Value: value}
 }
 
-func EntityExternalID(value string) zap.Field {
-	return zap.String(FieldEntityExternalID, value)
+// EntityExternalID returns a log field for the entity external ID.
+func EntityExternalID(value string) Field {
+	return Field{Key: FieldEntityExternalID, Value: value}
 }
 
-func EntityID(value string) zap.Field {
-	return zap.String(FieldEntityID, value)
+// EntityID returns a log field for the entity ID.
+func EntityID(value string) Field {
+	return Field{Key: FieldEntityID, Value: value}
 }
 
-func RequestCursor(value any) zap.Field {
-	switch v := value.(type) {
-	case string:
-		return zap.String(FieldAdapterRequestCursor, v)
-	case int:
-		return zap.Int(FieldAdapterRequestCursor, v)
-	default:
-		return zap.Any(FieldAdapterRequestCursor, value)
-	}
+// RequestCursor returns a log field for the request cursor.
+func RequestCursor(value any) Field {
+	return Field{Key: FieldAdapterRequestCursor, Value: value}
 }
 
-func RequestPageSize(value int64) zap.Field {
-	return zap.Int64(FieldAdapterRequestPageSize, value)
+// RequestPageSize returns a log field for the request page size.
+func RequestPageSize(value int64) Field {
+	return Field{Key: FieldAdapterRequestPageSize, Value: value}
 }
 
-func TenantID(value string) zap.Field {
-	return zap.String(FieldTenantID, value)
+// TenantID returns a log field for the tenant ID.
+func TenantID(value string) Field {
+	return Field{Key: FieldTenantID, Value: value}
 }

@@ -14,24 +14,20 @@
 
 package logs
 
-import (
-	"context"
-
-	"go.uber.org/zap"
-)
+import "context"
 
 type loggerContextKey struct{}
 
-// ContextWithLogger returns a new context with the provided logger attached.
-// The logger can be retrieved later using LoggerFromContext.
-func ContextWithLogger(ctx context.Context, logger *zap.Logger) context.Context {
+// NewContextWithLogger returns a new context with the provided logger attached.
+// The logger can be retrieved later using FromContext.
+func NewContextWithLogger(ctx context.Context, logger Logger) context.Context {
 	return context.WithValue(ctx, loggerContextKey{}, logger)
 }
 
-// LoggerFromContext retrieves the logger from the context.
+// FromContext retrieves the logger from the context.
 // If no logger is found in the context or the value is not a logger, it returns nil.
-func LoggerFromContext(ctx context.Context) *zap.Logger {
-	if logger, ok := ctx.Value(loggerContextKey{}).(*zap.Logger); ok {
+func FromContext(ctx context.Context) Logger {
+	if logger, ok := ctx.Value(loggerContextKey{}).(Logger); ok {
 		return logger
 	}
 

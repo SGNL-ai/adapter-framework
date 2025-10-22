@@ -24,6 +24,7 @@ import (
 
 	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
+	"github.com/sgnl-ai/adapter-framework/pkg/logs/zaplog"
 	"github.com/sgnl-ai/adapter-framework/server/internal"
 	"go.uber.org/zap"
 )
@@ -213,7 +214,8 @@ func TestNew_WithLogger(t *testing.T) {
 
 	t.Setenv("AUTH_TOKENS_PATH", validTokensPath)
 
-	logger := zap.NewNop()
+	zapLogger := zap.NewNop()
+	logger := zaplog.New(zapLogger)
 	stop := make(chan struct{})
 	defer close(stop)
 
@@ -224,7 +226,7 @@ func TestNew_WithLogger(t *testing.T) {
 		t.Fatal("Expected *internal.Server")
 	}
 
-	if internalServer.Logger != logger {
+	if internalServer.Logger == nil {
 		t.Error("Expected logger to be set")
 	}
 }

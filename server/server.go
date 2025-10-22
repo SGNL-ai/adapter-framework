@@ -23,8 +23,8 @@ import (
 	"github.com/fsnotify/fsnotify"
 	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
+	"github.com/sgnl-ai/adapter-framework/pkg/logs"
 	"github.com/sgnl-ai/adapter-framework/server/internal"
-	"go.uber.org/zap"
 )
 
 type Server = internal.Server
@@ -34,11 +34,12 @@ type ServerOption func(*serverConfig)
 
 // serverConfig holds configuration options for the AdapterServer.
 type serverConfig struct {
-	logger *zap.Logger
+	logger logs.Logger
 }
 
-// WithLogger configures the server to use the provided Zap logger.
-func WithLogger(logger *zap.Logger) ServerOption {
+// WithLogger configures the server to use the provided logger.
+// The logger must implement the logs.Logger interface.
+func WithLogger(logger logs.Logger) ServerOption {
 	return func(cfg *serverConfig) {
 		cfg.logger = logger
 	}
@@ -84,7 +85,7 @@ func RegisterAdapter[Config any](s api_adapter_v1.AdapterServer, datasourceType 
 func newWithAuthTokensPath(
 	authTokensPath string,
 	stop <-chan struct{},
-	logger *zap.Logger,
+	logger logs.Logger,
 ) api_adapter_v1.AdapterServer {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {

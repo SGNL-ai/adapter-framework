@@ -23,6 +23,7 @@ import (
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
 	"github.com/sgnl-ai/adapter-framework/pkg/connector"
 	"github.com/sgnl-ai/adapter-framework/pkg/logs"
+	"github.com/sgnl-ai/adapter-framework/pkg/logs/zaplog"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zaptest/observer"
@@ -582,12 +583,13 @@ func TestServer_GetPage_WithLogger(t *testing.T) {
 
 	// Create an observable logger to capture log output.
 	observedCore, observedLogs := observer.New(zapcore.InfoLevel)
-	observableLogger := zap.New(observedCore)
+	zapLogger := zap.New(observedCore)
+	logger := zaplog.New(zapLogger)
 
 	s := &Server{
 		Tokens:              validTokens,
 		AdapterGetPageFuncs: make(map[string]AdapterGetPageFunc),
-		Logger:              observableLogger,
+		Logger:              logger,
 	}
 
 	if err := RegisterAdapter(s, "Mock-1.0.1", mockAdapter); err != nil {
@@ -634,7 +636,7 @@ func TestServer_GetPage_WithLogger(t *testing.T) {
 		t.Fatal("Context was not passed to adapter")
 	}
 
-	retrievedLogger := logs.LoggerFromContext(mockAdapter.CapturedCtx)
+	retrievedLogger := logs.FromContext(mockAdapter.CapturedCtx)
 	if retrievedLogger == nil {
 		t.Fatal("Logger was not added to context")
 	}

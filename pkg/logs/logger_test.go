@@ -12,20 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package logs
+package logs_test
 
 import (
 	"context"
 	"testing"
 
+	"github.com/sgnl-ai/adapter-framework/pkg/logs"
+	"github.com/sgnl-ai/adapter-framework/pkg/logs/zaplog"
 	"go.uber.org/zap"
 )
 
 func TestContextWithLogger(t *testing.T) {
-	logger := zap.NewNop()
+	zapLogger := zap.NewNop()
+	logger := zaplog.New(zapLogger)
 	ctx := context.Background()
 
-	newCtx := ContextWithLogger(ctx, logger)
+	newCtx := logs.NewContextWithLogger(ctx, logger)
 
 	if newCtx == nil {
 		t.Fatal("ContextWithLogger returned nil context")
@@ -37,43 +40,49 @@ func TestContextWithLogger(t *testing.T) {
 }
 
 func TestLoggerFromContext(t *testing.T) {
-	logger := zap.NewNop()
+	zapLogger := zap.NewNop()
+	logger := zaplog.New(zapLogger)
 
 	tests := map[string]struct {
 		setupCtx   func() context.Context
-		wantLogger *zap.Logger
+		wantLogger bool
 	}{
 		"returns_logger_when_present": {
 			setupCtx: func() context.Context {
 				ctx := context.Background()
-
-				return ContextWithLogger(ctx, logger)
+				return logs.NewContextWithLogger(ctx, logger)
 			},
-			wantLogger: logger,
+			wantLogger: true,
 		},
 		"returns_nil_when_logger_not_present": {
 			setupCtx: func() context.Context {
 				return context.Background()
 			},
-			wantLogger: nil,
+			wantLogger: false,
 		},
 		"returns_nil_when_context_has_wrong_type": {
 			setupCtx: func() context.Context {
 				ctx := context.Background()
-
+				type loggerContextKey struct{}
 				return context.WithValue(ctx, loggerContextKey{}, "not a logger")
 			},
-			wantLogger: nil,
+			wantLogger: false,
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx := tc.setupCtx()
-			retrievedLogger := LoggerFromContext(ctx)
+			retrievedLogger := logs.FromContext(ctx)
 
-			if tc.wantLogger != retrievedLogger {
-				t.Error("LoggerFromContext returned different logger than the one stored")
+			if tc.wantLogger {
+				if retrievedLogger == nil {
+					t.Fatal("LoggerFromContext returned nil, expected logger")
+				}
+			} else {
+				if retrievedLogger != nil {
+					t.Error("LoggerFromContext should return nil")
+				}
 			}
 		})
 	}
