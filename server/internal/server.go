@@ -24,6 +24,7 @@ import (
 	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
 	"github.com/sgnl-ai/adapter-framework/pkg/connector"
+	"github.com/sgnl-ai/adapter-framework/pkg/logs"
 	"google.golang.org/grpc/codes"
 	grpc_metadata "google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -53,6 +54,10 @@ type Server struct {
 
 	// TokensMutex is the mutex that must be locked for every access to Tokens.
 	TokensMutex sync.RWMutex
+
+	// Logger is an optional logger that can be used throughout the server and passed to adapters
+	// via the context in a GetPage request.
+	Logger logs.Logger
 }
 
 func (s *Server) GetPage(ctx context.Context, req *api_adapter_v1.GetPageRequest) (*api_adapter_v1.GetPageResponse, error) {
@@ -141,6 +146,23 @@ func RegisterAdapter[Config any](s *Server, datasourceType string, adapter frame
 				}), nil
 			}
 			ctx = newCtx
+		}
+
+		// Create a child logger with request fields and add it to the context.
+		if s.Logger != nil {
+			requestLogger := s.Logger.With(
+				logs.RequestCursor(req.Cursor),
+				logs.RequestPageSize(req.PageSize),
+				logs.TenantID(req.TenantId),
+				logs.ClientID(req.ClientId),
+				logs.DatasourceAddress(req.Datasource.Address),
+				logs.DatasourceID(req.Datasource.Id),
+				logs.DatasourceType(req.Datasource.Type),
+				logs.EntityID(req.Entity.Id),
+				logs.EntityExternalID(req.Entity.ExternalId),
+			)
+
+			ctx = logs.NewContextWithLogger(ctx, requestLogger)
 		}
 
 		return adapter.GetPage(ctx, adapterRequest), reverseMapping

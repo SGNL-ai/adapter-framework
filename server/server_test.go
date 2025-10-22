@@ -24,6 +24,7 @@ import (
 
 	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
+	"github.com/sgnl-ai/adapter-framework/pkg/logs"
 	"github.com/sgnl-ai/adapter-framework/server/internal"
 )
 
@@ -98,6 +99,7 @@ func TestNewWithAuthTokensPath(t *testing.T) {
 			gotAdapterServer := newWithAuthTokensPath(
 				tc.inputAuthTokensPath,
 				tc.inputStopChan,
+				nil,
 			)
 
 			AssertDeepEqual(t, tc.wantAdapterServer, gotAdapterServer)
@@ -118,6 +120,7 @@ func TestNewWithAuthTokensPathFileWatcher(t *testing.T) {
 	gotAdapterServer := newWithAuthTokensPath(
 		validTokensPath,
 		stop,
+		nil,
 	)
 
 	// Assert the initial state of the tokens are correct
@@ -197,4 +200,31 @@ func TestRegisterAdapterInvalidServer(t *testing.T) {
 	}
 
 	AssertDeepEqual(t, err, errors.New("type assertion to *internal.Server failed"))
+}
+
+func TestNew_WithLogger(t *testing.T) {
+	validTokensPath := "./TOKENS_WITH_LOGGER"
+
+	tokens := []byte(`["dGhpc2lzYXRlc3R0b2tlbg=="]`)
+	if err := os.WriteFile(validTokensPath, tokens, 0666); err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(validTokensPath)
+
+	t.Setenv("AUTH_TOKENS_PATH", validTokensPath)
+
+	logger := logs.NewMockLogger()
+	stop := make(chan struct{})
+	defer close(stop)
+
+	server := New(stop, WithLogger(logger))
+
+	internalServer, ok := server.(*internal.Server)
+	if !ok {
+		t.Fatal("Expected *internal.Server")
+	}
+
+	if internalServer.Logger == nil {
+		t.Error("Expected logger to be set")
+	}
 }

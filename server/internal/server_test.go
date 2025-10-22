@@ -22,6 +22,7 @@ import (
 	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
 	"github.com/sgnl-ai/adapter-framework/pkg/connector"
+	"github.com/sgnl-ai/adapter-framework/pkg/logs"
 	"google.golang.org/grpc/codes"
 	grpc_metadata "google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -544,5 +545,147 @@ func TestServer_GetPage(t *testing.T) {
 			AssertDeepEqual(t, tc.wantResp, gotResp)
 			AssertDeepEqual(t, tc.wantError, gotError)
 		})
+	}
+}
+
+type MockAdapterWithContext struct {
+	Response    framework.Response
+	CapturedCtx context.Context
+}
+
+func (a *MockAdapterWithContext) GetPage(ctx context.Context, request *framework.Request[TestConfigA]) framework.Response {
+	a.CapturedCtx = ctx
+
+	return a.Response
+}
+
+func TestServer_GetPage_WithLogger(t *testing.T) {
+	validTokens := []string{"dGhpc2lzYXRlc3R0b2tlbg=="}
+
+	mockAdapter := &MockAdapterWithContext{
+		Response: framework.Response{
+			Success: &framework.Page{
+				Objects: []framework.Object{
+					{"name": "Alice"},
+				},
+			},
+		},
+	}
+
+	ctx := context.Background()
+	ctx = grpc_metadata.NewIncomingContext(ctx, grpc_metadata.MD{
+		"token": validTokens,
+	})
+
+	logger := logs.NewMockLogger()
+
+	s := &Server{
+		Tokens:              validTokens,
+		AdapterGetPageFuncs: make(map[string]AdapterGetPageFunc),
+		Logger:              logger,
+	}
+
+	if err := RegisterAdapter(s, "Mock-1.0.1", mockAdapter); err != nil {
+		t.Fatal(err)
+	}
+
+	req := &api_adapter_v1.GetPageRequest{
+		TenantId: "test-tenant-123",
+		ClientId: "test-client-456",
+		Datasource: &api_adapter_v1.DatasourceConfig{
+			Id:      "datasource-789",
+			Type:    "Mock-1.0.1",
+			Config:  []byte(`{"a":"a value"}`),
+			Address: "http://example.com/",
+			Auth: &api_adapter_v1.DatasourceAuthCredentials{
+				AuthMechanism: &api_adapter_v1.DatasourceAuthCredentials_HttpAuthorization{
+					HttpAuthorization: "Bearer mysecret",
+				},
+			},
+		},
+		Entity: &api_adapter_v1.EntityConfig{
+			Id:         "entity-abc",
+			ExternalId: "users",
+			Attributes: []*api_adapter_v1.AttributeConfig{
+				{
+					Id:         "attr-123",
+					ExternalId: "name",
+					Type:       api_adapter_v1.AttributeType_ATTRIBUTE_TYPE_STRING,
+				},
+			},
+			Ordered: true,
+		},
+		PageSize: 50,
+		Cursor:   "test-cursor",
+	}
+
+	_, err := s.GetPage(ctx, req)
+	if err != nil {
+		t.Fatalf("GetPage returned error: %v", err)
+	}
+
+	// Verify logger was added to context
+	if mockAdapter.CapturedCtx == nil {
+		t.Fatal("Context was not passed to adapter")
+	}
+
+	retrievedLogger := logs.FromContext(mockAdapter.CapturedCtx)
+	if retrievedLogger == nil {
+		t.Fatal("Logger was not added to context")
+	}
+
+	// Test that the logger has the correct fields by logging a message and checking the output.
+	retrievedLogger.Info("test message")
+
+	// Cast to MockLogger to inspect entries
+	mockLogger, ok := retrievedLogger.(*logs.MockLogger)
+	if !ok {
+		t.Fatal("Expected retrievedLogger to be a MockLogger")
+	}
+
+	entries := mockLogger.Entries()
+	if len(entries) != 1 {
+		t.Fatalf("Expected 1 log entry, got %d", len(entries))
+	}
+
+	logEntry := entries[0]
+
+	if logEntry.Message != "test message" {
+		t.Errorf("Expected message 'test message', got %s", logEntry.Message)
+	}
+
+	if logEntry.Level != "info" {
+		t.Errorf("Expected level 'info', got %s", logEntry.Level)
+	}
+
+	// Verify the expected fields are present with correct values.
+	expectedFields := map[string]any{
+		"adapterRequestCursor":   "test-cursor",
+		"adapterRequestPageSize": int64(50),
+		"tenantId":               "test-tenant-123",
+		"clientId":               "test-client-456",
+		"datasourceAddress":      "http://example.com/",
+		"datasourceId":           "datasource-789",
+		"datasourceType":         "Mock-1.0.1",
+		"entityId":               "entity-abc",
+		"entityExternalId":       "users",
+	}
+
+	fieldMap := make(map[string]any, len(logEntry.Fields))
+	for _, field := range logEntry.Fields {
+		fieldMap[field.Key] = field.Value
+	}
+
+	for fieldName, expectedValue := range expectedFields {
+		actualValue, ok := fieldMap[fieldName]
+		if !ok {
+			t.Errorf("Expected field %s not found in log output", fieldName)
+
+			continue
+		}
+
+		if actualValue != expectedValue {
+			t.Errorf("Field %s: expected %v, got %v", fieldName, expectedValue, actualValue)
+		}
 	}
 }
