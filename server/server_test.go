@@ -24,9 +24,8 @@ import (
 
 	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
-	"github.com/sgnl-ai/adapter-framework/pkg/logs/zaplog"
+	"github.com/sgnl-ai/adapter-framework/pkg/logs"
 	"github.com/sgnl-ai/adapter-framework/server/internal"
-	"go.uber.org/zap"
 )
 
 type MockAdapterA struct{}
@@ -214,8 +213,7 @@ func TestNew_WithLogger(t *testing.T) {
 
 	t.Setenv("AUTH_TOKENS_PATH", validTokensPath)
 
-	zapLogger := zap.NewNop()
-	logger := zaplog.New(zapLogger)
+	logger := logs.NewMockLogger()
 	stop := make(chan struct{})
 	defer close(stop)
 

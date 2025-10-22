@@ -19,13 +19,10 @@ import (
 	"testing"
 
 	"github.com/sgnl-ai/adapter-framework/pkg/logs"
-	"github.com/sgnl-ai/adapter-framework/pkg/logs/zaplog"
-	"go.uber.org/zap"
 )
 
 func TestContextWithLogger(t *testing.T) {
-	zapLogger := zap.NewNop()
-	logger := zaplog.New(zapLogger)
+	logger := logs.NewMockLogger()
 	ctx := context.Background()
 
 	newCtx := logs.NewContextWithLogger(ctx, logger)
@@ -40,8 +37,7 @@ func TestContextWithLogger(t *testing.T) {
 }
 
 func TestLoggerFromContext(t *testing.T) {
-	zapLogger := zap.NewNop()
-	logger := zaplog.New(zapLogger)
+	logger := logs.NewMockLogger()
 
 	tests := map[string]struct {
 		setupCtx   func() context.Context

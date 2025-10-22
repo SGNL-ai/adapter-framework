@@ -23,10 +23,6 @@ import (
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
 	"github.com/sgnl-ai/adapter-framework/pkg/connector"
 	"github.com/sgnl-ai/adapter-framework/pkg/logs"
-	"github.com/sgnl-ai/adapter-framework/pkg/logs/zaplog"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-	"go.uber.org/zap/zaptest/observer"
 	"google.golang.org/grpc/codes"
 	grpc_metadata "google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -581,10 +577,7 @@ func TestServer_GetPage_WithLogger(t *testing.T) {
 		"token": validTokens,
 	})
 
-	// Create an observable logger to capture log output.
-	observedCore, observedLogs := observer.New(zapcore.InfoLevel)
-	zapLogger := zap.New(observedCore)
-	logger := zaplog.New(zapLogger)
+	logger := logs.NewMockLogger()
 
 	s := &Server{
 		Tokens:              validTokens,
@@ -644,14 +637,25 @@ func TestServer_GetPage_WithLogger(t *testing.T) {
 	// Test that the logger has the correct fields by logging a message and checking the output.
 	retrievedLogger.Info("test message")
 
-	if observedLogs.Len() != 1 {
-		t.Fatalf("Expected 1 log entry, got %d", observedLogs.Len())
+	// Cast to MockLogger to inspect entries
+	mockLogger, ok := retrievedLogger.(*logs.MockLogger)
+	if !ok {
+		t.Fatal("Expected retrievedLogger to be a MockLogger")
 	}
 
-	logEntry := observedLogs.All()[0]
+	entries := mockLogger.Entries()
+	if len(entries) != 1 {
+		t.Fatalf("Expected 1 log entry, got %d", len(entries))
+	}
+
+	logEntry := entries[0]
 
 	if logEntry.Message != "test message" {
 		t.Errorf("Expected message 'test message', got %q", logEntry.Message)
+	}
+
+	if logEntry.Level != "info" {
+		t.Errorf("Expected level 'info', got %q", logEntry.Level)
 	}
 
 	// Verify the expected fields are present with correct values.
@@ -667,9 +671,13 @@ func TestServer_GetPage_WithLogger(t *testing.T) {
 		"entityExternalId":       "users",
 	}
 
-	contextMap := logEntry.ContextMap()
+	fieldMap := make(map[string]any, len(logEntry.Fields))
+	for _, field := range logEntry.Fields {
+		fieldMap[field.Key] = field.Value
+	}
+
 	for fieldName, expectedValue := range expectedFields {
-		actualValue, ok := contextMap[fieldName]
+		actualValue, ok := fieldMap[fieldName]
 		if !ok {
 			t.Errorf("Expected field %s not found in log output", fieldName)
 
