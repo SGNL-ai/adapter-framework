@@ -6,10 +6,11 @@ package sgnl.connector.v1;
 
 option go_package = "github.com/sgnl-ai/adapter-framework/pkg/connector/v1";
 
+import "google/protobuf/empty.proto";
 import "proto/grpc_proxy/v1/grpc_proxy.proto";
 
 // ConnectorService is a gRPC service implemented by the Connector Service to
-// relay requests from the Adapters and Action Handlers to the remote on-premises 
+// relay requests from the Adapters and Action Handlers to the remote on-premises
 // connectors.
 service ConnectorService {
   // Bidirectional streaming RPC for request relay
@@ -20,6 +21,11 @@ service ConnectorService {
   // - version: Connector version
   // - labels: Optional metadata as key-value pairs
   rpc RelayRequests (stream ConnectorResponse) returns (stream ConnectorRequest) {}
+
+  // Unary RPC for relaying log batches from connector to service
+  // Uses the same authentication as RelayRequests (via metadata)
+  // Returns Empty on success, error on failure
+  rpc RelayLogs (LogBatch) returns (google.protobuf.Empty) {}
 }
 
 // Wrapper messages with request IDs for request/response correlate
@@ -31,4 +37,30 @@ message ConnectorRequest {
 message ConnectorResponse {
   string request_id = 1;
   sgnl.grpc_proxy.v1.Response proxy_response = 2;
+}
+
+// LogBatch contains a batch of log entries from the connector
+message LogBatch {
+  repeated LogEntry entries = 1;
+  uint32 dropped_count = 5; // Count of logs dropped
+}
+
+// LogEntry represents a single log entry
+message LogEntry {
+  int64 timestamp_ns = 1;
+
+  // Log level
+  enum Level {
+    DEBUG = 0;
+    INFO = 1;
+    WARN = 2;
+    ERROR = 3;
+  }
+  Level level = 2;
+
+  string message = 3;
+  string fields_json = 4; // Structured fields as JSON
+  string logger_name = 5;
+  string caller = 6; // file:line
+  string stack_trace = 7; // Only for ERROR level
 }
