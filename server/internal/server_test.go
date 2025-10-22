@@ -651,11 +651,11 @@ func TestServer_GetPage_WithLogger(t *testing.T) {
 	logEntry := entries[0]
 
 	if logEntry.Message != "test message" {
-		t.Errorf("Expected message 'test message', got %q", logEntry.Message)
+		t.Errorf("Expected message 'test message', got %s", logEntry.Message)
 	}
 
 	if logEntry.Level != "info" {
-		t.Errorf("Expected level 'info', got %q", logEntry.Level)
+		t.Errorf("Expected level 'info', got %s", logEntry.Level)
 	}
 
 	// Verify the expected fields are present with correct values.
