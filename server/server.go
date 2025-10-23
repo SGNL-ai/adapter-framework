@@ -23,10 +23,27 @@ import (
 	"github.com/fsnotify/fsnotify"
 	framework "github.com/sgnl-ai/adapter-framework"
 	api_adapter_v1 "github.com/sgnl-ai/adapter-framework/api/adapter/v1"
+	"github.com/sgnl-ai/adapter-framework/pkg/logs"
 	"github.com/sgnl-ai/adapter-framework/server/internal"
 )
 
 type Server = internal.Server
+
+// ServerOption are options for configuring the AdapterServer.
+type ServerOption func(*serverConfig)
+
+// serverConfig holds configuration options for the AdapterServer.
+type serverConfig struct {
+	logger logs.Logger
+}
+
+// WithLogger configures the server to use the provided logger.
+// The logger must implement the logs.Logger interface.
+func WithLogger(logger logs.Logger) ServerOption {
+	return func(cfg *serverConfig) {
+		cfg.logger = logger
+	}
+}
 
 // New returns an AdapterServer that wraps the given high-level
 // Adapter implementation with the Tokens field populated from the file
@@ -35,13 +52,19 @@ type Server = internal.Server
 // be closed and stop watching for file changes.
 func New(
 	stop <-chan struct{},
+	opts ...ServerOption,
 ) api_adapter_v1.AdapterServer {
 	authTokensPath, exists := os.LookupEnv("AUTH_TOKENS_PATH")
 	if !exists {
 		panic("AUTH_TOKENS_PATH environment variable not set")
 	}
 
-	return newWithAuthTokensPath(authTokensPath, stop)
+	cfg := &serverConfig{}
+	for _, opt := range opts {
+		opt(cfg)
+	}
+
+	return newWithAuthTokensPath(authTokensPath, stop, cfg.logger)
 }
 
 // RegisterAdapter registers a new high-level Adapter implementation with the server.
@@ -62,6 +85,7 @@ func RegisterAdapter[Config any](s api_adapter_v1.AdapterServer, datasourceType 
 func newWithAuthTokensPath(
 	authTokensPath string,
 	stop <-chan struct{},
+	logger logs.Logger,
 ) api_adapter_v1.AdapterServer {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -75,6 +99,7 @@ func newWithAuthTokensPath(
 	server := &internal.Server{
 		Tokens:              getTokensFromPath(authTokensPath),
 		AdapterGetPageFuncs: make(map[string]internal.AdapterGetPageFunc),
+		Logger:              logger,
 	}
 
 	go func(s *internal.Server) {

@@ -45,6 +45,14 @@ message GetPageRequest {
     // returned by the last call to GetPage for the entity.
     // If not set, return the first page for this entity.
     string cursor = 4;
+
+    // The tenant identifier associated with this request.
+    // Optional.
+    string tenant_id = 5;
+
+    // The client identifier associated with this request.
+    // Optional.
+    string client_id = 6;
 }
 
 // A response containing a page of data.
@@ -194,7 +202,7 @@ message Page {
 message Object {
     // The object's attributes.
     repeated Attribute attributes = 1;
-    
+
     // The child objects that belong to child entities of
     // the object's entity.
     repeated EntityObjects child_objects = 2;
@@ -241,13 +249,13 @@ message AttributeValue {
 message Duration {
     // A duration as a number of seconds.
     int64 seconds = 1;
-    
+
     // A duration as a number of nanoseconds.
     int32 nanos = 2;
-    
+
     // A duration as a number of months.
     int64 months = 3;
-    
+
     // A duration as a number of days.
     int64 days = 4;
 }
