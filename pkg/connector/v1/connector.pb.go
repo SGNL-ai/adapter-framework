@@ -185,11 +185,11 @@ func (x *ConnectorResponse) GetProxyResponse() *v1.Response {
 
 // LogBatch contains a batch of log entries from the connector
 type LogBatch struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Entries       []*LogEntry            `protobuf:"bytes,1,rep,name=entries,proto3" json:"entries,omitempty"`
-	DroppedCount  uint32                 `protobuf:"varint,5,opt,name=dropped_count,json=droppedCount,proto3" json:"dropped_count,omitempty"` // Count of logs dropped
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Entries          []*LogEntry            `protobuf:"bytes,1,rep,name=entries,proto3" json:"entries,omitempty"`
+	LastDroppedCount uint32                 `protobuf:"varint,5,opt,name=last_dropped_count,json=lastDroppedCount,proto3" json:"last_dropped_count,omitempty"` // Count of logs dropped
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *LogBatch) Reset() {
@@ -229,9 +229,9 @@ func (x *LogBatch) GetEntries() []*LogEntry {
 	return nil
 }
 
-func (x *LogBatch) GetDroppedCount() uint32 {
+func (x *LogBatch) GetLastDroppedCount() uint32 {
 	if x != nil {
-		return x.DroppedCount
+		return x.LastDroppedCount
 	}
 	return 0
 }
@@ -341,10 +341,10 @@ const file_proto_connector_v1_connector_proto_rawDesc = "" +
 	"\x11ConnectorResponse\x12\x1d\n" +
 	"\n" +
 	"request_id\x18\x01 \x01(\tR\trequestId\x12C\n" +
-	"\x0eproxy_response\x18\x02 \x01(\v2\x1c.sgnl.grpc_proxy.v1.ResponseR\rproxyResponse\"f\n" +
+	"\x0eproxy_response\x18\x02 \x01(\v2\x1c.sgnl.grpc_proxy.v1.ResponseR\rproxyResponse\"o\n" +
 	"\bLogBatch\x125\n" +
-	"\aentries\x18\x01 \x03(\v2\x1b.sgnl.connector.v1.LogEntryR\aentries\x12#\n" +
-	"\rdropped_count\x18\x05 \x01(\rR\fdroppedCount\"\xae\x02\n" +
+	"\aentries\x18\x01 \x03(\v2\x1b.sgnl.connector.v1.LogEntryR\aentries\x12,\n" +
+	"\x12last_dropped_count\x18\x05 \x01(\rR\x10lastDroppedCount\"\xae\x02\n" +
 	"\bLogEntry\x12!\n" +
 	"\ftimestamp_ns\x18\x01 \x01(\x03R\vtimestampNs\x127\n" +
 	"\x05level\x18\x02 \x01(\x0e2!.sgnl.connector.v1.LogEntry.LevelR\x05level\x12\x18\n" +

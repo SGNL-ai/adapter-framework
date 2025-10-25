@@ -42,7 +42,7 @@ message ConnectorResponse {
 // LogBatch contains a batch of log entries from the connector
 message LogBatch {
   repeated LogEntry entries = 1;
-  uint32 dropped_count = 5; // Count of logs dropped
+  uint32 last_dropped_count = 5; // Count of logs dropped
 }
 
 // LogEntry represents a single log entry
