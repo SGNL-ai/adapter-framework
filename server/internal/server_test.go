@@ -660,7 +660,7 @@ func TestServer_GetPage_WithLogger(t *testing.T) {
 
 	// Verify the expected fields are present with correct values.
 	expectedFields := map[string]any{
-		"adapterRequestCursor":   "test-cursor",
+		"adapterRequestCursor":   true,
 		"adapterRequestPageSize": int64(50),
 		"tenantId":               "test-tenant-123",
 		"clientId":               "test-client-456",

@@ -46,8 +46,24 @@ func EntityID(value string) Field {
 // RequestCursor returns a log field indicating whether a request cursor exists.
 // The actual cursor value is not logged to avoid exposing sensitive data
 // (URLs with secrets, usernames, group names, IDs, etc.).
+//
+// TODO: Implement a framework for selectively logging cursor contents. Cursors
+// can contain sensitive data (PII, secrets) that should be redacted, but logging
+// some cursor metadata could be useful for debugging. Until then, we only log
+// whether a cursor is present.
 func RequestCursor(value any) Field {
-	return Field{Key: FieldAdapterRequestCursor, Value: value != nil}
+	var hasValue bool
+
+	switch v := value.(type) {
+	case string:
+		hasValue = v != ""
+	case []byte:
+		hasValue = len(v) > 0
+	default:
+		hasValue = value != nil
+	}
+
+	return Field{Key: FieldAdapterRequestCursor, Value: hasValue}
 }
 
 // RequestPageSize returns a log field for the request page size.
