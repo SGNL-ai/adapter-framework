@@ -43,9 +43,11 @@ func EntityID(value string) Field {
 	return Field{Key: FieldEntityID, Value: value}
 }
 
-// RequestCursor returns a log field for the request cursor.
+// RequestCursor returns a log field indicating whether a request cursor exists.
+// The actual cursor value is not logged to avoid exposing sensitive data
+// (URLs with secrets, usernames, group names, IDs, etc.).
 func RequestCursor(value any) Field {
-	return Field{Key: FieldAdapterRequestCursor, Value: value}
+	return Field{Key: FieldAdapterRequestCursor, Value: value != nil}
 }
 
 // RequestPageSize returns a log field for the request page size.
