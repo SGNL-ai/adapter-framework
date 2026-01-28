@@ -659,8 +659,9 @@ func TestServer_GetPage_WithLogger(t *testing.T) {
 	}
 
 	// Verify the expected fields are present with correct values.
+	// Note: Cursor is intentionally not logged here to avoid exposing sensitive data.
+	// Cursor fields should be selectively logged from individual adapters.
 	expectedFields := map[string]any{
-		"adapterRequestCursor":   true,
 		"adapterRequestPageSize": int64(50),
 		"tenantId":               "test-tenant-123",
 		"clientId":               "test-client-456",

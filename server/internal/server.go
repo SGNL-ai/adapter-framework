@@ -149,9 +149,11 @@ func RegisterAdapter[Config any](s *Server, datasourceType string, adapter frame
 		}
 
 		// Create a child logger with request fields and add it to the context.
+		// Note: Cursor is intentionally not logged here to avoid exposing sensitive data
+		// (URLs with secrets, usernames, group names, IDs, etc.).
+		// Cursor fields should be selectively logged from individual adapters.
 		if s.Logger != nil {
 			requestLogger := s.Logger.With(
-				logs.RequestCursor(req.Cursor),
 				logs.RequestPageSize(req.PageSize),
 				logs.TenantID(req.TenantId),
 				logs.ClientID(req.ClientId),

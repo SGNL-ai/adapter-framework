@@ -8,7 +8,6 @@ const (
 	FieldDatasourceType         = "datasourceType"
 	FieldEntityExternalID       = "entityExternalId"
 	FieldEntityID               = "entityId"
-	FieldAdapterRequestCursor   = "adapterRequestCursor" // Prefix with "adapter" because there may be multiple page cursors used in a single adapter request.
 	FieldAdapterRequestPageSize = "adapterRequestPageSize"
 	FieldTenantID               = "tenantId"
 )
@@ -41,29 +40,6 @@ func EntityExternalID(value string) Field {
 // EntityID returns a log field for the entity ID.
 func EntityID(value string) Field {
 	return Field{Key: FieldEntityID, Value: value}
-}
-
-// RequestCursor returns a log field indicating whether a request cursor exists.
-// The actual cursor value is not logged to avoid exposing sensitive data
-// (URLs with secrets, usernames, group names, IDs, etc.).
-//
-// TODO: Implement a framework for selectively logging cursor contents. Cursors
-// can contain sensitive data (PII, secrets) that should be redacted, but logging
-// some cursor metadata could be useful for debugging. Until then, we only log
-// whether a cursor is present.
-func RequestCursor(value any) Field {
-	var hasValue bool
-
-	switch v := value.(type) {
-	case string:
-		hasValue = v != ""
-	case []byte:
-		hasValue = len(v) > 0
-	default:
-		hasValue = value != nil
-	}
-
-	return Field{Key: FieldAdapterRequestCursor, Value: hasValue}
 }
 
 // RequestPageSize returns a log field for the request page size.
