@@ -6,6 +6,7 @@ package sgnl.grpc_proxy.v1;
 
 option go_package = "github.com/sgnl-ai/adapter-framework/pkg/grpc_proxy/v1";
 
+import "google/api/annotations.proto";
 import "proto/grpc_proxy/v1/http.proto";
 import "proto/grpc_proxy/v1/sql.proto";
 import "proto/grpc_proxy/v1/ldap.proto";
@@ -15,7 +16,12 @@ import "proto/grpc_proxy/v1/ldap.proto";
 // relaying them to the remote on-premises Connectors.
 service ProxyService {
   // ProxyRequest forwards a request through the proxy
-  rpc ProxyRequest(ProxyRequestMessage) returns (Response) {}
+  rpc ProxyRequest(ProxyRequestMessage) returns (Response) {
+    option (google.api.http) = {
+      post: "/v1/proxy"
+      body: "*"
+    };
+  }
 }
 
 // Request represents a request to be proxied

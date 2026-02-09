@@ -9,6 +9,7 @@
 package v1
 
 import (
+	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
@@ -302,7 +303,7 @@ var File_proto_grpc_proxy_v1_grpc_proxy_proto protoreflect.FileDescriptor
 
 const file_proto_grpc_proxy_v1_grpc_proxy_proto_rawDesc = "" +
 	"\n" +
-	"$proto/grpc_proxy/v1/grpc_proxy.proto\x12\x12sgnl.grpc_proxy.v1\x1a\x1eproto/grpc_proxy/v1/http.proto\x1a\x1dproto/grpc_proxy/v1/sql.proto\x1a\x1eproto/grpc_proxy/v1/ldap.proto\"\x83\x02\n" +
+	"$proto/grpc_proxy/v1/grpc_proxy.proto\x12\x12sgnl.grpc_proxy.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x1eproto/grpc_proxy/v1/http.proto\x1a\x1dproto/grpc_proxy/v1/sql.proto\x1a\x1eproto/grpc_proxy/v1/ldap.proto\"\x83\x02\n" +
 	"\aRequest\x12D\n" +
 	"\fhttp_request\x18\x01 \x01(\v2\x1f.sgnl.grpc_proxy.v1.HTTPRequestH\x00R\vhttpRequest\x12I\n" +
 	"\rsql_query_req\x18\x02 \x01(\v2#.sgnl.grpc_proxy.v1.SQLQueryRequestH\x00R\vsqlQueryReq\x12W\n" +
@@ -318,9 +319,9 @@ const file_proto_grpc_proxy_v1_grpc_proxy_proto_rawDesc = "" +
 	"\arequest\x18\x01 \x01(\v2\x1b.sgnl.grpc_proxy.v1.RequestR\arequest\x12!\n" +
 	"\fconnector_id\x18\x02 \x01(\tR\vconnectorId\x12\x1b\n" +
 	"\tclient_id\x18\x03 \x01(\tR\bclientId\x12\x1b\n" +
-	"\ttenant_id\x18\x04 \x01(\tR\btenantId2g\n" +
-	"\fProxyService\x12W\n" +
-	"\fProxyRequest\x12'.sgnl.grpc_proxy.v1.ProxyRequestMessage\x1a\x1c.sgnl.grpc_proxy.v1.Response\"\x00B8Z6github.com/sgnl-ai/adapter-framework/pkg/grpc_proxy/v1b\x06proto3"
+	"\ttenant_id\x18\x04 \x01(\tR\btenantId2{\n" +
+	"\fProxyService\x12k\n" +
+	"\fProxyRequest\x12'.sgnl.grpc_proxy.v1.ProxyRequestMessage\x1a\x1c.sgnl.grpc_proxy.v1.Response\"\x14\x82\xd3\xe4\x93\x02\x0e:\x01*\"\t/v1/proxyB8Z6github.com/sgnl-ai/adapter-framework/pkg/grpc_proxy/v1b\x06proto3"
 
 var (
 	file_proto_grpc_proxy_v1_grpc_proxy_proto_rawDescOnce sync.Once
