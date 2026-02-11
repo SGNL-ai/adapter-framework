@@ -16,7 +16,9 @@ package web
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/PaesslerAG/gval"
@@ -61,7 +63,16 @@ func convertJSONObjectList(entity *framework.EntityConfig, objects []map[string]
 		parsedObject, err := convertJSONObject(entity, object, opts, jsonPaths)
 
 		if err != nil {
-			return nil, err
+			// Log the complete object and skip it instead of returning error
+			objectJSON, jsonErr := json.Marshal(object)
+			if jsonErr != nil {
+				log.Printf("[ERROR] Failed to marshal JSON object for logging: %v. Original error: %v", jsonErr, err)
+			} else {
+				log.Printf("[ERROR] Skipping JSON object due to conversion error. Entity: %v, Error: %v, Object: %s",
+					entity, err, string(objectJSON))
+			}
+
+			continue // Skip this object and process the next one
 		}
 
 		if len(parsedObject) == 0 {
