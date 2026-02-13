@@ -1,6 +1,6 @@
 module github.com/sgnl-ai/adapter-framework
 
-go 1.25.7
+go 1.25
 
 require (
 	github.com/PaesslerAG/gval v1.2.4
