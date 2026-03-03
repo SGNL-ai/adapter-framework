@@ -8,7 +8,7 @@ require (
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/go-asn1-ber/asn1-ber v1.5.8-0.20250403174932-29230038a667
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0
-	github.com/sosodev/duration v1.3.1
+	github.com/sosodev/duration v1.4.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20260209200024-4cfbd4190f57
 	google.golang.org/grpc v1.79.1
 	google.golang.org/protobuf v1.36.11
