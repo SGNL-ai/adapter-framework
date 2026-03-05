@@ -18,3 +18,78 @@ message LDAPSearchResponse {
   string response = 1;
   string error = 2;
 }
+
+// LDAPAttribute represents an LDAP attribute with a type name and values.
+// Maps to both ldap.Attribute (used in add) and ldap.PartialAttribute (used in modify).
+message LDAPAttribute {
+  string type = 1;
+  repeated string values = 2;
+}
+
+// LDAPModifyOperation represents the type of modification to apply to an attribute.
+// Values align with go-ldap/ldap/v3 constants: AddAttribute=0, DeleteAttribute=1, ReplaceAttribute=2.
+enum LDAPModifyOperation {
+  LDAP_MODIFY_OPERATION_ADD = 0;
+  LDAP_MODIFY_OPERATION_DELETE = 1;
+  LDAP_MODIFY_OPERATION_REPLACE = 2;
+}
+
+// LDAPAddRequest represents a request to add a new LDAP entry.
+// Maps to ldap.AddRequest.
+message LDAPAddRequest {
+  string dn = 1;
+  repeated LDAPAttribute attributes = 2;
+}
+
+// LDAPModifyChange represents a single modification within a modify operation.
+// Maps to ldap.Change.
+message LDAPModifyChange {
+  LDAPModifyOperation operation = 1;
+  LDAPAttribute modification = 2;
+}
+
+// LDAPModifyRequest represents a request to modify attributes of an existing LDAP entry.
+// Maps to ldap.ModifyRequest.
+message LDAPModifyRequest {
+  string dn = 1;
+  repeated LDAPModifyChange changes = 2;
+}
+
+// LDAPDeleteRequest represents a request to delete an LDAP entry.
+// Maps to ldap.DelRequest.
+message LDAPDeleteRequest {
+  string dn = 1;
+}
+
+// LDAPModifyDNRequest represents a request to rename or move an LDAP entry.
+// Maps to ldap.ModifyDNRequest.
+message LDAPModifyDNRequest {
+  string dn = 1;
+  string new_rdn = 2;
+  bool delete_old_rdn = 3;
+  string new_superior = 4;
+}
+
+// LDAPOperationRequest wraps LDAP write operations with connection credentials.
+// Each request is self-contained (bind-per-operation pattern); the on-prem
+// connector's SessionPool handles actual connection reuse.
+message LDAPOperationRequest {
+  string url = 1;
+  string bind_dn = 2;
+  string bind_password = 3;
+  oneof operation {
+    LDAPAddRequest add_request = 4;
+    LDAPModifyRequest modify_request = 5;
+    LDAPDeleteRequest delete_request = 6;
+    LDAPModifyDNRequest modify_dn_request = 7;
+  }
+}
+
+// LDAPOperationResponse represents the result of an LDAP write operation.
+// Fields map to RFC 4511 LDAPResult and go-ldap's Error type.
+message LDAPOperationResponse {
+  bool success = 1;
+  string error = 2;
+  int32 result_code = 3;
+  string matched_dn = 4;
+}
