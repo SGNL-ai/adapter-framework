@@ -30,6 +30,7 @@ message Request {
     sgnl.grpc_proxy.v1.HTTPRequest http_request = 1;
     sgnl.grpc_proxy.v1.SQLQueryRequest sql_query_req = 2;
     sgnl.grpc_proxy.v1.LDAPSearchRequest ldap_search_request = 3;
+    sgnl.grpc_proxy.v1.LDAPOperationRequest ldap_operation_request = 4;
   }
 }
 
@@ -40,6 +41,7 @@ message Response {
     sgnl.grpc_proxy.v1.HTTPResponse http_response = 2;
     sgnl.grpc_proxy.v1.SQLQueryResponse sql_query_response = 3;
     sgnl.grpc_proxy.v1.LDAPSearchResponse ldap_search_response = 4;
+    sgnl.grpc_proxy.v1.LDAPOperationResponse ldap_operation_response = 5;
   }
 }
 
