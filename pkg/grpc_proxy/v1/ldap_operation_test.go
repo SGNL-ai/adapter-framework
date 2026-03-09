@@ -248,38 +248,33 @@ func TestLDAPOperationRequest_GivenModifyDNRequest_WhenConstructed_ThenFieldsAre
 	}
 }
 
-func TestLDAPOperationResponse_GivenSuccessAndError_WhenConstructed_ThenFieldsAreCorrect(t *testing.T) {
+func TestLDAPOperationResponse_GivenResultFields_WhenConstructed_ThenFieldsAreCorrect(t *testing.T) {
 	tests := []struct {
 		name       string
-		success    bool
 		errMsg     string
 		resultCode int32
 		matchedDN  string
 	}{
 		{
-			name:       "success",
-			success:    true,
+			name:       "success_result_code_zero",
 			errMsg:     "",
 			resultCode: 0,
 			matchedDN:  "",
 		},
 		{
 			name:       "error_invalid_credentials",
-			success:    false,
 			errMsg:     "invalid credentials",
 			resultCode: 49,
 			matchedDN:  "",
 		},
 		{
 			name:       "error_no_such_object",
-			success:    false,
 			errMsg:     "no such object",
 			resultCode: 32,
 			matchedDN:  "dc=example,dc=com",
 		},
 		{
 			name:       "error_insufficient_access",
-			success:    false,
 			errMsg:     "insufficient access rights",
 			resultCode: 50,
 			matchedDN:  "cn=John,ou=Users,dc=example,dc=com",
@@ -290,16 +285,12 @@ func TestLDAPOperationResponse_GivenSuccessAndError_WhenConstructed_ThenFieldsAr
 		t.Run(tt.name, func(t *testing.T) {
 			// Arrange & Act
 			resp := &LDAPOperationResponse{
-				Success:    tt.success,
 				Error:      tt.errMsg,
 				ResultCode: tt.resultCode,
 				MatchedDn:  tt.matchedDN,
 			}
 
-			// Assert
-			if resp.GetSuccess() != tt.success {
-				t.Errorf("got success %v, want %v", resp.GetSuccess(), tt.success)
-			}
+			// Assert - success is derived from result_code == 0, no explicit success field
 			if resp.GetError() != tt.errMsg {
 				t.Errorf("got error %q, want %q", resp.GetError(), tt.errMsg)
 			}
@@ -313,9 +304,11 @@ func TestLDAPOperationResponse_GivenSuccessAndError_WhenConstructed_ThenFieldsAr
 	}
 }
 
-func TestLDAPModifyOperation_GivenEnumValues_WhenChecked_ThenMatchGoLDAPConstants(t *testing.T) {
-	// These values must match go-ldap/ldap/v3 constants:
-	// AddAttribute=0, DeleteAttribute=1, ReplaceAttribute=2
+func TestLDAPModifyOperation_GivenEnumValues_WhenChecked_ThenNumericValuesAreStable(t *testing.T) {
+	// Verify enum numeric values remain stable across regenerations.
+	// These values are chosen to align with go-ldap/ldap/v3 constants
+	// (AddAttribute=0, DeleteAttribute=1, ReplaceAttribute=2) by convention,
+	// but this test validates the proto-generated values, not the go-ldap library directly.
 
 	tests := []struct {
 		name     string
@@ -323,17 +316,17 @@ func TestLDAPModifyOperation_GivenEnumValues_WhenChecked_ThenMatchGoLDAPConstant
 		expected int32
 	}{
 		{
-			name:     "add_matches_go_ldap_AddAttribute",
+			name:     "add_is_zero",
 			op:       LDAPModifyOperation_LDAP_MODIFY_OPERATION_ADD,
 			expected: 0,
 		},
 		{
-			name:     "delete_matches_go_ldap_DeleteAttribute",
+			name:     "delete_is_one",
 			op:       LDAPModifyOperation_LDAP_MODIFY_OPERATION_DELETE,
 			expected: 1,
 		},
 		{
-			name:     "replace_matches_go_ldap_ReplaceAttribute",
+			name:     "replace_is_two",
 			op:       LDAPModifyOperation_LDAP_MODIFY_OPERATION_REPLACE,
 			expected: 2,
 		},
@@ -393,7 +386,6 @@ func TestRequest_GivenLDAPOperationRequest_WhenOneofSet_ThenGetReturnsCorrectTyp
 func TestResponse_GivenLDAPOperationResponse_WhenOneofSet_ThenGetReturnsCorrectType(t *testing.T) {
 	// Arrange
 	opResp := &LDAPOperationResponse{
-		Success:    true,
 		ResultCode: 0,
 	}
 
@@ -415,8 +407,8 @@ func TestResponse_GivenLDAPOperationResponse_WhenOneofSet_ThenGetReturnsCorrectT
 	if resp.GetLdapSearchResponse() != nil {
 		t.Error("expected ldap_search_response to be nil")
 	}
-	if !resp.GetLdapOperationResponse().GetSuccess() {
-		t.Error("expected success to be true")
+	if resp.GetLdapOperationResponse().GetResultCode() != 0 {
+		t.Errorf("expected result_code 0, got %d", resp.GetLdapOperationResponse().GetResultCode())
 	}
 }
 
@@ -590,14 +582,12 @@ func TestLDAPOperationResponse_GivenResponse_WhenMarshalUnmarshal_ThenRoundTrips
 		{
 			name: "success_response",
 			original: &LDAPOperationResponse{
-				Success:    true,
 				ResultCode: 0,
 			},
 		},
 		{
 			name: "error_response",
 			original: &LDAPOperationResponse{
-				Success:    false,
 				Error:      "no such object",
 				ResultCode: 32,
 				MatchedDn:  "dc=example,dc=com",
@@ -619,9 +609,6 @@ func TestLDAPOperationResponse_GivenResponse_WhenMarshalUnmarshal_ThenRoundTrips
 			}
 
 			// Assert
-			if decoded.GetSuccess() != tt.original.GetSuccess() {
-				t.Errorf("success: got %v, want %v", decoded.GetSuccess(), tt.original.GetSuccess())
-			}
 			if decoded.GetError() != tt.original.GetError() {
 				t.Errorf("error: got %q, want %q", decoded.GetError(), tt.original.GetError())
 			}
@@ -682,7 +669,6 @@ func TestResponse_GivenLDAPOperationResponse_WhenMarshalUnmarshal_ThenOneofPrese
 	original := &Response{
 		ResponseType: &Response_LdapOperationResponse{
 			LdapOperationResponse: &LDAPOperationResponse{
-				Success:    false,
 				Error:      "insufficient access rights",
 				ResultCode: 50,
 				MatchedDn:  "cn=John,ou=Users,dc=example,dc=com",
@@ -706,14 +692,11 @@ func TestResponse_GivenLDAPOperationResponse_WhenMarshalUnmarshal_ThenOneofPrese
 		t.Fatal("expected ldap_operation_response to be set after unmarshal")
 	}
 	got := decoded.GetLdapOperationResponse()
-	if got.GetSuccess() {
-		t.Error("expected success to be false")
+	if got.GetResultCode() != 50 {
+		t.Errorf("got result_code %d, want %d", got.GetResultCode(), 50)
 	}
 	if got.GetError() != "insufficient access rights" {
 		t.Errorf("got error %q, want %q", got.GetError(), "insufficient access rights")
-	}
-	if got.GetResultCode() != 50 {
-		t.Errorf("got result_code %d, want %d", got.GetResultCode(), 50)
 	}
 	if got.GetMatchedDn() != "cn=John,ou=Users,dc=example,dc=com" {
 		t.Errorf("got matched_dn %q, want %q", got.GetMatchedDn(), "cn=John,ou=Users,dc=example,dc=com")

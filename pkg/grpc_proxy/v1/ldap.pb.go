@@ -649,9 +649,9 @@ func (*LDAPOperationRequest_ModifyDnRequest) isLDAPOperationRequest_Operation() 
 
 // LDAPOperationResponse represents the result of an LDAP write operation.
 // Fields map to RFC 4511 LDAPResult and go-ldap's Error type.
+// Success is derived from result_code == 0 (no explicit success field).
 type LDAPOperationResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
 	Error         string                 `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
 	ResultCode    int32                  `protobuf:"varint,3,opt,name=result_code,json=resultCode,proto3" json:"result_code,omitempty"`
 	MatchedDn     string                 `protobuf:"bytes,4,opt,name=matched_dn,json=matchedDn,proto3" json:"matched_dn,omitempty"`
@@ -687,13 +687,6 @@ func (x *LDAPOperationResponse) ProtoReflect() protoreflect.Message {
 // Deprecated: Use LDAPOperationResponse.ProtoReflect.Descriptor instead.
 func (*LDAPOperationResponse) Descriptor() ([]byte, []int) {
 	return file_proto_grpc_proxy_v1_ldap_proto_rawDescGZIP(), []int{9}
-}
-
-func (x *LDAPOperationResponse) GetSuccess() bool {
-	if x != nil {
-		return x.Success
-	}
-	return false
 }
 
 func (x *LDAPOperationResponse) GetError() string {
@@ -757,14 +750,13 @@ const file_proto_grpc_proxy_v1_ldap_proto_rawDesc = "" +
 	"\x0emodify_request\x18\x05 \x01(\v2%.sgnl.grpc_proxy.v1.LDAPModifyRequestH\x00R\rmodifyRequest\x12N\n" +
 	"\x0edelete_request\x18\x06 \x01(\v2%.sgnl.grpc_proxy.v1.LDAPDeleteRequestH\x00R\rdeleteRequest\x12U\n" +
 	"\x11modify_dn_request\x18\a \x01(\v2'.sgnl.grpc_proxy.v1.LDAPModifyDNRequestH\x00R\x0fmodifyDnRequestB\v\n" +
-	"\toperation\"\x87\x01\n" +
-	"\x15LDAPOperationResponse\x12\x18\n" +
-	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x14\n" +
+	"\toperation\"|\n" +
+	"\x15LDAPOperationResponse\x12\x14\n" +
 	"\x05error\x18\x02 \x01(\tR\x05error\x12\x1f\n" +
 	"\vresult_code\x18\x03 \x01(\x05R\n" +
 	"resultCode\x12\x1d\n" +
 	"\n" +
-	"matched_dn\x18\x04 \x01(\tR\tmatchedDn*y\n" +
+	"matched_dn\x18\x04 \x01(\tR\tmatchedDnJ\x04\b\x01\x10\x02R\asuccess*y\n" +
 	"\x13LDAPModifyOperation\x12\x1d\n" +
 	"\x19LDAP_MODIFY_OPERATION_ADD\x10\x00\x12 \n" +
 	"\x1cLDAP_MODIFY_OPERATION_DELETE\x10\x01\x12!\n" +

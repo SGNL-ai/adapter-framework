@@ -87,8 +87,10 @@ message LDAPOperationRequest {
 
 // LDAPOperationResponse represents the result of an LDAP write operation.
 // Fields map to RFC 4511 LDAPResult and go-ldap's Error type.
+// Success is derived from result_code == 0 (no explicit success field).
 message LDAPOperationResponse {
-  bool success = 1;
+  reserved 1;
+  reserved "success";
   string error = 2;
   int32 result_code = 3;
   string matched_dn = 4;
