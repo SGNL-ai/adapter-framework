@@ -19,16 +19,16 @@ func TestLDAPOperationRequest_GivenAddRequest_WhenConstructed_ThenFieldsAreCorre
 			name: "single_attribute",
 			dn:   "cn=John Doe,ou=Users,dc=example,dc=com",
 			attributes: []*LDAPAttribute{
-				{Type: "objectClass", Values: []string{"user"}},
+				{Type: "objectClass", Values: [][]byte{[]byte("user")}},
 			},
 		},
 		{
 			name: "multiple_attributes",
 			dn:   "cn=Jane Doe,ou=Users,dc=example,dc=com",
 			attributes: []*LDAPAttribute{
-				{Type: "objectClass", Values: []string{"user", "person"}},
-				{Type: "sAMAccountName", Values: []string{"jdoe"}},
-				{Type: "cn", Values: []string{"Jane Doe"}},
+				{Type: "objectClass", Values: [][]byte{[]byte("user"), []byte("person")}},
+				{Type: "sAMAccountName", Values: [][]byte{[]byte("jdoe")}},
+				{Type: "cn", Values: [][]byte{[]byte("Jane Doe")}},
 			},
 		},
 		{
@@ -89,7 +89,7 @@ func TestLDAPOperationRequest_GivenModifyRequest_WhenConstructed_ThenFieldsAreCo
 			changes: []*LDAPModifyChange{
 				{
 					Operation:    LDAPModifyOperation_LDAP_MODIFY_OPERATION_REPLACE,
-					Modification: &LDAPAttribute{Type: "userAccountControl", Values: []string{"512"}},
+					Modification: &LDAPAttribute{Type: "userAccountControl", Values: [][]byte{[]byte("512")}},
 				},
 			},
 		},
@@ -99,15 +99,15 @@ func TestLDAPOperationRequest_GivenModifyRequest_WhenConstructed_ThenFieldsAreCo
 			changes: []*LDAPModifyChange{
 				{
 					Operation:    LDAPModifyOperation_LDAP_MODIFY_OPERATION_REPLACE,
-					Modification: &LDAPAttribute{Type: "title", Values: []string{"Engineer"}},
+					Modification: &LDAPAttribute{Type: "title", Values: [][]byte{[]byte("Engineer")}},
 				},
 				{
 					Operation:    LDAPModifyOperation_LDAP_MODIFY_OPERATION_DELETE,
-					Modification: &LDAPAttribute{Type: "description", Values: []string{}},
+					Modification: &LDAPAttribute{Type: "description", Values: [][]byte{}},
 				},
 				{
 					Operation:    LDAPModifyOperation_LDAP_MODIFY_OPERATION_ADD,
-					Modification: &LDAPAttribute{Type: "mail", Values: []string{"john@example.com"}},
+					Modification: &LDAPAttribute{Type: "mail", Values: [][]byte{[]byte("john@example.com")}},
 				},
 			},
 		},
@@ -350,7 +350,7 @@ func TestRequest_GivenLDAPOperationRequest_WhenOneofSet_ThenGetReturnsCorrectTyp
 	addReq := &LDAPAddRequest{
 		Dn: "cn=Test,dc=example,dc=com",
 		Attributes: []*LDAPAttribute{
-			{Type: "objectClass", Values: []string{"user"}},
+			{Type: "objectClass", Values: [][]byte{[]byte("user")}},
 		},
 	}
 	opReq := &LDAPOperationRequest{
@@ -422,9 +422,9 @@ func TestLDAPOperationRequest_GivenAddRequest_WhenMarshalUnmarshal_ThenRoundTrip
 			AddRequest: &LDAPAddRequest{
 				Dn: "cn=John Doe,ou=Users,dc=example,dc=com",
 				Attributes: []*LDAPAttribute{
-					{Type: "objectClass", Values: []string{"user", "person"}},
-					{Type: "sAMAccountName", Values: []string{"jdoe"}},
-					{Type: "cn", Values: []string{"John Doe"}},
+					{Type: "objectClass", Values: [][]byte{[]byte("user"), []byte("person")}},
+					{Type: "sAMAccountName", Values: [][]byte{[]byte("jdoe")}},
+					{Type: "cn", Values: [][]byte{[]byte("John Doe")}},
 				},
 			},
 		},
@@ -449,7 +449,7 @@ func TestLDAPOperationRequest_GivenAddRequest_WhenMarshalUnmarshal_ThenRoundTrip
 		t.Errorf("bind_dn: got %q, want %q", decoded.GetBindDn(), original.GetBindDn())
 	}
 	if decoded.GetBindPassword() != original.GetBindPassword() {
-		t.Errorf("bind_password: got %q, want %q", decoded.GetBindPassword(), original.GetBindPassword())
+		t.Error("bind_password: decoded value does not match original")
 	}
 	if decoded.GetAddRequest() == nil {
 		t.Fatal("expected add_request to be set after unmarshal")
@@ -483,11 +483,11 @@ func TestLDAPOperationRequest_GivenModifyRequest_WhenMarshalUnmarshal_ThenRoundT
 				Changes: []*LDAPModifyChange{
 					{
 						Operation:    LDAPModifyOperation_LDAP_MODIFY_OPERATION_REPLACE,
-						Modification: &LDAPAttribute{Type: "userAccountControl", Values: []string{"512"}},
+						Modification: &LDAPAttribute{Type: "userAccountControl", Values: [][]byte{[]byte("512")}},
 					},
 					{
 						Operation:    LDAPModifyOperation_LDAP_MODIFY_OPERATION_ADD,
-						Modification: &LDAPAttribute{Type: "mail", Values: []string{"john@example.com"}},
+						Modification: &LDAPAttribute{Type: "mail", Values: [][]byte{[]byte("john@example.com")}},
 					},
 				},
 			},

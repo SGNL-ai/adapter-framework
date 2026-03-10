@@ -21,9 +21,11 @@ message LDAPSearchResponse {
 
 // LDAPAttribute represents an LDAP attribute with a type name and values.
 // Maps to both ldap.Attribute (used in add) and ldap.PartialAttribute (used in modify).
+// Values use bytes (not string) because LDAP attribute values can be arbitrary
+// binary data (e.g., objectGUID, certificates) that may not be valid UTF-8.
 message LDAPAttribute {
   string type = 1;
-  repeated string values = 2;
+  repeated bytes values = 2;
 }
 
 // LDAPModifyOperation represents the type of modification to apply to an attribute.

@@ -176,10 +176,12 @@ func (x *LDAPSearchResponse) GetError() string {
 
 // LDAPAttribute represents an LDAP attribute with a type name and values.
 // Maps to both ldap.Attribute (used in add) and ldap.PartialAttribute (used in modify).
+// Values use bytes (not string) because LDAP attribute values can be arbitrary
+// binary data (e.g., objectGUID, certificates) that may not be valid UTF-8.
 type LDAPAttribute struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Type          string                 `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
-	Values        []string               `protobuf:"bytes,2,rep,name=values,proto3" json:"values,omitempty"`
+	Values        [][]byte               `protobuf:"bytes,2,rep,name=values,proto3" json:"values,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -221,7 +223,7 @@ func (x *LDAPAttribute) GetType() string {
 	return ""
 }
 
-func (x *LDAPAttribute) GetValues() []string {
+func (x *LDAPAttribute) GetValues() [][]byte {
 	if x != nil {
 		return x.Values
 	}
@@ -722,7 +724,7 @@ const file_proto_grpc_proxy_v1_ldap_proto_rawDesc = "" +
 	"\x05error\x18\x02 \x01(\tR\x05error\";\n" +
 	"\rLDAPAttribute\x12\x12\n" +
 	"\x04type\x18\x01 \x01(\tR\x04type\x12\x16\n" +
-	"\x06values\x18\x02 \x03(\tR\x06values\"c\n" +
+	"\x06values\x18\x02 \x03(\fR\x06values\"c\n" +
 	"\x0eLDAPAddRequest\x12\x0e\n" +
 	"\x02dn\x18\x01 \x01(\tR\x02dn\x12A\n" +
 	"\n" +
