@@ -23,6 +23,57 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// LDAPModifyOperation represents the type of modification to apply to an attribute.
+// Values align with go-ldap/ldap/v3 constants: AddAttribute=0, DeleteAttribute=1, ReplaceAttribute=2.
+type LDAPModifyOperation int32
+
+const (
+	LDAPModifyOperation_LDAP_MODIFY_OPERATION_ADD     LDAPModifyOperation = 0
+	LDAPModifyOperation_LDAP_MODIFY_OPERATION_DELETE  LDAPModifyOperation = 1
+	LDAPModifyOperation_LDAP_MODIFY_OPERATION_REPLACE LDAPModifyOperation = 2
+)
+
+// Enum value maps for LDAPModifyOperation.
+var (
+	LDAPModifyOperation_name = map[int32]string{
+		0: "LDAP_MODIFY_OPERATION_ADD",
+		1: "LDAP_MODIFY_OPERATION_DELETE",
+		2: "LDAP_MODIFY_OPERATION_REPLACE",
+	}
+	LDAPModifyOperation_value = map[string]int32{
+		"LDAP_MODIFY_OPERATION_ADD":     0,
+		"LDAP_MODIFY_OPERATION_DELETE":  1,
+		"LDAP_MODIFY_OPERATION_REPLACE": 2,
+	}
+)
+
+func (x LDAPModifyOperation) Enum() *LDAPModifyOperation {
+	p := new(LDAPModifyOperation)
+	*p = x
+	return p
+}
+
+func (x LDAPModifyOperation) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (LDAPModifyOperation) Descriptor() protoreflect.EnumDescriptor {
+	return file_proto_grpc_proxy_v1_ldap_proto_enumTypes[0].Descriptor()
+}
+
+func (LDAPModifyOperation) Type() protoreflect.EnumType {
+	return &file_proto_grpc_proxy_v1_ldap_proto_enumTypes[0]
+}
+
+func (x LDAPModifyOperation) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use LDAPModifyOperation.Descriptor instead.
+func (LDAPModifyOperation) EnumDescriptor() ([]byte, []int) {
+	return file_proto_grpc_proxy_v1_ldap_proto_rawDescGZIP(), []int{0}
+}
+
 // LDAPSearchRequest is a wrapper around a marshalled LDAP Adapter request to an
 // on-premises connector.
 type LDAPSearchRequest struct {
@@ -123,6 +174,544 @@ func (x *LDAPSearchResponse) GetError() string {
 	return ""
 }
 
+// LDAPAttribute represents an LDAP attribute with a type name and values.
+// Maps to both ldap.Attribute (used in add) and ldap.PartialAttribute (used in modify).
+// Values use bytes (not string) because LDAP attribute values can be arbitrary
+// binary data (e.g., objectGUID, certificates) that may not be valid UTF-8.
+type LDAPAttribute struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Type          string                 `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
+	Values        [][]byte               `protobuf:"bytes,2,rep,name=values,proto3" json:"values,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LDAPAttribute) Reset() {
+	*x = LDAPAttribute{}
+	mi := &file_proto_grpc_proxy_v1_ldap_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LDAPAttribute) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LDAPAttribute) ProtoMessage() {}
+
+func (x *LDAPAttribute) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_grpc_proxy_v1_ldap_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LDAPAttribute.ProtoReflect.Descriptor instead.
+func (*LDAPAttribute) Descriptor() ([]byte, []int) {
+	return file_proto_grpc_proxy_v1_ldap_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *LDAPAttribute) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *LDAPAttribute) GetValues() [][]byte {
+	if x != nil {
+		return x.Values
+	}
+	return nil
+}
+
+// LDAPAddRequest represents a request to add a new LDAP entry.
+// Maps to ldap.AddRequest.
+type LDAPAddRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Dn            string                 `protobuf:"bytes,1,opt,name=dn,proto3" json:"dn,omitempty"`
+	Attributes    []*LDAPAttribute       `protobuf:"bytes,2,rep,name=attributes,proto3" json:"attributes,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LDAPAddRequest) Reset() {
+	*x = LDAPAddRequest{}
+	mi := &file_proto_grpc_proxy_v1_ldap_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LDAPAddRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LDAPAddRequest) ProtoMessage() {}
+
+func (x *LDAPAddRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_grpc_proxy_v1_ldap_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LDAPAddRequest.ProtoReflect.Descriptor instead.
+func (*LDAPAddRequest) Descriptor() ([]byte, []int) {
+	return file_proto_grpc_proxy_v1_ldap_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *LDAPAddRequest) GetDn() string {
+	if x != nil {
+		return x.Dn
+	}
+	return ""
+}
+
+func (x *LDAPAddRequest) GetAttributes() []*LDAPAttribute {
+	if x != nil {
+		return x.Attributes
+	}
+	return nil
+}
+
+// LDAPModifyChange represents a single modification within a modify operation.
+// Maps to ldap.Change.
+type LDAPModifyChange struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Operation     LDAPModifyOperation    `protobuf:"varint,1,opt,name=operation,proto3,enum=sgnl.grpc_proxy.v1.LDAPModifyOperation" json:"operation,omitempty"`
+	Modification  *LDAPAttribute         `protobuf:"bytes,2,opt,name=modification,proto3" json:"modification,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LDAPModifyChange) Reset() {
+	*x = LDAPModifyChange{}
+	mi := &file_proto_grpc_proxy_v1_ldap_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LDAPModifyChange) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LDAPModifyChange) ProtoMessage() {}
+
+func (x *LDAPModifyChange) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_grpc_proxy_v1_ldap_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LDAPModifyChange.ProtoReflect.Descriptor instead.
+func (*LDAPModifyChange) Descriptor() ([]byte, []int) {
+	return file_proto_grpc_proxy_v1_ldap_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *LDAPModifyChange) GetOperation() LDAPModifyOperation {
+	if x != nil {
+		return x.Operation
+	}
+	return LDAPModifyOperation_LDAP_MODIFY_OPERATION_ADD
+}
+
+func (x *LDAPModifyChange) GetModification() *LDAPAttribute {
+	if x != nil {
+		return x.Modification
+	}
+	return nil
+}
+
+// LDAPModifyRequest represents a request to modify attributes of an existing LDAP entry.
+// Maps to ldap.ModifyRequest.
+type LDAPModifyRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Dn            string                 `protobuf:"bytes,1,opt,name=dn,proto3" json:"dn,omitempty"`
+	Changes       []*LDAPModifyChange    `protobuf:"bytes,2,rep,name=changes,proto3" json:"changes,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LDAPModifyRequest) Reset() {
+	*x = LDAPModifyRequest{}
+	mi := &file_proto_grpc_proxy_v1_ldap_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LDAPModifyRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LDAPModifyRequest) ProtoMessage() {}
+
+func (x *LDAPModifyRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_grpc_proxy_v1_ldap_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LDAPModifyRequest.ProtoReflect.Descriptor instead.
+func (*LDAPModifyRequest) Descriptor() ([]byte, []int) {
+	return file_proto_grpc_proxy_v1_ldap_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *LDAPModifyRequest) GetDn() string {
+	if x != nil {
+		return x.Dn
+	}
+	return ""
+}
+
+func (x *LDAPModifyRequest) GetChanges() []*LDAPModifyChange {
+	if x != nil {
+		return x.Changes
+	}
+	return nil
+}
+
+// LDAPDeleteRequest represents a request to delete an LDAP entry.
+// Maps to ldap.DelRequest.
+type LDAPDeleteRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Dn            string                 `protobuf:"bytes,1,opt,name=dn,proto3" json:"dn,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LDAPDeleteRequest) Reset() {
+	*x = LDAPDeleteRequest{}
+	mi := &file_proto_grpc_proxy_v1_ldap_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LDAPDeleteRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LDAPDeleteRequest) ProtoMessage() {}
+
+func (x *LDAPDeleteRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_grpc_proxy_v1_ldap_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LDAPDeleteRequest.ProtoReflect.Descriptor instead.
+func (*LDAPDeleteRequest) Descriptor() ([]byte, []int) {
+	return file_proto_grpc_proxy_v1_ldap_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *LDAPDeleteRequest) GetDn() string {
+	if x != nil {
+		return x.Dn
+	}
+	return ""
+}
+
+// LDAPModifyDNRequest represents a request to rename or move an LDAP entry.
+// Maps to ldap.ModifyDNRequest.
+type LDAPModifyDNRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Dn            string                 `protobuf:"bytes,1,opt,name=dn,proto3" json:"dn,omitempty"`
+	NewRdn        string                 `protobuf:"bytes,2,opt,name=new_rdn,json=newRdn,proto3" json:"new_rdn,omitempty"`
+	DeleteOldRdn  bool                   `protobuf:"varint,3,opt,name=delete_old_rdn,json=deleteOldRdn,proto3" json:"delete_old_rdn,omitempty"`
+	NewSuperior   string                 `protobuf:"bytes,4,opt,name=new_superior,json=newSuperior,proto3" json:"new_superior,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LDAPModifyDNRequest) Reset() {
+	*x = LDAPModifyDNRequest{}
+	mi := &file_proto_grpc_proxy_v1_ldap_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LDAPModifyDNRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LDAPModifyDNRequest) ProtoMessage() {}
+
+func (x *LDAPModifyDNRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_grpc_proxy_v1_ldap_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LDAPModifyDNRequest.ProtoReflect.Descriptor instead.
+func (*LDAPModifyDNRequest) Descriptor() ([]byte, []int) {
+	return file_proto_grpc_proxy_v1_ldap_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *LDAPModifyDNRequest) GetDn() string {
+	if x != nil {
+		return x.Dn
+	}
+	return ""
+}
+
+func (x *LDAPModifyDNRequest) GetNewRdn() string {
+	if x != nil {
+		return x.NewRdn
+	}
+	return ""
+}
+
+func (x *LDAPModifyDNRequest) GetDeleteOldRdn() bool {
+	if x != nil {
+		return x.DeleteOldRdn
+	}
+	return false
+}
+
+func (x *LDAPModifyDNRequest) GetNewSuperior() string {
+	if x != nil {
+		return x.NewSuperior
+	}
+	return ""
+}
+
+// LDAPOperationRequest wraps LDAP write operations with connection credentials.
+// Each request is self-contained (bind-per-operation pattern); the on-prem
+// connector's SessionPool handles actual connection reuse.
+type LDAPOperationRequest struct {
+	state        protoimpl.MessageState `protogen:"open.v1"`
+	Url          string                 `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
+	BindDn       string                 `protobuf:"bytes,2,opt,name=bind_dn,json=bindDn,proto3" json:"bind_dn,omitempty"`
+	BindPassword string                 `protobuf:"bytes,3,opt,name=bind_password,json=bindPassword,proto3" json:"bind_password,omitempty"`
+	// Types that are valid to be assigned to Operation:
+	//
+	//	*LDAPOperationRequest_AddRequest
+	//	*LDAPOperationRequest_ModifyRequest
+	//	*LDAPOperationRequest_DeleteRequest
+	//	*LDAPOperationRequest_ModifyDnRequest
+	Operation     isLDAPOperationRequest_Operation `protobuf_oneof:"operation"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LDAPOperationRequest) Reset() {
+	*x = LDAPOperationRequest{}
+	mi := &file_proto_grpc_proxy_v1_ldap_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LDAPOperationRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LDAPOperationRequest) ProtoMessage() {}
+
+func (x *LDAPOperationRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_grpc_proxy_v1_ldap_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LDAPOperationRequest.ProtoReflect.Descriptor instead.
+func (*LDAPOperationRequest) Descriptor() ([]byte, []int) {
+	return file_proto_grpc_proxy_v1_ldap_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *LDAPOperationRequest) GetUrl() string {
+	if x != nil {
+		return x.Url
+	}
+	return ""
+}
+
+func (x *LDAPOperationRequest) GetBindDn() string {
+	if x != nil {
+		return x.BindDn
+	}
+	return ""
+}
+
+func (x *LDAPOperationRequest) GetBindPassword() string {
+	if x != nil {
+		return x.BindPassword
+	}
+	return ""
+}
+
+func (x *LDAPOperationRequest) GetOperation() isLDAPOperationRequest_Operation {
+	if x != nil {
+		return x.Operation
+	}
+	return nil
+}
+
+func (x *LDAPOperationRequest) GetAddRequest() *LDAPAddRequest {
+	if x != nil {
+		if x, ok := x.Operation.(*LDAPOperationRequest_AddRequest); ok {
+			return x.AddRequest
+		}
+	}
+	return nil
+}
+
+func (x *LDAPOperationRequest) GetModifyRequest() *LDAPModifyRequest {
+	if x != nil {
+		if x, ok := x.Operation.(*LDAPOperationRequest_ModifyRequest); ok {
+			return x.ModifyRequest
+		}
+	}
+	return nil
+}
+
+func (x *LDAPOperationRequest) GetDeleteRequest() *LDAPDeleteRequest {
+	if x != nil {
+		if x, ok := x.Operation.(*LDAPOperationRequest_DeleteRequest); ok {
+			return x.DeleteRequest
+		}
+	}
+	return nil
+}
+
+func (x *LDAPOperationRequest) GetModifyDnRequest() *LDAPModifyDNRequest {
+	if x != nil {
+		if x, ok := x.Operation.(*LDAPOperationRequest_ModifyDnRequest); ok {
+			return x.ModifyDnRequest
+		}
+	}
+	return nil
+}
+
+type isLDAPOperationRequest_Operation interface {
+	isLDAPOperationRequest_Operation()
+}
+
+type LDAPOperationRequest_AddRequest struct {
+	AddRequest *LDAPAddRequest `protobuf:"bytes,4,opt,name=add_request,json=addRequest,proto3,oneof"`
+}
+
+type LDAPOperationRequest_ModifyRequest struct {
+	ModifyRequest *LDAPModifyRequest `protobuf:"bytes,5,opt,name=modify_request,json=modifyRequest,proto3,oneof"`
+}
+
+type LDAPOperationRequest_DeleteRequest struct {
+	DeleteRequest *LDAPDeleteRequest `protobuf:"bytes,6,opt,name=delete_request,json=deleteRequest,proto3,oneof"`
+}
+
+type LDAPOperationRequest_ModifyDnRequest struct {
+	ModifyDnRequest *LDAPModifyDNRequest `protobuf:"bytes,7,opt,name=modify_dn_request,json=modifyDnRequest,proto3,oneof"`
+}
+
+func (*LDAPOperationRequest_AddRequest) isLDAPOperationRequest_Operation() {}
+
+func (*LDAPOperationRequest_ModifyRequest) isLDAPOperationRequest_Operation() {}
+
+func (*LDAPOperationRequest_DeleteRequest) isLDAPOperationRequest_Operation() {}
+
+func (*LDAPOperationRequest_ModifyDnRequest) isLDAPOperationRequest_Operation() {}
+
+// LDAPOperationResponse represents the result of an LDAP write operation.
+// Fields map to RFC 4511 LDAPResult and go-ldap's Error type.
+// Success is derived from result_code == 0 (no explicit success field).
+type LDAPOperationResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Error         string                 `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+	ResultCode    int32                  `protobuf:"varint,3,opt,name=result_code,json=resultCode,proto3" json:"result_code,omitempty"`
+	MatchedDn     string                 `protobuf:"bytes,4,opt,name=matched_dn,json=matchedDn,proto3" json:"matched_dn,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LDAPOperationResponse) Reset() {
+	*x = LDAPOperationResponse{}
+	mi := &file_proto_grpc_proxy_v1_ldap_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LDAPOperationResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LDAPOperationResponse) ProtoMessage() {}
+
+func (x *LDAPOperationResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_grpc_proxy_v1_ldap_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LDAPOperationResponse.ProtoReflect.Descriptor instead.
+func (*LDAPOperationResponse) Descriptor() ([]byte, []int) {
+	return file_proto_grpc_proxy_v1_ldap_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *LDAPOperationResponse) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
+func (x *LDAPOperationResponse) GetResultCode() int32 {
+	if x != nil {
+		return x.ResultCode
+	}
+	return 0
+}
+
+func (x *LDAPOperationResponse) GetMatchedDn() string {
+	if x != nil {
+		return x.MatchedDn
+	}
+	return ""
+}
+
 var File_proto_grpc_proxy_v1_ldap_proto protoreflect.FileDescriptor
 
 const file_proto_grpc_proxy_v1_ldap_proto_rawDesc = "" +
@@ -132,7 +721,48 @@ const file_proto_grpc_proxy_v1_ldap_proto_rawDesc = "" +
 	"\arequest\x18\x01 \x01(\tR\arequest\"F\n" +
 	"\x12LDAPSearchResponse\x12\x1a\n" +
 	"\bresponse\x18\x01 \x01(\tR\bresponse\x12\x14\n" +
-	"\x05error\x18\x02 \x01(\tR\x05errorB8Z6github.com/sgnl-ai/adapter-framework/pkg/grpc_proxy/v1b\x06proto3"
+	"\x05error\x18\x02 \x01(\tR\x05error\";\n" +
+	"\rLDAPAttribute\x12\x12\n" +
+	"\x04type\x18\x01 \x01(\tR\x04type\x12\x16\n" +
+	"\x06values\x18\x02 \x03(\fR\x06values\"c\n" +
+	"\x0eLDAPAddRequest\x12\x0e\n" +
+	"\x02dn\x18\x01 \x01(\tR\x02dn\x12A\n" +
+	"\n" +
+	"attributes\x18\x02 \x03(\v2!.sgnl.grpc_proxy.v1.LDAPAttributeR\n" +
+	"attributes\"\xa0\x01\n" +
+	"\x10LDAPModifyChange\x12E\n" +
+	"\toperation\x18\x01 \x01(\x0e2'.sgnl.grpc_proxy.v1.LDAPModifyOperationR\toperation\x12E\n" +
+	"\fmodification\x18\x02 \x01(\v2!.sgnl.grpc_proxy.v1.LDAPAttributeR\fmodification\"c\n" +
+	"\x11LDAPModifyRequest\x12\x0e\n" +
+	"\x02dn\x18\x01 \x01(\tR\x02dn\x12>\n" +
+	"\achanges\x18\x02 \x03(\v2$.sgnl.grpc_proxy.v1.LDAPModifyChangeR\achanges\"#\n" +
+	"\x11LDAPDeleteRequest\x12\x0e\n" +
+	"\x02dn\x18\x01 \x01(\tR\x02dn\"\x87\x01\n" +
+	"\x13LDAPModifyDNRequest\x12\x0e\n" +
+	"\x02dn\x18\x01 \x01(\tR\x02dn\x12\x17\n" +
+	"\anew_rdn\x18\x02 \x01(\tR\x06newRdn\x12$\n" +
+	"\x0edelete_old_rdn\x18\x03 \x01(\bR\fdeleteOldRdn\x12!\n" +
+	"\fnew_superior\x18\x04 \x01(\tR\vnewSuperior\"\xb1\x03\n" +
+	"\x14LDAPOperationRequest\x12\x10\n" +
+	"\x03url\x18\x01 \x01(\tR\x03url\x12\x17\n" +
+	"\abind_dn\x18\x02 \x01(\tR\x06bindDn\x12#\n" +
+	"\rbind_password\x18\x03 \x01(\tR\fbindPassword\x12E\n" +
+	"\vadd_request\x18\x04 \x01(\v2\".sgnl.grpc_proxy.v1.LDAPAddRequestH\x00R\n" +
+	"addRequest\x12N\n" +
+	"\x0emodify_request\x18\x05 \x01(\v2%.sgnl.grpc_proxy.v1.LDAPModifyRequestH\x00R\rmodifyRequest\x12N\n" +
+	"\x0edelete_request\x18\x06 \x01(\v2%.sgnl.grpc_proxy.v1.LDAPDeleteRequestH\x00R\rdeleteRequest\x12U\n" +
+	"\x11modify_dn_request\x18\a \x01(\v2'.sgnl.grpc_proxy.v1.LDAPModifyDNRequestH\x00R\x0fmodifyDnRequestB\v\n" +
+	"\toperation\"|\n" +
+	"\x15LDAPOperationResponse\x12\x14\n" +
+	"\x05error\x18\x02 \x01(\tR\x05error\x12\x1f\n" +
+	"\vresult_code\x18\x03 \x01(\x05R\n" +
+	"resultCode\x12\x1d\n" +
+	"\n" +
+	"matched_dn\x18\x04 \x01(\tR\tmatchedDnJ\x04\b\x01\x10\x02R\asuccess*y\n" +
+	"\x13LDAPModifyOperation\x12\x1d\n" +
+	"\x19LDAP_MODIFY_OPERATION_ADD\x10\x00\x12 \n" +
+	"\x1cLDAP_MODIFY_OPERATION_DELETE\x10\x01\x12!\n" +
+	"\x1dLDAP_MODIFY_OPERATION_REPLACE\x10\x02B8Z6github.com/sgnl-ai/adapter-framework/pkg/grpc_proxy/v1b\x06proto3"
 
 var (
 	file_proto_grpc_proxy_v1_ldap_proto_rawDescOnce sync.Once
@@ -146,17 +776,35 @@ func file_proto_grpc_proxy_v1_ldap_proto_rawDescGZIP() []byte {
 	return file_proto_grpc_proxy_v1_ldap_proto_rawDescData
 }
 
-var file_proto_grpc_proxy_v1_ldap_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_proto_grpc_proxy_v1_ldap_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_proto_grpc_proxy_v1_ldap_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_proto_grpc_proxy_v1_ldap_proto_goTypes = []any{
-	(*LDAPSearchRequest)(nil),  // 0: sgnl.grpc_proxy.v1.LDAPSearchRequest
-	(*LDAPSearchResponse)(nil), // 1: sgnl.grpc_proxy.v1.LDAPSearchResponse
+	(LDAPModifyOperation)(0),      // 0: sgnl.grpc_proxy.v1.LDAPModifyOperation
+	(*LDAPSearchRequest)(nil),     // 1: sgnl.grpc_proxy.v1.LDAPSearchRequest
+	(*LDAPSearchResponse)(nil),    // 2: sgnl.grpc_proxy.v1.LDAPSearchResponse
+	(*LDAPAttribute)(nil),         // 3: sgnl.grpc_proxy.v1.LDAPAttribute
+	(*LDAPAddRequest)(nil),        // 4: sgnl.grpc_proxy.v1.LDAPAddRequest
+	(*LDAPModifyChange)(nil),      // 5: sgnl.grpc_proxy.v1.LDAPModifyChange
+	(*LDAPModifyRequest)(nil),     // 6: sgnl.grpc_proxy.v1.LDAPModifyRequest
+	(*LDAPDeleteRequest)(nil),     // 7: sgnl.grpc_proxy.v1.LDAPDeleteRequest
+	(*LDAPModifyDNRequest)(nil),   // 8: sgnl.grpc_proxy.v1.LDAPModifyDNRequest
+	(*LDAPOperationRequest)(nil),  // 9: sgnl.grpc_proxy.v1.LDAPOperationRequest
+	(*LDAPOperationResponse)(nil), // 10: sgnl.grpc_proxy.v1.LDAPOperationResponse
 }
 var file_proto_grpc_proxy_v1_ldap_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	3, // 0: sgnl.grpc_proxy.v1.LDAPAddRequest.attributes:type_name -> sgnl.grpc_proxy.v1.LDAPAttribute
+	0, // 1: sgnl.grpc_proxy.v1.LDAPModifyChange.operation:type_name -> sgnl.grpc_proxy.v1.LDAPModifyOperation
+	3, // 2: sgnl.grpc_proxy.v1.LDAPModifyChange.modification:type_name -> sgnl.grpc_proxy.v1.LDAPAttribute
+	5, // 3: sgnl.grpc_proxy.v1.LDAPModifyRequest.changes:type_name -> sgnl.grpc_proxy.v1.LDAPModifyChange
+	4, // 4: sgnl.grpc_proxy.v1.LDAPOperationRequest.add_request:type_name -> sgnl.grpc_proxy.v1.LDAPAddRequest
+	6, // 5: sgnl.grpc_proxy.v1.LDAPOperationRequest.modify_request:type_name -> sgnl.grpc_proxy.v1.LDAPModifyRequest
+	7, // 6: sgnl.grpc_proxy.v1.LDAPOperationRequest.delete_request:type_name -> sgnl.grpc_proxy.v1.LDAPDeleteRequest
+	8, // 7: sgnl.grpc_proxy.v1.LDAPOperationRequest.modify_dn_request:type_name -> sgnl.grpc_proxy.v1.LDAPModifyDNRequest
+	8, // [8:8] is the sub-list for method output_type
+	8, // [8:8] is the sub-list for method input_type
+	8, // [8:8] is the sub-list for extension type_name
+	8, // [8:8] is the sub-list for extension extendee
+	0, // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_proto_grpc_proxy_v1_ldap_proto_init() }
@@ -164,18 +812,25 @@ func file_proto_grpc_proxy_v1_ldap_proto_init() {
 	if File_proto_grpc_proxy_v1_ldap_proto != nil {
 		return
 	}
+	file_proto_grpc_proxy_v1_ldap_proto_msgTypes[8].OneofWrappers = []any{
+		(*LDAPOperationRequest_AddRequest)(nil),
+		(*LDAPOperationRequest_ModifyRequest)(nil),
+		(*LDAPOperationRequest_DeleteRequest)(nil),
+		(*LDAPOperationRequest_ModifyDnRequest)(nil),
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_grpc_proxy_v1_ldap_proto_rawDesc), len(file_proto_grpc_proxy_v1_ldap_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   2,
+			NumEnums:      1,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_proto_grpc_proxy_v1_ldap_proto_goTypes,
 		DependencyIndexes: file_proto_grpc_proxy_v1_ldap_proto_depIdxs,
+		EnumInfos:         file_proto_grpc_proxy_v1_ldap_proto_enumTypes,
 		MessageInfos:      file_proto_grpc_proxy_v1_ldap_proto_msgTypes,
 	}.Build()
 	File_proto_grpc_proxy_v1_ldap_proto = out.File
