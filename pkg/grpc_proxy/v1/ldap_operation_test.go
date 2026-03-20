@@ -1,4 +1,4 @@
-// Tests for LDAP operation proto message types (add, modify, delete, modifyDN).
+// Tests for LDAP operation proto message types (add, modify, delete, modifyDN, search).
 // Verifies construction, oneof routing, marshal/unmarshal roundtrip, and enum value alignment.
 
 package v1
@@ -700,5 +700,323 @@ func TestResponse_GivenLDAPOperationResponse_WhenMarshalUnmarshal_ThenOneofPrese
 	}
 	if got.GetMatchedDn() != "cn=John,ou=Users,dc=example,dc=com" {
 		t.Errorf("got matched_dn %q, want %q", got.GetMatchedDn(), "cn=John,ou=Users,dc=example,dc=com")
+	}
+}
+
+func TestLDAPOperationRequest_GivenSearchRequest_WhenConstructed_ThenFieldsAreCorrect(t *testing.T) {
+	tests := []struct {
+		name        string
+		baseDn      string
+		scope       LDAPSearchScope
+		filter      string
+		attributes  []string
+		sizeLimit   int32
+		timeLimit   int32
+	}{
+		{
+			name:       "basic_search",
+			baseDn:     "ou=Users,dc=example,dc=com",
+			scope:      LDAPSearchScope_LDAP_SEARCH_SCOPE_SUBTREE,
+			filter:     "(objectClass=user)",
+			attributes: []string{"cn", "mail", "sAMAccountName"},
+			sizeLimit:  1000,
+			timeLimit:  30,
+		},
+		{
+			name:       "single_level_search",
+			baseDn:     "ou=Groups,dc=example,dc=com",
+			scope:      LDAPSearchScope_LDAP_SEARCH_SCOPE_ONE_LEVEL,
+			filter:     "(objectClass=group)",
+			attributes: []string{"cn", "member"},
+			sizeLimit:  500,
+			timeLimit:  15,
+		},
+		{
+			name:       "base_object_search",
+			baseDn:     "cn=Administrator,cn=Users,dc=example,dc=com",
+			scope:      LDAPSearchScope_LDAP_SEARCH_SCOPE_BASE,
+			filter:     "(objectClass=*)",
+			attributes: []string{},
+			sizeLimit:  0,
+			timeLimit:  0,
+		},
+		{
+			name:       "complex_filter_search",
+			baseDn:     "dc=example,dc=com",
+			scope:      LDAPSearchScope_LDAP_SEARCH_SCOPE_SUBTREE,
+			filter:     "(&(objectClass=user)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))",
+			attributes: []string{"*"},
+			sizeLimit:  2000,
+			timeLimit:  60,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Arrange
+			searchReq := &LDAPSearchOpRequest{
+				BaseDn:     tt.baseDn,
+				Scope:      tt.scope,
+				Filter:     tt.filter,
+				Attributes: tt.attributes,
+				SizeLimit:  tt.sizeLimit,
+				TimeLimit:  tt.timeLimit,
+			}
+
+			// Act
+			opReq := &LDAPOperationRequest{
+				Url:          "ldaps://ad.example.com:636",
+				BindDn:       "cn=admin,dc=example,dc=com",
+				BindPassword: "secret",
+				Operation:    &LDAPOperationRequest_SearchRequest{SearchRequest: searchReq},
+			}
+
+			// Assert
+			if opReq.GetSearchRequest() == nil {
+				t.Fatal("expected search_request to be set")
+			}
+			got := opReq.GetSearchRequest()
+			if got.GetBaseDn() != tt.baseDn {
+				t.Errorf("got base_dn %q, want %q", got.GetBaseDn(), tt.baseDn)
+			}
+			if got.GetScope() != tt.scope {
+				t.Errorf("got scope %v, want %v", got.GetScope(), tt.scope)
+			}
+			if got.GetFilter() != tt.filter {
+				t.Errorf("got filter %q, want %q", got.GetFilter(), tt.filter)
+			}
+			if len(got.GetAttributes()) != len(tt.attributes) {
+				t.Errorf("got %d attributes, want %d", len(got.GetAttributes()), len(tt.attributes))
+			}
+			if got.GetSizeLimit() != tt.sizeLimit {
+				t.Errorf("got size_limit %d, want %d", got.GetSizeLimit(), tt.sizeLimit)
+			}
+			if got.GetTimeLimit() != tt.timeLimit {
+				t.Errorf("got time_limit %d, want %d", got.GetTimeLimit(), tt.timeLimit)
+			}
+			// Verify other operation requests are nil
+			if opReq.GetAddRequest() != nil {
+				t.Error("expected add_request to be nil")
+			}
+			if opReq.GetModifyRequest() != nil {
+				t.Error("expected modify_request to be nil")
+			}
+			if opReq.GetDeleteRequest() != nil {
+				t.Error("expected delete_request to be nil")
+			}
+			if opReq.GetModifyDnRequest() != nil {
+				t.Error("expected modify_dn_request to be nil")
+			}
+		})
+	}
+}
+
+func TestLDAPSearchScope_GivenEnumValues_WhenChecked_ThenNumericValuesAreStable(t *testing.T) {
+	// Verify enum numeric values remain stable across regenerations.
+	// These values are chosen to align with go-ldap/ldap/v3 constants
+	// (ScopeBaseObject=0, ScopeSingleLevel=1, ScopeWholeSubtree=2) by convention.
+
+	tests := []struct {
+		name     string
+		scope    LDAPSearchScope
+		expected int32
+	}{
+		{
+			name:     "base_is_zero",
+			scope:    LDAPSearchScope_LDAP_SEARCH_SCOPE_BASE,
+			expected: 0,
+		},
+		{
+			name:     "one_level_is_one",
+			scope:    LDAPSearchScope_LDAP_SEARCH_SCOPE_ONE_LEVEL,
+			expected: 1,
+		},
+		{
+			name:     "subtree_is_two",
+			scope:    LDAPSearchScope_LDAP_SEARCH_SCOPE_SUBTREE,
+			expected: 2,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Act
+			got := int32(tt.scope)
+
+			// Assert
+			if got != tt.expected {
+				t.Errorf("got %d, want %d", got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestLDAPOperationRequest_GivenSearchRequest_WhenMarshalUnmarshal_ThenRoundTripsCorrectly(t *testing.T) {
+	// Arrange
+	original := &LDAPOperationRequest{
+		Url:          "ldaps://ad.example.com:636",
+		BindDn:       "cn=admin,dc=example,dc=com",
+		BindPassword: "secret",
+		Operation: &LDAPOperationRequest_SearchRequest{
+			SearchRequest: &LDAPSearchOpRequest{
+				BaseDn:     "ou=Users,dc=example,dc=com",
+				Scope:      LDAPSearchScope_LDAP_SEARCH_SCOPE_SUBTREE,
+				Filter:     "(&(objectClass=user)(mail=*@example.com))",
+				Attributes: []string{"cn", "mail", "sAMAccountName", "userPrincipalName"},
+				SizeLimit:  1000,
+				TimeLimit:  30,
+			},
+		},
+	}
+
+	// Act
+	data, err := proto.Marshal(original)
+	if err != nil {
+		t.Fatalf("marshal failed: %v", err)
+	}
+
+	decoded := &LDAPOperationRequest{}
+	if err := proto.Unmarshal(data, decoded); err != nil {
+		t.Fatalf("unmarshal failed: %v", err)
+	}
+
+	// Assert - basic fields
+	if decoded.GetUrl() != original.GetUrl() {
+		t.Errorf("url: got %q, want %q", decoded.GetUrl(), original.GetUrl())
+	}
+	if decoded.GetBindDn() != original.GetBindDn() {
+		t.Errorf("bind_dn: got %q, want %q", decoded.GetBindDn(), original.GetBindDn())
+	}
+	if decoded.GetBindPassword() != original.GetBindPassword() {
+		t.Error("bind_password: decoded value does not match original")
+	}
+
+	// Assert - search request specific fields
+	if decoded.GetSearchRequest() == nil {
+		t.Fatal("expected search_request to be set after unmarshal")
+	}
+	origSearch := original.GetSearchRequest()
+	decodedSearch := decoded.GetSearchRequest()
+
+	if decodedSearch.GetBaseDn() != origSearch.GetBaseDn() {
+		t.Errorf("base_dn: got %q, want %q", decodedSearch.GetBaseDn(), origSearch.GetBaseDn())
+	}
+	if decodedSearch.GetScope() != origSearch.GetScope() {
+		t.Errorf("scope: got %v, want %v", decodedSearch.GetScope(), origSearch.GetScope())
+	}
+	if decodedSearch.GetFilter() != origSearch.GetFilter() {
+		t.Errorf("filter: got %q, want %q", decodedSearch.GetFilter(), origSearch.GetFilter())
+	}
+	if len(decodedSearch.GetAttributes()) != len(origSearch.GetAttributes()) {
+		t.Fatalf("attributes count: got %d, want %d", len(decodedSearch.GetAttributes()), len(origSearch.GetAttributes()))
+	}
+	for i, attr := range decodedSearch.GetAttributes() {
+		if attr != origSearch.GetAttributes()[i] {
+			t.Errorf("attribute[%d]: got %q, want %q", i, attr, origSearch.GetAttributes()[i])
+		}
+	}
+	if decodedSearch.GetSizeLimit() != origSearch.GetSizeLimit() {
+		t.Errorf("size_limit: got %d, want %d", decodedSearch.GetSizeLimit(), origSearch.GetSizeLimit())
+	}
+	if decodedSearch.GetTimeLimit() != origSearch.GetTimeLimit() {
+		t.Errorf("time_limit: got %d, want %d", decodedSearch.GetTimeLimit(), origSearch.GetTimeLimit())
+	}
+}
+
+func TestRequest_GivenLDAPOperationSearchRequest_WhenOneofSet_ThenGetReturnsCorrectType(t *testing.T) {
+	// Arrange
+	searchReq := &LDAPSearchOpRequest{
+		BaseDn:     "ou=Users,dc=example,dc=com",
+		Scope:      LDAPSearchScope_LDAP_SEARCH_SCOPE_ONE_LEVEL,
+		Filter:     "(objectClass=user)",
+		Attributes: []string{"cn", "mail"},
+		SizeLimit:  500,
+		TimeLimit:  15,
+	}
+	opReq := &LDAPOperationRequest{
+		Url:          "ldaps://ad.example.com:636",
+		BindDn:       "cn=admin,dc=example,dc=com",
+		BindPassword: "secret",
+		Operation:    &LDAPOperationRequest_SearchRequest{SearchRequest: searchReq},
+	}
+
+	// Act
+	req := &Request{
+		RequestType: &Request_LdapOperationRequest{LdapOperationRequest: opReq},
+	}
+
+	// Assert
+	if req.GetLdapOperationRequest() == nil {
+		t.Fatal("expected ldap_operation_request to be set")
+	}
+	if req.GetLdapOperationRequest().GetSearchRequest() == nil {
+		t.Fatal("expected search_request to be set")
+	}
+	if req.GetHttpRequest() != nil {
+		t.Error("expected http_request to be nil")
+	}
+	if req.GetSqlQueryReq() != nil {
+		t.Error("expected sql_query_req to be nil")
+	}
+	if req.GetLdapSearchRequest() != nil {
+		t.Error("expected ldap_search_request to be nil")
+	}
+	if req.GetLdapOperationRequest().GetUrl() != "ldaps://ad.example.com:636" {
+		t.Errorf("got url %q, want %q", req.GetLdapOperationRequest().GetUrl(), "ldaps://ad.example.com:636")
+	}
+	if req.GetLdapOperationRequest().GetSearchRequest().GetBaseDn() != "ou=Users,dc=example,dc=com" {
+		t.Errorf("got base_dn %q, want %q", req.GetLdapOperationRequest().GetSearchRequest().GetBaseDn(), "ou=Users,dc=example,dc=com")
+	}
+}
+
+func TestRequest_GivenLDAPOperationSearchRequest_WhenMarshalUnmarshal_ThenOneofPreserved(t *testing.T) {
+	// Arrange
+	original := &Request{
+		RequestType: &Request_LdapOperationRequest{
+			LdapOperationRequest: &LDAPOperationRequest{
+				Url:          "ldaps://ad.example.com:636",
+				BindDn:       "cn=admin,dc=example,dc=com",
+				BindPassword: "secret",
+				Operation: &LDAPOperationRequest_SearchRequest{
+					SearchRequest: &LDAPSearchOpRequest{
+						BaseDn:     "cn=TestUser,ou=Users,dc=example,dc=com",
+						Scope:      LDAPSearchScope_LDAP_SEARCH_SCOPE_BASE,
+						Filter:     "(objectClass=*)",
+						Attributes: []string{"*"},
+						SizeLimit:  1,
+						TimeLimit:  5,
+					},
+				},
+			},
+		},
+	}
+
+	// Act
+	data, err := proto.Marshal(original)
+	if err != nil {
+		t.Fatalf("marshal failed: %v", err)
+	}
+
+	decoded := &Request{}
+	if err := proto.Unmarshal(data, decoded); err != nil {
+		t.Fatalf("unmarshal failed: %v", err)
+	}
+
+	// Assert
+	if decoded.GetLdapOperationRequest() == nil {
+		t.Fatal("expected ldap_operation_request to be set after unmarshal")
+	}
+	if decoded.GetLdapOperationRequest().GetSearchRequest() == nil {
+		t.Fatal("expected search_request to be set after unmarshal")
+	}
+	searchReq := decoded.GetLdapOperationRequest().GetSearchRequest()
+	if searchReq.GetBaseDn() != "cn=TestUser,ou=Users,dc=example,dc=com" {
+		t.Errorf("got base_dn %q, want %q", searchReq.GetBaseDn(), "cn=TestUser,ou=Users,dc=example,dc=com")
+	}
+	if searchReq.GetScope() != LDAPSearchScope_LDAP_SEARCH_SCOPE_BASE {
+		t.Errorf("got scope %v, want %v", searchReq.GetScope(), LDAPSearchScope_LDAP_SEARCH_SCOPE_BASE)
+	}
+	if searchReq.GetFilter() != "(objectClass=*)" {
+		t.Errorf("got filter %q, want %q", searchReq.GetFilter(), "(objectClass=*)")
 	}
 }
