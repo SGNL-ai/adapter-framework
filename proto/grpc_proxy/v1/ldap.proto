@@ -72,7 +72,30 @@ message LDAPModifyDNRequest {
   string new_superior = 4;
 }
 
-// LDAPOperationRequest wraps LDAP write operations with connection credentials.
+// LDAPSearchScope represents the scope of an LDAP search operation.
+// Values align with go-ldap/ldap/v3 constants: ScopeBaseObject=0, ScopeSingleLevel=1, ScopeWholeSubtree=2.
+enum LDAPSearchScope {
+  LDAP_SEARCH_SCOPE_BASE = 0;
+  LDAP_SEARCH_SCOPE_ONE_LEVEL = 1;
+  LDAP_SEARCH_SCOPE_SUBTREE = 2;
+}
+
+// LDAPSearchOpRequest represents a structured LDAP search operation request.
+// Maps to ldap.SearchRequest for credentialed bind-per-operation LDAP searches.
+message LDAPSearchOpRequest {
+  string base_dn = 1;
+  // Optional scope field to avoid dangerous proto3 default behavior.
+  // If not set, server should apply SUBTREE scope as the safe default.
+  // If explicitly set to BASE, the restrictive base-object-only search is intended.
+  optional LDAPSearchScope scope = 2;
+  string filter = 3;
+  repeated string attributes = 4;
+  int32 size_limit = 5;
+  int32 time_limit = 6; // in seconds
+}
+
+// LDAPOperationRequest wraps credentialed LDAP operations (including search and
+// write-like operations) with connection credentials.
 // Each request is self-contained (bind-per-operation pattern); the on-prem
 // connector's SessionPool handles actual connection reuse.
 message LDAPOperationRequest {
@@ -84,6 +107,7 @@ message LDAPOperationRequest {
     LDAPModifyRequest modify_request = 5;
     LDAPDeleteRequest delete_request = 6;
     LDAPModifyDNRequest modify_dn_request = 7;
+    LDAPSearchOpRequest search_request = 8;
   }
 }
 
