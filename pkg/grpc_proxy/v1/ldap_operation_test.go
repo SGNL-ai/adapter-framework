@@ -707,7 +707,7 @@ func TestLDAPOperationRequest_GivenSearchRequest_WhenConstructed_ThenFieldsAreCo
 	tests := []struct {
 		name        string
 		baseDn      string
-		scope       LDAPSearchScope
+		scope       *LDAPSearchScope
 		filter      string
 		attributes  []string
 		sizeLimit   int32
@@ -716,7 +716,7 @@ func TestLDAPOperationRequest_GivenSearchRequest_WhenConstructed_ThenFieldsAreCo
 		{
 			name:       "basic_search",
 			baseDn:     "ou=Users,dc=example,dc=com",
-			scope:      LDAPSearchScope_LDAP_SEARCH_SCOPE_SUBTREE,
+			scope:      LDAPSearchScope_LDAP_SEARCH_SCOPE_SUBTREE.Enum(),
 			filter:     "(objectClass=user)",
 			attributes: []string{"cn", "mail", "sAMAccountName"},
 			sizeLimit:  1000,
@@ -725,7 +725,7 @@ func TestLDAPOperationRequest_GivenSearchRequest_WhenConstructed_ThenFieldsAreCo
 		{
 			name:       "single_level_search",
 			baseDn:     "ou=Groups,dc=example,dc=com",
-			scope:      LDAPSearchScope_LDAP_SEARCH_SCOPE_ONE_LEVEL,
+			scope:      LDAPSearchScope_LDAP_SEARCH_SCOPE_ONE_LEVEL.Enum(),
 			filter:     "(objectClass=group)",
 			attributes: []string{"cn", "member"},
 			sizeLimit:  500,
@@ -734,7 +734,7 @@ func TestLDAPOperationRequest_GivenSearchRequest_WhenConstructed_ThenFieldsAreCo
 		{
 			name:       "base_object_search",
 			baseDn:     "cn=Administrator,cn=Users,dc=example,dc=com",
-			scope:      LDAPSearchScope_LDAP_SEARCH_SCOPE_BASE,
+			scope:      LDAPSearchScope_LDAP_SEARCH_SCOPE_BASE.Enum(),
 			filter:     "(objectClass=*)",
 			attributes: []string{},
 			sizeLimit:  0,
@@ -743,7 +743,7 @@ func TestLDAPOperationRequest_GivenSearchRequest_WhenConstructed_ThenFieldsAreCo
 		{
 			name:       "complex_filter_search",
 			baseDn:     "dc=example,dc=com",
-			scope:      LDAPSearchScope_LDAP_SEARCH_SCOPE_SUBTREE,
+			scope:      LDAPSearchScope_LDAP_SEARCH_SCOPE_SUBTREE.Enum(),
 			filter:     "(&(objectClass=user)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))",
 			attributes: []string{"*"},
 			sizeLimit:  2000,
@@ -779,8 +779,8 @@ func TestLDAPOperationRequest_GivenSearchRequest_WhenConstructed_ThenFieldsAreCo
 			if got.GetBaseDn() != tt.baseDn {
 				t.Errorf("got base_dn %q, want %q", got.GetBaseDn(), tt.baseDn)
 			}
-			if got.GetScope() != tt.scope {
-				t.Errorf("got scope %v, want %v", got.GetScope(), tt.scope)
+			if got.GetScope() != *tt.scope {
+				t.Errorf("got scope %v, want %v", got.GetScope(), *tt.scope)
 			}
 			if got.GetFilter() != tt.filter {
 				t.Errorf("got filter %q, want %q", got.GetFilter(), tt.filter)
@@ -860,7 +860,7 @@ func TestLDAPOperationRequest_GivenSearchRequest_WhenMarshalUnmarshal_ThenRoundT
 		Operation: &LDAPOperationRequest_SearchRequest{
 			SearchRequest: &LDAPSearchOpRequest{
 				BaseDn:     "ou=Users,dc=example,dc=com",
-				Scope:      LDAPSearchScope_LDAP_SEARCH_SCOPE_SUBTREE,
+				Scope:      LDAPSearchScope_LDAP_SEARCH_SCOPE_SUBTREE.Enum(),
 				Filter:     "(&(objectClass=user)(mail=*@example.com))",
 				Attributes: []string{"cn", "mail", "sAMAccountName", "userPrincipalName"},
 				SizeLimit:  1000,
@@ -927,7 +927,7 @@ func TestRequest_GivenLDAPOperationSearchRequest_WhenOneofSet_ThenGetReturnsCorr
 	// Arrange
 	searchReq := &LDAPSearchOpRequest{
 		BaseDn:     "ou=Users,dc=example,dc=com",
-		Scope:      LDAPSearchScope_LDAP_SEARCH_SCOPE_ONE_LEVEL,
+		Scope:      LDAPSearchScope_LDAP_SEARCH_SCOPE_ONE_LEVEL.Enum(),
 		Filter:     "(objectClass=user)",
 		Attributes: []string{"cn", "mail"},
 		SizeLimit:  500,
@@ -980,7 +980,7 @@ func TestRequest_GivenLDAPOperationSearchRequest_WhenMarshalUnmarshal_ThenOneofP
 				Operation: &LDAPOperationRequest_SearchRequest{
 					SearchRequest: &LDAPSearchOpRequest{
 						BaseDn:     "cn=TestUser,ou=Users,dc=example,dc=com",
-						Scope:      LDAPSearchScope_LDAP_SEARCH_SCOPE_BASE,
+						Scope:      LDAPSearchScope_LDAP_SEARCH_SCOPE_BASE.Enum(),
 						Filter:     "(objectClass=*)",
 						Attributes: []string{"*"},
 						SizeLimit:  1,
