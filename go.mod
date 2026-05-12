@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	github.com/PaesslerAG/gval v1.2.4
 	github.com/PaesslerAG/jsonpath v0.1.1
-	github.com/fsnotify/fsnotify v1.9.0
+	github.com/fsnotify/fsnotify v1.10.1
 	github.com/go-asn1-ber/asn1-ber v1.5.8-0.20250403174932-29230038a667
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.29.0
 	github.com/sosodev/duration v1.4.0
