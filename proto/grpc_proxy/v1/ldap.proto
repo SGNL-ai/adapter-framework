@@ -101,7 +101,7 @@ message LDAPSearchOpRequest {
 message LDAPOperationRequest {
   string url = 1;
   string bind_dn = 2;
-  string bind_password = 3;
+  string bind_password = 3 [debug_redact = true];
   oneof operation {
     LDAPAddRequest add_request = 4;
     LDAPModifyRequest modify_request = 5;
