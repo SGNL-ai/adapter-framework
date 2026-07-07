@@ -44,6 +44,7 @@ jobs:
           fi
 
   build-and-test:
+    environment: CI
     runs-on: ubuntu-latest
     steps:
       - if: ${{ github.event_name == 'pull_request' }}
