@@ -61,12 +61,6 @@ jobs:
       - name: Run tests and code coverage 🧪
         run: docker run --rm --network="host" -v ./:/src -w /src golang:1.26-bookworm go test -coverprofile=coverage.txt -covermode=atomic -v ./...
 
-      # CodeCov
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v6
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-
   check-success:
     runs-on: ubuntu-latest
     needs: [build-and-test, check-proto]
